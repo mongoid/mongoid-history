@@ -10,6 +10,7 @@ module Mongoid::History
       field       :modified,                :type => Hash
       field       :version,                 :type => Integer
       field       :scope,                   :type => String
+      referenced_in :modified_by,           :class_name => Mongoid::History.modifer_class_name
 
       Mongoid::History.tracker_class_name = self.name.tableize.singularize.to_sym
     end
@@ -19,12 +20,45 @@ module Mongoid::History
     end
     
     
+    def undo!
+      merge_changes(trackable, attributes_before_change)
+      trackable.save!
+    end
+    
+    def redo!
+      merge_changes(trackable, attributes_after_change)
+      trackable.save!
+    end
+    
+    def merge_changes(model, attributes_to_merge)
+      attributes_to_merge.each do |k, v|
+        if model.attributes[k].is_a? Array && v.is_a? Array
+          # deep merge array
+          model.attributes[k] = ( model.attributes[k] + v ).unique
+        elsif model.attributes[k].is_a? Hash && v.is_a? Hash
+          # deep merge hash
+          model.attributes[k] = model.attributes[k].deep_merge(v)
+        else
+          model.attributes[k] = v
+        end
+      end
+      model
+    end
+    
+    def attributes_before_change
+      @attributes_before_change ||= modified.inject({}) { |h, k, v| h[k] = v[0]; h }
+    end
+
+    def attributes_after_change
+      @attributes_after_change ||= modified.inject({}) { |h, k, v| h[k] = v[1]; h }
+    end
+    
     def trackable
-      parents_and_master.last
+      @trackable ||= parents_and_master.last
     end
     
     def trackable_parents
-      parents_and_master[0, -1]
+      @trackable_parents ||= parents_and_master[0, -1]
     end
     
     
