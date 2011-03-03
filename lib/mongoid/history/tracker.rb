@@ -10,7 +10,7 @@ module Mongoid::History
       field       :modified,                :type => Hash
       field       :version,                 :type => Integer
       field       :scope,                   :type => String
-      referenced_in :modified_by,           :class_name => Mongoid::History.modifer_class_name
+      referenced_in :modifier,              :class_name => Mongoid::History.modifer_class_name
 
       Mongoid::History.tracker_class_name = self.name.tableize.singularize.to_sym
     end
@@ -32,33 +32,34 @@ module Mongoid::History
     
     def merge_changes(model, attributes_to_merge)
       attributes_to_merge.each do |k, v|
-        if model.attributes[k].is_a? Array && v.is_a? Array
-          # deep merge array
-          model.attributes[k] = ( model.attributes[k] + v ).unique
-        elsif model.attributes[k].is_a? Hash && v.is_a? Hash
-          # deep merge hash
-          model.attributes[k] = model.attributes[k].deep_merge(v)
+        if model.attributes[k].is_a?(Array) && v.is_a?(Array)
+          # Todo: This merge is wrong
+          model.send "#{k}=", ( model.attributes[k] + v ).unique
+        elsif model.attributes[k].is_a?(Hash) && v.is_a?(Hash)
+          # Todo: when deep merging, directions matter...
+          # consider undo and redo both senarios
+          model.send "#{k}=", model.attributes[k].deep_merge(v)
         else
-          model.attributes[k] = v
+          model.send("#{k}=", v)
         end
       end
       model
     end
     
     def attributes_before_change
-      @attributes_before_change ||= modified.inject({}) { |h, k, v| h[k] = v[0]; h }
+      @attributes_before_change ||= modified.inject({}) { |h, kv| k,v = kv; h[k] = v[0]; h }
     end
 
     def attributes_after_change
-      @attributes_after_change ||= modified.inject({}) { |h, k, v| h[k] = v[1]; h }
+      @attributes_after_change ||= modified.inject({}) { |h, k, v| k,v = kv; h[k] = v[1]; h }
     end
     
     def trackable
-      @trackable ||= parents_and_master.last
+      @trackable ||= trackable_parents_and_trackable.last
     end
     
     def trackable_parents
-      @trackable_parents ||= parents_and_master[0, -1]
+      @trackable_parents ||= trackable_parents_and_trackable[0, -1]
     end
     
     
@@ -73,9 +74,9 @@ private
       documents = []
       begin
         node = chain.shift
-        name = node[:name]
-        col  = doc.nil? ? name.classify.constantize : doc.send(name)
-        doc  = col.where(:id => node[:id]).first
+        name = node['name']
+        col  = doc.nil? ? name.classify.constantize : doc.send(name.tableize)
+        doc  = col.where(:_id => node['id']).first
         documents << doc
       end while( !chain.empty? )
       documents

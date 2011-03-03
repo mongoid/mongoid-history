@@ -39,9 +39,11 @@ describe Mongoid::History::Trackable do
       
       @expected_option = {
         :on             =>  :all,
-        :user_field     =>  :created_at,
+        :modifier_field =>  :modifier,
         :version_field  =>  :version,
-        :scope          =>  :my_model
+        :scope          =>  :my_model,
+        :except         =>  ["created_at", "updated_at", "version", "modifier_id", "_id", "id"],
+        :track_create   =>  false
       }
     end
     
@@ -54,8 +56,12 @@ describe Mongoid::History::Trackable do
       Mongoid::History.trackable_class_options[:my_model].should == @expected_option
     end
     
-    it "should define callback function #insert_history_track" do
-      MyModel.new.should respond_to :insert_history_track
+    it "should define callback function #track_update" do
+      MyModel.new.private_methods.collect(&:to_sym).should include(:track_update)
+    end
+    
+    it "should define callback function #track_create" do
+      MyModel.new.private_methods.collect(&:to_sym).should include(:track_create)
     end
 
     it "should define #history_trackable_options" do
