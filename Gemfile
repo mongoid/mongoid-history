@@ -1,5 +1,6 @@
 source "http://rubygems.org"
 
+gem 'easy_diff'
 gem 'mongoid', '~> 2.0.0.rc.7'
 
 group :development do
