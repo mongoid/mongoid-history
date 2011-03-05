@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{mongoid-history}
-  s.version = "0.0.0"
+  s.version = "0.0.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Aaron Qian"]
@@ -31,6 +31,7 @@ Gem::Specification.new do |s|
     "lib/mongoid/history.rb",
     "lib/mongoid/history/trackable.rb",
     "lib/mongoid/history/tracker.rb",
+    "mongoid-history.gemspec",
     "spec/integration/integration_spec.rb",
     "spec/spec_helper.rb",
     "spec/trackable_spec.rb",
