@@ -1,6 +1,88 @@
 = mongoid-history
 
-Description goes here.
+In frustration of Mongoid::Versioning, I created this plugin for tracking historical changes for any document, including embedded ones. It achieves this by storing all history tracks in a single collection that you define. (See Usage for more details) Embedded documents are referenced by storing an association path, which is an array of document_name and document_id fields starting from the top most parent document and down to the embedded document that should track history.
+
+This plugin implements multi-user undo, which allows users to undo any history change in any order. Undoing a document also creates a new history track. This is great for auditing and preventing vandalism, but it is probably not suitable for use cases such as a wiki.
+
+== Install
+
+  gem install mongoid-history
+
+== Rails 3
+
+In your Gemfile:
+
+  gem 'mongoid-history'
+
+== Usage
+
+Here is a quick example on how to use this plugin. For more details, please look at spec/integration/integration_spec.rb. It offers more detailed examples on how to use Mongoid::History.
+
+  # Create a new class for tracking all histories.
+  # Must include Mongoid::History::Tracker
+  class HistoryTracker
+    include Mongoid::History::Tracker
+  end
+
+  class Post
+    include Mongoid::Document
+    include Mongoid::Timestamps
+    
+    # History tracking all Post Documents
+    # Note: Tracking will not work until #track_history is invoked
+    include Mongoid::History::Trackable
+
+    field           :title
+    field           :body
+    field           :rating
+    embeds_many     :comments
+    
+    # Telling Mongoid::History how you want to track
+    track_history   :on => [:title, :body],       # I want to track title and body fields only. Default is :all
+                    :modifier_field => :modifier, # Adds "referened_in :modifier" to track who made the change. Default is :modifier
+                    :version_field => :version,   # Adds "field :version, :type => Integer" to track current version. Default is :version
+                    :track_create   =>  false,    # Do you want to track document creation? Default is false
+  end
+
+  class Comment
+    include Mongoid::Document
+    include Mongoid::Timestamps
+    
+    # Declare that we want to track comments
+    include Mongoid::History::Trackable
+
+    field             :title
+    field             :body
+    embedded_in       :post, :inverse_of => :comments
+    
+    # Track title and body for all comments, scope it to post (the parent)
+    # Also track creation
+    track_history     :on => [:title, :body], :scope => :post, :track_create => true
+  end
+
+  # The modifier can be specified as well 
+  class User
+    include Mongoid::Document
+    include Mongoid::Timestamps
+
+    field             :name
+  end
+  
+  user = User.create(:name => "Aaron")
+  post = Post.create(:title => "Test", :body => "Post", :modifier => user)
+  comment = post.comments.create(:title => "test", :body => "comment", :modifier => user)
+  comment.history_tracks.count # should be 1
+  
+  comment.update_attributes(:title => "Test 2")
+  comment.history_tracks.count # should be 2
+  
+  track = comment.history_tracks.last
+
+  track.undo! # comment title should be "Test"
+  
+  track.redo! # comment title should be "Test 2"
+  
+  
 
 == Contributing to mongoid-history
  
