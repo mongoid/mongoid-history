@@ -8,6 +8,7 @@ module Mongoid::History
       
       field       :association_chain,       :type => Array,     :default => []
       field       :modified,                :type => Hash
+      field       :original,                :type => Hash
       field       :version,                 :type => Integer
       field       :scope,                   :type => String
       referenced_in :modifier,              :class_name => Mongoid::History.modifer_class_name
@@ -19,41 +20,18 @@ module Mongoid::History
     module ClassMethods
     end
     
-    
     def undo!
-      merge_changes(trackable, attributes_before_change)
-      trackable.save!
+      undo_hash = affected.easy_unmerge(modified)
+      undo_hash.easy_merge!(original)
+      trackable.update_attributes!(undo_hash)
     end
     
     def redo!
-      merge_changes(trackable, attributes_after_change)
-      trackable.save!
+      redo_hash = affected.easy_unmerge(original)
+      redo_hash.easy_merge!(modified)
+      trackable.update_attributes!(redo_hash)
     end
-    
-    def merge_changes(model, attributes_to_merge)
-      attributes_to_merge.each do |k, v|
-        if model.attributes[k].is_a?(Array) && v.is_a?(Array)
-          # Todo: This merge is wrong
-          model.send "#{k}=", ( model.attributes[k] + v ).unique
-        elsif model.attributes[k].is_a?(Hash) && v.is_a?(Hash)
-          # Todo: when deep merging, directions matter...
-          # consider undo and redo both senarios
-          model.send "#{k}=", model.attributes[k].deep_merge(v)
-        else
-          model.send("#{k}=", v)
-        end
-      end
-      model
-    end
-    
-    def attributes_before_change
-      @attributes_before_change ||= modified.inject({}) { |h, kv| k,v = kv; h[k] = v[0]; h }
-    end
-
-    def attributes_after_change
-      @attributes_after_change ||= modified.inject({}) { |h, k, v| k,v = kv; h[k] = v[1]; h }
-    end
-    
+            
     def trackable
       @trackable ||= trackable_parents_and_trackable.last
     end
@@ -62,6 +40,9 @@ module Mongoid::History
       @trackable_parents ||= trackable_parents_and_trackable[0, -1]
     end
     
+    def affected
+      @affected ||= (modified.keys | original.keys).inject({}){ |h,k| h[k] = trackable.attributes[k]; h}
+    end
     
 private
     def trackable_parents_and_trackable

@@ -90,12 +90,18 @@ module Mongoid::History
       end
 
       def history_tracker_attributes
-        @history_tracker_attributes ||= {
+        return @history_tracker_attributes if @history_tracker_attributes
+        
+        @history_tracker_attributes = {
           :association_chain  => triverse_association_chain,
-          :modified           => (new_record? ? modified_attributes_for_create : modified_attributes_for_update),
           :scope              => history_trackable_options[:scope],
           :modifier        => send(history_trackable_options[:modifier_field])
         }
+        
+        original, modified = transform_changes((new_record? ? modified_attributes_for_create : modified_attributes_for_update))
+        @history_tracker_attributes[:original] = original
+        @history_tracker_attributes[:modified] = modified
+        @history_tracker_attributes
       end
       
       def track_update
@@ -118,6 +124,18 @@ module Mongoid::History
         @modified_attributes_for_create = nil
         @modified_attributes_for_update = nil
         @history_tracks = nil
+      end
+      
+      def transform_changes(changes)
+        original = {}
+        modified = {}
+        changes.each_pair do |k, v|
+          o, m = v
+          original[k] = o if o
+          modified[k] = m if m
+        end
+        
+        return original.easy_diff modified
       end
       
     end

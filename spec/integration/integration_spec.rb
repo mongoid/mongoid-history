@@ -50,9 +50,14 @@ describe Mongoid::History do
         @comment.history_tracks.count.should == 1
       end
       
-      it "should assign title and body" do
-        @comment.history_tracks.first.modified.should == {'title' => [nil, "test"], 'body' => [nil, "comment"]}
+      it "should assign title and body on modified" do
+        @comment.history_tracks.first.modified.should == {'title' => "test", 'body' =>  "comment"}
       end
+      
+      it "should not assign title and body on original" do
+        @comment.history_tracks.first.original.should == {}
+      end
+      
       
       it "should assign modifier" do
         @comment.history_tracks.first.modifier.should == @user
@@ -87,7 +92,14 @@ describe Mongoid::History do
       it "should assign modified fields" do
         @post.update_attributes(:title => "Another Test")
         @post.history_tracks.first.modified.should == {
-          "title" => ["Test", "Another Test"]
+          "title" => "Another Test"
+        }
+      end
+      
+      it "should assign original fields" do
+        @post.update_attributes(:title => "Another Test")
+        @post.history_tracks.first.original.should == {
+          "title" => "Test"
         }
       end
 
@@ -141,9 +153,18 @@ describe Mongoid::History do
         @post.update_attributes(:title => "Test2")
         @post.update_attributes(:title => "Test3")
         @post.history_tracks.where(:version => 2).first.modified.should == {
-          "title" => ["Test2", "Test3"]
+          "title" => "Test3"
         }
       end
+      
+      it "should assign original fields" do
+        @post.update_attributes(:title => "Test2")
+        @post.update_attributes(:title => "Test3")
+        @post.history_tracks.where(:version => 2).first.original.should == {
+          "title" => "Test2"
+        }
+      end
+      
 
       it "should assign modifier" do
         @post.update_attributes(:title => "Another Test", :modifier => @another_user)
@@ -165,7 +186,14 @@ describe Mongoid::History do
       it "should assign modified fields" do
         @comment.update_attributes(:title => "Test2")
         @comment.history_tracks.where(:version => 2).first.modified.should == {
-          "title" => ["test", "Test2"]
+          "title" => "Test2"
+        }
+      end
+      
+      it "should assign original fields" do
+        @comment.update_attributes(:title => "Test2")
+        @comment.history_tracks.where(:version => 2).first.original.should == {
+          "title" => "test"
         }
       end
 
@@ -175,26 +203,60 @@ describe Mongoid::History do
       end
     end
     
-    describe "undo on non-embedded" do
+    describe "non-embedded" do
       it "should undo changes" do
-        lambda {
-          @post.update_attributes(:title => "Test2")
-          @post.history_tracks.where(:version => 1).first.undo!
-          @post.reload
-        }.should_not change(@post, :title)
-        
+        @post.update_attributes(:title => "Test2")
+        @post.history_tracks.where(:version => 1).first.undo!
+        @post.reload
+        @post.title.should == "Test"
+      end
+      
+      it "should create a new history track after undo" do
+        @post.update_attributes(:title => "Test2")
+        @post.history_tracks.where(:version => 1).first.undo!
+        @post.reload
+        @post.history_tracks.count.should == 2
+      end
+      
+      it "should stay the same after undo and redo" do
+        @post.update_attributes(:title => "Test2")
+        @track = @post.history_tracks.where(:version => 1).first
+        @track.undo!
+        @track.redo!
+        @post2 = Post.where(:_id => @post.id).first
+      
+        @post.title.should == @post2.title
       end
     end
     
-    describe "undo on embedded" do
+    describe "embedded" do
       it "should undo changes" do
-          @comment.update_attributes(:title => "Test2")
-          @comment.history_tracks.where(:version => 2).first.undo!
-          # reloading an embedded document === KAMIKAZE
-          # at least for the current release of mongoid...
-          @post.reload
-          @comment = @post.comments.first
-          @comment.title.should == "test"
+        @comment.update_attributes(:title => "Test2")
+        @comment.history_tracks.where(:version => 2).first.undo!
+        # reloading an embedded document === KAMIKAZE
+        # at least for the current release of mongoid...
+        @post.reload
+        @comment = @post.comments.first
+        @comment.title.should == "test"
+      end
+      
+      it "should create a new history track after undo" do
+        @comment.update_attributes(:title => "Test2")
+        @comment.history_tracks.where(:version => 2).first.undo!
+        @post.reload
+        @comment = @post.comments.first
+        @comment.history_tracks.count.should == 3
+      end
+      
+      it "should stay the same after undo and redo" do
+        @comment.update_attributes(:title => "Test2")
+        @track = @comment.history_tracks.where(:version => 2).first
+        @track.undo!
+        @track.redo!
+        @post2 = Post.where(:_id => @post.id).first
+        @comment2 = @post2.comments.first
+        
+        @comment.title.should == @comment2.title
       end
     end
 
