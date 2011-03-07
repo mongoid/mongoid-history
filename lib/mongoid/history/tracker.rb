@@ -31,7 +31,11 @@ module Mongoid::History
       redo_hash.easy_merge!(modified)
       trackable.update_attributes!(redo_hash)
     end
-            
+    
+    def trackable_root
+      @trackable_root ||= trackable_parents_and_trackable.first
+    end
+   
     def trackable
       @trackable ||= trackable_parents_and_trackable.last
     end
