@@ -206,23 +206,30 @@ describe Mongoid::History do
     describe "non-embedded" do
       it "should undo changes" do
         @post.update_attributes(:title => "Test2")
-        @post.history_tracks.where(:version => 1).first.undo!
+        @post.history_tracks.where(:version => 1).first.undo!(@user)
         @post.reload
         @post.title.should == "Test"
       end
       
       it "should create a new history track after undo" do
         @post.update_attributes(:title => "Test2")
-        @post.history_tracks.where(:version => 1).first.undo!
+        @post.history_tracks.where(:version => 1).first.undo!(@user)
         @post.reload
         @post.history_tracks.count.should == 2
+      end
+      
+      it "should assign @user as the modifier of the newly created history track" do
+        @post.update_attributes(:title => "Test2")
+        @post.history_tracks.where(:version => 1).first.undo!(@user)
+        @post.reload
+        @post.history_tracks.where(:version => 2).first.modifier.should == @user
       end
       
       it "should stay the same after undo and redo" do
         @post.update_attributes(:title => "Test2")
         @track = @post.history_tracks.where(:version => 1).first
-        @track.undo!
-        @track.redo!
+        @track.undo!(@user)
+        @track.redo!(@user)
         @post2 = Post.where(:_id => @post.id).first
       
         @post.title.should == @post2.title
@@ -232,7 +239,7 @@ describe Mongoid::History do
     describe "embedded" do
       it "should undo changes" do
         @comment.update_attributes(:title => "Test2")
-        @comment.history_tracks.where(:version => 2).first.undo!
+        @comment.history_tracks.where(:version => 2).first.undo!(@user)
         # reloading an embedded document === KAMIKAZE
         # at least for the current release of mongoid...
         @post.reload
@@ -242,17 +249,25 @@ describe Mongoid::History do
       
       it "should create a new history track after undo" do
         @comment.update_attributes(:title => "Test2")
-        @comment.history_tracks.where(:version => 2).first.undo!
+        @comment.history_tracks.where(:version => 2).first.undo!(@user)
         @post.reload
         @comment = @post.comments.first
         @comment.history_tracks.count.should == 3
       end
       
+      it "should assign @user as the modifier of the newly created history track" do
+        @comment.update_attributes(:title => "Test2")
+        @comment.history_tracks.where(:version => 2).first.undo!(@user)
+        @post.reload
+        @comment = @post.comments.first
+        @comment.history_tracks.where(:version => 3).first.modifier.should == @user
+      end
+      
       it "should stay the same after undo and redo" do
         @comment.update_attributes(:title => "Test2")
         @track = @comment.history_tracks.where(:version => 2).first
-        @track.undo!
-        @track.redo!
+        @track.undo!(@user)
+        @track.redo!(@user)
         @post2 = Post.where(:_id => @post.id).first
         @comment2 = @post2.comments.first
         
