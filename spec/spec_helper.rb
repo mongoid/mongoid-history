@@ -2,7 +2,6 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 
 require 'rspec'
-require 'easy_diff'
 require 'mongoid'
 require 'mongoid-history'
 require 'database_cleaner'
