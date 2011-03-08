@@ -38,6 +38,7 @@ module Mongoid::History
         extend SingletonMethods
         
         delegate :history_trackable_options, :to => 'self.class'
+        delegate :track_history?, :to => 'self.class'
 
         before_update :track_update
         before_create :track_create if options[:track_create]
@@ -47,8 +48,18 @@ module Mongoid::History
         Mongoid::History.trackable_classes << self
         Mongoid::History.trackable_class_options ||= {}
         Mongoid::History.trackable_class_options[model_name] = options
+        Thread.current[:mongoid_history_trackable_enabled] = true
       end
       
+      def track_history?
+        !!Thread.current[:mongoid_history_trackable_enabled]
+      end
+      
+      def disable_tracking(&block)
+        Thread.current[:mongoid_history_trackable_enabled] = false
+        yield
+        Thread.current[:mongoid_history_trackable_enabled] = true
+      end
     end
     
     module InstanceMethods
@@ -58,7 +69,7 @@ module Mongoid::History
       
     private
       def should_track_update?
-        !modified_attributes_for_update.blank?
+        track_history? && !modified_attributes_for_update.blank?
       end
       
       def triverse_association_chain(node=self)
@@ -113,6 +124,7 @@ module Mongoid::History
       end
       
       def track_create
+        return unless track_history?
         current_version = (self.send(history_trackable_options[:version_field]) || 0 ) + 1
         self.send("#{history_trackable_options[:version_field]}=", current_version)
         Mongoid::History.tracker_class.create!(history_tracker_attributes.merge(:version => current_version))
