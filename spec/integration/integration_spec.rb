@@ -274,6 +274,63 @@ describe Mongoid::History do
         @comment.title.should == @comment2.title
       end
     end
+    
+    describe "trackables" do
+      before :each do
+        @comment.update_attributes(:title => "Test2") # version == 2
+        @comment.update_attributes(:title => "Test3") # version == 3
+        @comment.update_attributes(:title => "Test4") # version == 4
+      end
+      
+      describe "undo" do
+        it "should recognize :from, :to options" do
+          @comment.undo! @user, :from => 2, :to => 4
+          @comment.title.should == "test"
+        end
+        
+        it "should recognize parameter as version number" do
+          @comment.undo! @user, 3
+          
+          @comment.title.should == "Test2"
+        end
+        
+        it "should undo last version when no parameter is specified" do
+          @comment.undo! @user
+          @comment.title.should == "Test3"
+        end
+        
+        it "should recognize :last options" do
+          @comment.undo! @user, :last => 2
+          @comment.title.should == "Test2"
+        end
+      end
+      
+      describe "redo" do
+        before :each do
+          @comment.update_attributes(:title => "Test5")
+        end
+        
+        it "should recognize :from, :to options" do
+          @comment.redo! @user,  :from => 2, :to => 4
+          @comment.title.should == "Test4"
+        end
+        
+        it "should recognize parameter as version number" do
+          @comment.redo! @user, 2
+          @comment.title.should == "Test2"
+        end
+        
+        it "should redo last version when no parameter is specified" do
+          @comment.redo! @user
+          @comment.title.should == "Test5"
+        end
+        
+        it "should recognize :last options" do
+          @comment.redo! @user, :last => 1
+          @comment.title.should == "Test5"
+        end
 
+      end
+    end
   end
 end

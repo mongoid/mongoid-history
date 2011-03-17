@@ -42,7 +42,6 @@ module Mongoid::History
 
         before_update :track_update
         before_create :track_create if options[:track_create]
-
         
         Mongoid::History.trackable_classes ||= []
         Mongoid::History.trackable_classes << self
@@ -67,7 +66,50 @@ module Mongoid::History
         @history_tracks ||= Mongoid::History.tracker_class.where(:scope => history_trackable_options[:scope], :association_chain => triverse_association_chain)
       end
       
+      #  undo :from => 1, :to => 5
+      #  undo 4
+      #  undo :last => 10
+      def undo!(modifier, options_or_version=nil)
+        versions = get_versions_criteria(options_or_version).to_a
+        versions.sort!{|v1, v2| v2.version <=> v1.version}
+
+        versions.each do |v|
+          undo_attr = v.undo_attr(modifier)
+          self.attributes = v.undo_attr(modifier)
+        end
+        save!
+      end
+      
+      def redo!(modifier, options_or_version=nil)
+        versions = get_versions_criteria(options_or_version).to_a
+        versions.sort!{|v1, v2| v1.version <=> v2.version}
+
+        versions.each do |v|
+          redo_attr = v.redo_attr(modifier)
+          self.attributes = redo_attr
+        end
+        save!
+      end
+      
     private
+      def get_versions_criteria(options_or_version)
+        if options_or_version.is_a? Hash
+          options = options_or_version
+          if options[:from] && options[:to]
+            versions = history_tracks.where(:version.in => (options[:from] .. options[:to]).to_a)
+          elsif options[:last]
+            versions = history_tracks.limit(options[:last])
+          else
+            raise "Invalid options, please specify (:from / :to) keys or :last key."
+          end
+        else
+          version = options_or_version || self.attributes[history_trackable_options[:version_field]]
+          version = [ version ].flatten
+          versions = history_tracks.where(:version.in => version)
+        end
+        versions.desc(:version)
+      end
+      
       def should_track_update?
         track_history? && !modified_attributes_for_update.blank?
       end

@@ -21,19 +21,27 @@ module Mongoid::History
     end
     
     def undo!(modifier)
+      trackable.update_attributes!(undo_attr(modifier))
+    end
+    
+    def redo!(modifier)
+      trackable.update_attributes!(redo_attr(modifier))
+    end
+    
+    def undo_attr(modifier)
       undo_hash = affected.easy_unmerge(modified)
       undo_hash.easy_merge!(original)
       modifier_field = trackable.history_trackable_options[:modifier_field]
       undo_hash[modifier_field] = modifier
-      trackable.update_attributes!(undo_hash)
+      undo_hash
     end
     
-    def redo!(modifier)
+    def redo_attr(modifier)
       redo_hash = affected.easy_unmerge(original)
       redo_hash.easy_merge!(modified)
       modifier_field = trackable.history_trackable_options[:modifier_field]
       redo_hash[modifier_field] = modifier
-      trackable.update_attributes!(redo_hash)
+      redo_hash
     end
     
     def trackable_root
