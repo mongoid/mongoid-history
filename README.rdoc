@@ -82,7 +82,20 @@ Here is a quick example on how to use this plugin. For more details, please look
   
   track.redo! # comment title should be "Test 2"
   
+  # undo last change
+  comment.undo! @user
   
+  # undo versions 1 - 4
+  comment.undo! @user, :from => 1, :to => 4
+  
+  # undo last 3 versions
+  comment.undo! @user, :last => 3
+  
+  # redo versions 1 - 4
+  comment.redo! @user, :from => 1, :to => 4
+  
+  # redo last 3 versions
+  comment.redo! @user, :last => 3
 
 == Contributing to mongoid-history
  
