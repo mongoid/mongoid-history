@@ -96,13 +96,16 @@ module Mongoid::History
         if options_or_version.is_a? Hash
           options = options_or_version
           if options[:from] && options[:to]
-            versions = history_tracks.where(:version.in => (options[:from] .. options[:to]).to_a)
+            lower = options[:from] >= options[:to] ? options[:to] : options[:from]
+            upper = options[:from] <  options[:to] ? options[:to] : options[:from]
+            versions = history_tracks.where( :version.in => (lower .. upper).to_a )
           elsif options[:last]
-            versions = history_tracks.limit(options[:last])
+            versions = history_tracks.limit( options[:last] )
           else
             raise "Invalid options, please specify (:from / :to) keys or :last key."
           end
         else
+          options_or_version = options_or_version.to_a if options_or_version.is_a?(Range)
           version = options_or_version || self.attributes[history_trackable_options[:version_field]]
           version = [ version ].flatten
           versions = history_tracks.where(:version.in => version)

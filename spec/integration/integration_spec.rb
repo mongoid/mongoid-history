@@ -284,7 +284,7 @@ describe Mongoid::History do
       
       describe "undo" do
         it "should recognize :from, :to options" do
-          @comment.undo! @user, :from => 2, :to => 4
+          @comment.undo! @user, :from => 4, :to => 2
           @comment.title.should == "test"
         end
         

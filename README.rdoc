@@ -86,7 +86,7 @@ Here is a quick example on how to use this plugin. For more details, please look
   comment.undo! @user
   
   # undo versions 1 - 4
-  comment.undo! @user, :from => 1, :to => 4
+  comment.undo! @user, :from => 4, :to => 1
   
   # undo last 3 versions
   comment.undo! @user, :last => 3
