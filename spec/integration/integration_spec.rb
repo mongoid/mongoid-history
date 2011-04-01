@@ -14,6 +14,7 @@ describe Mongoid::History do
       field           :title
       field           :body
       field           :rating
+
       embeds_many     :comments
       track_history   :on => [:title, :body]
     end
@@ -32,15 +33,18 @@ describe Mongoid::History do
     class User
       include Mongoid::Document
       include Mongoid::Timestamps
+      include Mongoid::History::Trackable
 
+      field             :email
       field             :name
+      track_history    :except => [:email]
     end
   end
   
   before :each do
-    @user = User.create(:name => "Aaron")
-    @another_user = User.create(:name => "Another Guy")
-    @post = Post.create(:title => "Test", :body => "Post", :modifier => @user)
+    @user = User.create(:name => "Aaron", :email => "aaron@randomemail.com")
+    @another_user = User.create(:name => "Another Guy", :email => "anotherguy@randomemail.com")
+    @post = Post.create(:title => "Test", :body => "Post", :modifier => @user, :views => 100)
     @comment = @post.comments.create(:title => "test", :body => "comment", :modifier => @user)
   end
   
@@ -63,15 +67,15 @@ describe Mongoid::History do
         @comment.history_tracks.first.modifier.should == @user
       end
       
-      it "should assigin version" do
+      it "should assign version" do
         @comment.history_tracks.first.version.should == 1
       end
       
-      it "should assigin scope" do
+      it "should assign scope" do
         @comment.history_tracks.first.scope == "Post"
       end
       
-      it "should assigin association_chain" do
+      it "should assign association_chain" do
         @comment.history_tracks.first.association_chain = [{:id => @post.id, :name => "Post"}, {:id => @comment.id, :name => "Comment"}]
       end
     end
@@ -108,29 +112,36 @@ describe Mongoid::History do
         @post.history_tracks.first.modifier.should == @user
       end
 
-      it "should assigin version on history tracks" do
+      it "should assign version on history tracks" do
         @post.update_attributes(:title => "Another Test")
         @post.history_tracks.first.version.should == 1
       end
       
-      it "should assigin version on post" do
+      it "should assign version on post" do
         @post.update_attributes(:title => "Another Test")
         @post.version.should == 1
       end
 
-      it "should assigin scope" do
+      it "should assign scope" do
         @post.update_attributes(:title => "Another Test")
         @post.history_tracks.first.scope == "Post"
       end
 
-      it "should assigin association_chain" do
+      it "should assign association_chain" do
         @post.update_attributes(:title => "Another Test")
         @post.history_tracks.first.association_chain = [{:id => @post.id, :name => "Post"}]
+      end
+
+      it "should exclude defined options" do
+        @user.update_attributes(:name => "Aaron2", :email => "aaronsnewemail@randomemail.com")
+        @user.history_tracks.first.modified.should == {
+            "name" => "Aaron2"
+        }
       end
     end
     
     describe "on update non-embedded twice" do
-      it "should assigin version on post" do
+      it "should assign version on post" do
         @post.update_attributes(:title => "Test2")
         @post.update_attributes(:title => "Test3")
         @post.version.should == 2
@@ -173,7 +184,7 @@ describe Mongoid::History do
     end
     
     describe "on update embedded" do
-      it "should assigin version on comment" do
+      it "should assign version on comment" do
         @comment.update_attributes(:title => "Test2")
         @comment.version.should == 2 # first track generated on creation
       end
