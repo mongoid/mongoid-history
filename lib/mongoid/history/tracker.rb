@@ -68,7 +68,8 @@ module Mongoid::History
     end
     
     def affected
-      @affected ||= (modified.keys | original.keys).inject({}){ |h,k| h[k] = trackable.attributes[k]; h}
+      @affected ||= (modified.keys | original.keys).inject({}){ |h,k| h[k] = 
+        trackable ? trackable.attributes[k] : modified[k]; h}
     end
     
 private

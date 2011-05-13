@@ -95,6 +95,11 @@ describe Mongoid::History do
         @post.history_tracks.last.action == "destroy"
       end
 
+      it "should return affected attributes from track record" do
+        @post.destroy
+        @post.history_tracks.last.affected["title"] == "Test"
+      end
+
     end
     
     describe "on update non-embedded" do
