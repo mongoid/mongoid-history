@@ -42,6 +42,7 @@ Here is a quick example on how to use this plugin. For more details, please look
                     :modifier_field => :modifier, # Adds "referened_in :modifier" to track who made the change. Default is :modifier
                     :version_field => :version,   # Adds "field :version, :type => Integer" to track current version. Default is :version
                     :track_create   =>  false,    # Do you want to track document creation? Default is false
+                    :track_destroy  =>  false,    # Do you want to track document destruction? Default is false
   end
 
   class Comment
@@ -56,8 +57,8 @@ Here is a quick example on how to use this plugin. For more details, please look
     embedded_in       :post, :inverse_of => :comments
     
     # Track title and body for all comments, scope it to post (the parent)
-    # Also track creation
-    track_history     :on => [:title, :body], :scope => :post, :track_create => true
+    # Also track creation and destruction
+    track_history     :on => [:title, :body], :scope => :post, :track_create => true, :track_destroy => true
   end
 
   # The modifier can be specified as well 
@@ -96,6 +97,12 @@ Here is a quick example on how to use this plugin. For more details, please look
   
   # redo last 3 versions
   comment.redo! @user, :last => 3
+  
+  # delete post
+  post.destroy
+  
+  # undelete post
+  post.undo! @user
 
 == Contributing to mongoid-history
  
