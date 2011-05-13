@@ -10,6 +10,7 @@ module Mongoid::History
       field       :modified,                :type => Hash
       field       :original,                :type => Hash
       field       :version,                 :type => Integer
+      field       :action,                  :type => String
       field       :scope,                   :type => String
       referenced_in :modifier,              :class_name => Mongoid::History.modifer_class_name
 
@@ -21,11 +22,21 @@ module Mongoid::History
     end
     
     def undo!(modifier)
-      trackable.update_attributes!(undo_attr(modifier))
+      if action.to_sym == :destroy
+        class_name = association_chain[0]["name"]
+        restored = class_name.constantize.new(modified)
+        restored.save!
+      else
+        trackable.update_attributes!(undo_attr(modifier))
+      end
     end
     
     def redo!(modifier)
-      trackable.update_attributes!(redo_attr(modifier))
+      if action.to_sym == :destroy
+        trackable.destroy
+      else
+        trackable.update_attributes!(redo_attr(modifier))
+      end
     end
     
     def undo_attr(modifier)
@@ -57,15 +68,16 @@ module Mongoid::History
     end
     
     def affected
-      @affected ||= (modified.keys | original.keys).inject({}){ |h,k| h[k] = trackable.attributes[k]; h}
+      @affected ||= (modified.keys | original.keys).inject({}){ |h,k| h[k] = 
+        trackable ? trackable.attributes[k] : modified[k]; h}
     end
     
 private
     def trackable_parents_and_trackable
-      @trackable_parents_and_trackable ||= triverse_association_chain
+      @trackable_parents_and_trackable ||= traverse_association_chain
     end
 
-    def triverse_association_chain
+    def traverse_association_chain
       chain = association_chain.dup
       doc = nil
       documents = []

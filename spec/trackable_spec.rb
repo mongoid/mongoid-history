@@ -43,7 +43,8 @@ describe Mongoid::History::Trackable do
         :version_field  =>  :version,
         :scope          =>  :my_model,
         :except         =>  ["created_at", "updated_at", "version", "modifier_id", "_id", "id"],
-        :track_create   =>  false
+        :track_create   =>  false,
+        :track_destroy  =>  false,
       }
     end
     
@@ -62,6 +63,10 @@ describe Mongoid::History::Trackable do
     
     it "should define callback function #track_create" do
       MyModel.new.private_methods.collect(&:to_sym).should include(:track_create)
+    end
+
+    it "should define callback function #track_destroy" do
+      MyModel.new.private_methods.collect(&:to_sym).should include(:track_destroy)
     end
 
     it "should define #history_trackable_options" do
