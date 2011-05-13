@@ -23,8 +23,9 @@ module Mongoid::History
     
     def undo!(modifier)
       if action.to_sym == :destroy
-        n = association_chain[0]["name"]
-        raise "undelete of #{n} currently not supported"
+        class_name = association_chain[0]["name"]
+        restored = class_name.constantize.new(modified)
+        restored.save!
       else
         trackable.update_attributes!(undo_attr(modifier))
       end

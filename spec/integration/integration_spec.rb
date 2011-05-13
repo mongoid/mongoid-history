@@ -247,8 +247,7 @@ describe Mongoid::History do
       it "should undo destruction" do
         @post.destroy
         @post.history_tracks.where(:version => 1).first.undo!(@user)
-        @post.reload
-        @post.title.should == "Test"
+        Post.find(@post.id).title.should == "Test"
       end
       
       it "should create a new history track after undo" do
