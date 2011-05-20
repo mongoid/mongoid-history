@@ -33,7 +33,7 @@ module Mongoid::History
         end
 
         field options[:version_field].to_sym, :type => Integer
-        referenced_in options[:modifier_field].to_sym, :class_name => Mongoid::History.modifer_class_name
+        referenced_in options[:modifier_field].to_sym, :class_name => Mongoid::History.modifier_class_name
 
         include InstanceMethods
         extend SingletonMethods
@@ -49,17 +49,24 @@ module Mongoid::History
         Mongoid::History.trackable_classes << self
         Mongoid::History.trackable_class_options ||= {}
         Mongoid::History.trackable_class_options[model_name] = options
-        Thread.current[:mongoid_history_trackable_enabled] = true
       end
-
+      
       def track_history?
-        !!Thread.current[:mongoid_history_trackable_enabled]
+        enabled = Thread.current[track_history_flag]
+        enabled.nil? ? true : enabled
       end
 
       def disable_tracking(&block)
-        Thread.current[:mongoid_history_trackable_enabled] = false
-        yield
-        Thread.current[:mongoid_history_trackable_enabled] = true
+        begin
+          Thread.current[track_history_flag] = false
+          yield
+        ensure
+          Thread.current[track_history_flag] = true
+        end
+      end
+      
+      def track_history_flag
+        "mongoid_history_#{self.name.underscore}_trackable_enabled".to_sym
       end
     end
 

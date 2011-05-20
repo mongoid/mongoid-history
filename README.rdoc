@@ -103,6 +103,11 @@ Here is a quick example on how to use this plugin. For more details, please look
   
   # undelete post
   post.undo! @user
+  
+  # disable tracking for comments within a block
+  Comment.disable_tracking do
+    comment.update_attributes(:title => "Test 3")
+  end
 
 == Contributing to mongoid-history
  
