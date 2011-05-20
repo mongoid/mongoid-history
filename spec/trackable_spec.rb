@@ -72,5 +72,42 @@ describe Mongoid::History::Trackable do
     it "should define #history_trackable_options" do
       MyModel.history_trackable_options.should == @expected_option
     end
+
+    context "track_history" do
+    
+      it "should be enabled on the current thread" do
+        MyModel.new.track_history?.should == true
+      end
+      
+      it "should be disabled within disable_tracking" do
+        MyModel.disable_tracking do
+          MyModel.new.track_history?.should == false
+        end
+      end
+      
+      it "should be rescued if an exception occurs" do
+        begin
+          MyModel.disable_tracking do
+            raise "exception"
+          end
+        rescue
+        end
+        MyModel.new.track_history?.should == true
+      end
+      
+      it "should be disabled only for the class that calls disable_tracking" do
+        class MyModel2
+          include Mongoid::Document
+          include Mongoid::History::Trackable
+          track_history
+        end
+        
+        MyModel.disable_tracking do
+          MyModel2.new.track_history?.should == true
+        end      
+      end
+    
+    end
+    
   end
 end
