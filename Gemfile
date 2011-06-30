@@ -1,7 +1,7 @@
 source "http://rubygems.org"
 
 gem 'easy_diff'
-gem 'mongoid', '~> 2.0.2'
+gem 'mongoid', '>= 2.0.2'
 
 group :development do
   gem "rspec", "~> 2.3.0"
