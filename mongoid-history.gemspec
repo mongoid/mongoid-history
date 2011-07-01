@@ -54,7 +54,7 @@ Gem::Specification.new do |s|
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<easy_diff>, [">= 0"])
-      s.add_runtime_dependency(%q<mongoid>, ["~> 2.0.2"])
+      s.add_runtime_dependency(%q<mongoid>, [">= 2.0.2"])
       s.add_development_dependency(%q<rspec>, ["~> 2.3.0"])
       s.add_development_dependency(%q<yard>, ["~> 0.6.0"])
       s.add_development_dependency(%q<bundler>, ["~> 1.0.0"])
