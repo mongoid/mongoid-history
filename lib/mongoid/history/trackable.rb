@@ -12,6 +12,7 @@ module Mongoid::History
           :version_field  =>  :version,
           :scope          =>  model_name,
           :track_create   =>  false,
+          :track_update   =>  true,
           :track_destroy  =>  false,
         }
 
@@ -41,9 +42,9 @@ module Mongoid::History
         delegate :history_trackable_options, :to => 'self.class'
         delegate :track_history?, :to => 'self.class'
 
-        before_update :track_update
+        before_update :track_update if options[:track_update]
         before_create :track_create if options[:track_create]
-        after_destroy :track_destroy if options[:track_destroy]
+        before_destroy :track_destroy if options[:track_destroy]
 
         Mongoid::History.trackable_classes ||= []
         Mongoid::History.trackable_classes << self
@@ -72,7 +73,7 @@ module Mongoid::History
 
     module InstanceMethods
       def history_tracks
-        @history_tracks ||= Mongoid::History.tracker_class.where(:scope => history_trackable_options[:scope], :association_chain => triverse_association_chain)
+        @history_tracks ||= Mongoid::History.tracker_class.where(:scope => history_trackable_options[:scope], :association_chain => traverse_association_chain)
       end
 
       #  undo :from => 1, :to => 5
@@ -81,7 +82,7 @@ module Mongoid::History
       def undo!(modifier, options_or_version=nil)
         versions = get_versions_criteria(options_or_version).to_a
         versions.sort!{|v1, v2| v2.version <=> v1.version}
-
+        
         versions.each do |v|
           undo_attr = v.undo_attr(modifier)
           self.attributes = v.undo_attr(modifier)
@@ -115,7 +116,7 @@ module Mongoid::History
           end
         else
           options_or_version = options_or_version.to_a if options_or_version.is_a?(Range)
-          version = options_or_version || self.attributes[history_trackable_options[:version_field]]
+          version = options_or_version || self.attributes[history_trackable_options[:version_field].to_s]
           version = [ version ].flatten
           versions = history_tracks.where(:version.in => version)
         end
@@ -126,8 +127,8 @@ module Mongoid::History
         track_history? && !modified_attributes_for_update.blank?
       end
 
-      def triverse_association_chain(node=self)
-        list = node._parent ? triverse_association_chain(node._parent) : []
+      def traverse_association_chain(node=self)
+        list = node._parent ? traverse_association_chain(node._parent) : []
         list << { 'name' => node.class.name, 'id' => node.id }
         list
       end
@@ -165,9 +166,9 @@ module Mongoid::History
 
       def history_tracker_attributes(method)
         return @history_tracker_attributes if @history_tracker_attributes
-
+        
         @history_tracker_attributes = {
-          :association_chain  => triverse_association_chain,
+          :association_chain  => traverse_association_chain,
           :scope              => history_trackable_options[:scope],
           :modifier        => send(history_trackable_options[:modifier_field])
         }
