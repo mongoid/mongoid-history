@@ -40,36 +40,36 @@ describe Mongoid::History do
       track_history     :except => [:email]
     end
   end
-  
+
   before :each do
     @user = User.create(:name => "Aaron", :email => "aaron@randomemail.com")
     @another_user = User.create(:name => "Another Guy", :email => "anotherguy@randomemail.com")
     @post = Post.create(:title => "Test", :body => "Post", :modifier => @user, :views => 100)
     @comment = @post.comments.create(:title => "test", :body => "comment", :modifier => @user)
   end
-  
+
   describe "track" do
     describe "on creation" do
       it "should have one history track in comment" do
         @comment.history_tracks.count.should == 1
       end
-      
+
       it "should assign title and body on modified" do
         @comment.history_tracks.first.modified.should == {'title' => "test", 'body' =>  "comment"}
       end
-      
+
       it "should not assign title and body on original" do
         @comment.history_tracks.first.original.should == {}
       end
-      
+
       it "should assign modifier" do
         @comment.history_tracks.first.modifier.should == @user
       end
-      
+
       it "should assign version" do
         @comment.history_tracks.first.version.should == 1
       end
-      
+
       it "should assign scope" do
         @comment.history_tracks.first.scope == "Post"
       end
@@ -77,19 +77,19 @@ describe Mongoid::History do
       it "should assign method" do
         @comment.history_tracks.first.action == "create"
       end
-      
+
       it "should assign association_chain" do
         @comment.history_tracks.first.association_chain = [{:id => @post.id, :name => "Post"}, {:id => @comment.id, :name => "Comment"}]
       end
     end
-    
+
     describe "on destruction" do
       it "should have two history track records in post" do
         lambda {
           @post.destroy
         }.should change(HistoryTracker, :count).by(1)
       end
-      
+
       it "should assign destroy on track record" do
         @post.destroy
         @post.history_tracks.last.action == "destroy"
@@ -101,12 +101,12 @@ describe Mongoid::History do
       end
 
     end
-    
+
     describe "on update non-embedded" do
       it "should create a history track if changed attributes match tracked attributes" do
         lambda {
           @post.update_attributes(:title => "Another Test")
-        }.should change(HistoryTracker, :count).by(1)        
+        }.should change(HistoryTracker, :count).by(1)
       end
 
       it "should not create a history track if changed attributes do not match tracked attributes" do
@@ -114,7 +114,7 @@ describe Mongoid::History do
           @post.update_attributes(:rating => "untracked")
         }.should change(HistoryTracker, :count).by(0)
       end
-      
+
       it "should assign modified fields" do
         @post.update_attributes(:title => "Another Test")
         @post.history_tracks.first.modified.should == {
@@ -126,7 +126,7 @@ describe Mongoid::History do
         @post.update_attributes(:title => "Another Test")
         @post.history_tracks.first.action.should == "update"
       end
-      
+
       it "should assign original fields" do
         @post.update_attributes(:title => "Another Test")
         @post.history_tracks.first.original.should == {
@@ -143,7 +143,7 @@ describe Mongoid::History do
         @post.update_attributes(:title => "Another Test")
         @post.history_tracks.first.version.should == 1
       end
-      
+
       it "should assign version on post" do
         @post.update_attributes(:title => "Another Test")
         @post.version.should == 1
@@ -166,7 +166,7 @@ describe Mongoid::History do
         }
       end
     end
-    
+
     describe "on update non-embedded twice" do
       it "should assign version on post" do
         @post.update_attributes(:title => "Test2")
@@ -178,15 +178,15 @@ describe Mongoid::History do
         lambda {
           @post.update_attributes(:title => "Test2")
           @post.update_attributes(:title => "Test3")
-        }.should change(HistoryTracker, :count).by(2)        
+        }.should change(HistoryTracker, :count).by(2)
       end
-      
+
       it "should create a history track of version 2" do
         @post.update_attributes(:title => "Test2")
         @post.update_attributes(:title => "Test3")
         @post.history_tracks.where(:version => 2).first.should_not be_nil
       end
-      
+
       it "should assign modified fields" do
         @post.update_attributes(:title => "Test2")
         @post.update_attributes(:title => "Test3")
@@ -194,7 +194,7 @@ describe Mongoid::History do
           "title" => "Test3"
         }
       end
-      
+
       it "should assign original fields" do
         @post.update_attributes(:title => "Test2")
         @post.update_attributes(:title => "Test3")
@@ -202,14 +202,14 @@ describe Mongoid::History do
           "title" => "Test2"
         }
       end
-      
+
 
       it "should assign modifier" do
         @post.update_attributes(:title => "Another Test", :modifier => @another_user)
         @post.history_tracks.first.modifier.should == @another_user
       end
     end
-    
+
     describe "on update embedded" do
       it "should assign version on comment" do
         @comment.update_attributes(:title => "Test2")
@@ -220,14 +220,14 @@ describe Mongoid::History do
         @comment.update_attributes(:title => "Test2")
         @comment.history_tracks.where(:version => 2).first.should_not be_nil
       end
-      
+
       it "should assign modified fields" do
         @comment.update_attributes(:title => "Test2")
         @comment.history_tracks.where(:version => 2).first.modified.should == {
           "title" => "Test2"
         }
       end
-      
+
       it "should assign original fields" do
         @comment.update_attributes(:title => "Test2")
         @comment.history_tracks.where(:version => 2).first.original.should == {
@@ -240,7 +240,7 @@ describe Mongoid::History do
         @post.history_tracks.first.modifier.should == @another_user
       end
     end
-    
+
     describe "non-embedded" do
       it "should undo changes" do
         @post.update_attributes(:title => "Test2")
@@ -254,31 +254,31 @@ describe Mongoid::History do
         @post.history_tracks.where(:version => 1).first.undo!(@user)
         Post.find(@post.id).title.should == "Test"
       end
-      
+
       it "should create a new history track after undo" do
         @post.update_attributes(:title => "Test2")
         @post.history_tracks.where(:version => 1).first.undo!(@user)
         @post.reload
         @post.history_tracks.count.should == 2
       end
-      
+
       it "should assign @user as the modifier of the newly created history track" do
         @post.update_attributes(:title => "Test2")
         @post.history_tracks.where(:version => 1).first.undo!(@user)
         @post.reload
         @post.history_tracks.where(:version => 2).first.modifier.should == @user
       end
-      
+
       it "should stay the same after undo and redo" do
         @post.update_attributes(:title => "Test2")
         @track = @post.history_tracks.where(:version => 1).first
         @track.undo!(@user)
         @track.redo!(@user)
         @post2 = Post.where(:_id => @post.id).first
-      
+
         @post.title.should == @post2.title
       end
-      
+
       it "should be destroyed after undo and redo" do
         @post.destroy
         @track = @post.history_tracks.where(:version => 1).first
@@ -286,9 +286,8 @@ describe Mongoid::History do
         @track.redo!(@user)
         Post.where(:_id => @post.id).first == nil
       end
-      
     end
-    
+
     describe "embedded" do
       it "should undo changes" do
         @comment.update_attributes(:title => "Test2")
@@ -299,7 +298,7 @@ describe Mongoid::History do
         @comment = @post.comments.first
         @comment.title.should == "test"
       end
-      
+
       it "should create a new history track after undo" do
         @comment.update_attributes(:title => "Test2")
         @comment.history_tracks.where(:version => 2).first.undo!(@user)
@@ -307,7 +306,7 @@ describe Mongoid::History do
         @comment = @post.comments.first
         @comment.history_tracks.count.should == 3
       end
-      
+
       it "should assign @user as the modifier of the newly created history track" do
         @comment.update_attributes(:title => "Test2")
         @comment.history_tracks.where(:version => 2).first.undo!(@user)
@@ -315,7 +314,7 @@ describe Mongoid::History do
         @comment = @post.comments.first
         @comment.history_tracks.where(:version => 3).first.modifier.should == @user
       end
-      
+
       it "should stay the same after undo and redo" do
         @comment.update_attributes(:title => "Test2")
         @track = @comment.history_tracks.where(:version => 2).first
@@ -323,60 +322,60 @@ describe Mongoid::History do
         @track.redo!(@user)
         @post2 = Post.where(:_id => @post.id).first
         @comment2 = @post2.comments.first
-        
+
         @comment.title.should == @comment2.title
       end
     end
-    
+
     describe "trackables" do
       before :each do
         @comment.update_attributes(:title => "Test2") # version == 2
         @comment.update_attributes(:title => "Test3") # version == 3
         @comment.update_attributes(:title => "Test4") # version == 4
       end
-      
+
       describe "undo" do
         it "should recognize :from, :to options" do
           @comment.undo! @user, :from => 4, :to => 2
           @comment.title.should == "test"
         end
-        
+
         it "should recognize parameter as version number" do
-          @comment.undo! @user, 3          
+          @comment.undo! @user, 3
           @comment.title.should == "Test2"
         end
-        
+
         it "should undo last version when no parameter is specified" do
           @comment.undo! @user
           @comment.title.should == "Test3"
         end
-        
+
         it "should recognize :last options" do
           @comment.undo! @user, :last => 2
           @comment.title.should == "Test2"
         end
       end
-      
+
       describe "redo" do
         before :each do
           @comment.update_attributes(:title => "Test5")
         end
-        
+
         it "should recognize :from, :to options" do
           @comment.redo! @user,  :from => 2, :to => 4
           @comment.title.should == "Test4"
         end
-        
+
         it "should recognize parameter as version number" do
           @comment.redo! @user, 2
           @comment.title.should == "Test2"
         end
-        
+
         it "should redo last version when no parameter is specified" do
           @comment.redo! @user
           @comment.title.should == "Test5"
         end
-        
+
         it "should recognize :last options" do
           @comment.redo! @user, :last => 1
           @comment.title.should == "Test5"

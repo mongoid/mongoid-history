@@ -6,11 +6,11 @@ describe Mongoid::History::Tracker do
       include Mongoid::History::Tracker
     end
   end
-  
+
   after :each do
     Mongoid::History.tracker_class_name = nil
   end
-  
+
   it "should set tracker_class_name when included" do
     Mongoid::History.tracker_class_name.should == :my_tracker
   end

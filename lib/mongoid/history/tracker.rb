@@ -5,7 +5,7 @@ module Mongoid::History
     included do
       include Mongoid::Document
       include Mongoid::Timestamps
-      
+
       field       :association_chain,       :type => Array,     :default => []
       field       :modified,                :type => Hash
       field       :original,                :type => Hash
@@ -16,11 +16,7 @@ module Mongoid::History
 
       Mongoid::History.tracker_class_name = self.name.tableize.singularize.to_sym
     end
-    
-    
-    module ClassMethods
-    end
-    
+
     def undo!(modifier)
       if action.to_sym == :destroy
         class_name = association_chain[0]["name"]
@@ -30,7 +26,7 @@ module Mongoid::History
         trackable.update_attributes!(undo_attr(modifier))
       end
     end
-    
+
     def redo!(modifier)
       if action.to_sym == :destroy
         trackable.destroy
@@ -38,7 +34,7 @@ module Mongoid::History
         trackable.update_attributes!(redo_attr(modifier))
       end
     end
-    
+
     def undo_attr(modifier)
       undo_hash = affected.easy_unmerge(modified)
       undo_hash.easy_merge!(original)
@@ -46,7 +42,7 @@ module Mongoid::History
       undo_hash[modifier_field] = modifier
       undo_hash
     end
-    
+
     def redo_attr(modifier)
       redo_hash = affected.easy_unmerge(original)
       redo_hash.easy_merge!(modified)
@@ -54,24 +50,24 @@ module Mongoid::History
       redo_hash[modifier_field] = modifier
       redo_hash
     end
-    
+
     def trackable_root
       @trackable_root ||= trackable_parents_and_trackable.first
     end
-   
+
     def trackable
       @trackable ||= trackable_parents_and_trackable.last
     end
-    
+
     def trackable_parents
       @trackable_parents ||= trackable_parents_and_trackable[0, -1]
     end
-    
+
     def affected
       @affected ||= (modified.keys | original.keys).inject({}){ |h,k| h[k] = 
         trackable ? trackable.attributes[k] : modified[k]; h}
     end
-    
+
 private
     def trackable_parents_and_trackable
       @trackable_parents_and_trackable ||= traverse_association_chain
@@ -90,6 +86,6 @@ private
       end while( !chain.empty? )
       documents
     end
-    
+
   end
 end

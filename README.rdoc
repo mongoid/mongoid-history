@@ -27,7 +27,7 @@ Here is a quick example on how to use this plugin. For more details, please look
   class Post
     include Mongoid::Document
     include Mongoid::Timestamps
-    
+
     # History tracking all Post Documents
     # Note: Tracking will not work until #track_history is invoked
     include Mongoid::History::Trackable
@@ -36,7 +36,7 @@ Here is a quick example on how to use this plugin. For more details, please look
     field           :body
     field           :rating
     embeds_many     :comments
-    
+
     # Telling Mongoid::History how you want to track
     track_history   :on => [:title, :body],       # I want to track title and body fields only. Default is :all
                     :modifier_field => :modifier, # Adds "referened_in :modifier" to track who made the change. Default is :modifier
@@ -49,14 +49,14 @@ Here is a quick example on how to use this plugin. For more details, please look
   class Comment
     include Mongoid::Document
     include Mongoid::Timestamps
-    
+
     # Declare that we want to track comments
     include Mongoid::History::Trackable
 
     field             :title
     field             :body
     embedded_in       :post, :inverse_of => :comments
-    
+
     # Track title and body for all comments, scope it to post (the parent)
     # Also track creation and destruction
     track_history     :on => [:title, :body], :scope => :post, :track_create => true, :track_destroy => true
@@ -69,49 +69,49 @@ Here is a quick example on how to use this plugin. For more details, please look
 
     field             :name
   end
-  
+
   user = User.create(:name => "Aaron")
   post = Post.create(:title => "Test", :body => "Post", :modifier => user)
   comment = post.comments.create(:title => "test", :body => "comment", :modifier => user)
   comment.history_tracks.count # should be 1
-  
+
   comment.update_attributes(:title => "Test 2")
   comment.history_tracks.count # should be 2
-  
+
   track = comment.history_tracks.last
 
   track.undo! # comment title should be "Test"
-  
+
   track.redo! # comment title should be "Test 2"
-  
+
   # undo last change
   comment.undo! @user
-  
+
   # undo versions 1 - 4
   comment.undo! @user, :from => 4, :to => 1
-  
+
   # undo last 3 versions
   comment.undo! @user, :last => 3
-  
+
   # redo versions 1 - 4
   comment.redo! @user, :from => 1, :to => 4
-  
+
   # redo last 3 versions
   comment.redo! @user, :last => 3
-  
+
   # delete post
   post.destroy
-  
+
   # undelete post
   post.undo! @user
-  
+
   # disable tracking for comments within a block
   Comment.disable_tracking do
     comment.update_attributes(:title => "Test 3")
   end
 
 == Contributing to mongoid-history
- 
+
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet
 * Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it
 * Fork the project

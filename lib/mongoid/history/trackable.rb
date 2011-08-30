@@ -51,7 +51,7 @@ module Mongoid::History
         Mongoid::History.trackable_class_options ||= {}
         Mongoid::History.trackable_class_options[model_name] = options
       end
-      
+
       def track_history?
         enabled = Thread.current[track_history_flag]
         enabled.nil? ? true : enabled
@@ -65,7 +65,7 @@ module Mongoid::History
           Thread.current[track_history_flag] = true
         end
       end
-      
+
       def track_history_flag
         "mongoid_history_#{self.name.underscore}_trackable_enabled".to_sym
       end
@@ -82,7 +82,7 @@ module Mongoid::History
       def undo!(modifier, options_or_version=nil)
         versions = get_versions_criteria(options_or_version).to_a
         versions.sort!{|v1, v2| v2.version <=> v1.version}
-        
+
         versions.each do |v|
           undo_attr = v.undo_attr(modifier)
           self.attributes = v.undo_attr(modifier)
@@ -167,7 +167,7 @@ module Mongoid::History
 
       def history_tracker_attributes(method)
         return @history_tracker_attributes if @history_tracker_attributes
-        
+
         @history_tracker_attributes = {
           :association_chain  => traverse_association_chain,
           :scope              => history_trackable_options[:scope],
@@ -179,7 +179,7 @@ module Mongoid::History
           when :create then modified_attributes_for_create
           else modified_attributes_for_update
         end)
-        
+
         @history_tracker_attributes[:original] = original
         @history_tracker_attributes[:modified] = modified
         @history_tracker_attributes
