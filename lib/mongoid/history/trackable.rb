@@ -116,7 +116,8 @@ module Mongoid::History
           end
         else
           options_or_version = options_or_version.to_a if options_or_version.is_a?(Range)
-          version = options_or_version || self.attributes[history_trackable_options[:version_field].to_s]
+          version_field_name = history_trackable_options[:version_field]
+          version = options_or_version || self.attributes[version_field_name] || self.attributes[version_field_name.to_s]
           version = [ version ].flatten
           versions = history_tracks.where(:version.in => version)
         end
