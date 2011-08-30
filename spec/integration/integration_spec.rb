@@ -342,8 +342,7 @@ describe Mongoid::History do
         end
         
         it "should recognize parameter as version number" do
-          @comment.undo! @user, 3
-          
+          @comment.undo! @user, 3          
           @comment.title.should == "Test2"
         end
         
