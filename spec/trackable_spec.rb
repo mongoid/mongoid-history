@@ -44,6 +44,7 @@ describe Mongoid::History::Trackable do
         :scope          =>  :my_model,
         :except         =>  ["created_at", "updated_at", "version", "modifier_id", "_id", "id"],
         :track_create   =>  false,
+        :track_update   =>  true,
         :track_destroy  =>  false,
       }
     end

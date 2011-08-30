@@ -42,6 +42,7 @@ Here is a quick example on how to use this plugin. For more details, please look
                     :modifier_field => :modifier, # Adds "referened_in :modifier" to track who made the change. Default is :modifier
                     :version_field => :version,   # Adds "field :version, :type => Integer" to track current version. Default is :version
                     :track_create   =>  false,    # Do you want to track document creation? Default is false
+                    :track_update   =>  true,     # Do you want to track document updates? Default is true
                     :track_destroy  =>  false,    # Do you want to track document destruction? Default is false
   end
 
