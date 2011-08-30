@@ -5,15 +5,15 @@
 
 Gem::Specification.new do |s|
   s.name = %q{mongoid-history}
-  s.version = "0.1.3"
+  s.version = "0.1.4"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Aaron Qian", "Justin Grimes"]
-  s.date = %q{2011-07-12}
+  s.authors = [%q{Aaron Qian}, %q{Justin Grimes}]
+  s.date = %q{2011-08-30}
   s.description = %q{In frustration of Mongoid::Versioning, I created this plugin for tracking historical changes for any document, including embedded ones. It achieves this by storing all history tracks in a single collection that you define. (See Usage for more details) Embedded documents are referenced by storing an association path, which is an array of document_name and document_id fields starting from the top most parent document and down to the embedded document that should track history.
 
   This plugin implements multi-user undo, which allows users to undo any history change in any order. Undoing a document also creates a new history track. This is great for auditing and preventing vandalism, but it is probably not suitable for use cases such as a wiki.}
-  s.email = ["aq1018@gmail.com", "justin.mgrimes@gmail.com"]
+  s.email = [%q{aq1018@gmail.com}, %q{justin.mgrimes@gmail.com}]
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.rdoc"
@@ -38,9 +38,9 @@ Gem::Specification.new do |s|
     "spec/tracker_spec.rb"
   ]
   s.homepage = %q{http://github.com/aq1018/mongoid-history}
-  s.licenses = ["MIT"]
-  s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.6.2}
+  s.licenses = [%q{MIT}]
+  s.require_paths = [%q{lib}]
+  s.rubygems_version = %q{1.8.6}
   s.summary = %q{history tracking, auditing, undo, redo for mongoid}
   s.test_files = [
     "spec/integration/integration_spec.rb",
@@ -54,7 +54,8 @@ Gem::Specification.new do |s|
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<easy_diff>, [">= 0"])
-      s.add_runtime_dependency(%q<mongoid>, [">= 2.0.2"])
+      s.add_runtime_dependency(%q<mongoid>, ["~> 2.0"])
+      s.add_development_dependency(%q<bson_ext>, [">= 1.3.1"])
       s.add_development_dependency(%q<rspec>, ["~> 2.3.0"])
       s.add_development_dependency(%q<yard>, ["~> 0.6.0"])
       s.add_development_dependency(%q<bundler>, ["~> 1.0.0"])
@@ -65,7 +66,8 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<database_cleaner>, [">= 0"])
     else
       s.add_dependency(%q<easy_diff>, [">= 0"])
-      s.add_dependency(%q<mongoid>, [">= 2.0.2"])
+      s.add_dependency(%q<mongoid>, ["~> 2.0"])
+      s.add_dependency(%q<bson_ext>, [">= 1.3.1"])
       s.add_dependency(%q<rspec>, ["~> 2.3.0"])
       s.add_dependency(%q<yard>, ["~> 0.6.0"])
       s.add_dependency(%q<bundler>, ["~> 1.0.0"])
@@ -77,7 +79,8 @@ Gem::Specification.new do |s|
     end
   else
     s.add_dependency(%q<easy_diff>, [">= 0"])
-    s.add_dependency(%q<mongoid>, [">= 2.0.2"])
+    s.add_dependency(%q<mongoid>, ["~> 2.0"])
+    s.add_dependency(%q<bson_ext>, [">= 1.3.1"])
     s.add_dependency(%q<rspec>, ["~> 2.3.0"])
     s.add_dependency(%q<yard>, ["~> 0.6.0"])
     s.add_dependency(%q<bundler>, ["~> 1.0.0"])
