@@ -18,11 +18,24 @@ In your Gemfile:
 
 Here is a quick example on how to use this plugin. For more details, please look at spec/integration/integration_spec.rb. It offers more detailed examples on how to use Mongoid::History.
 
-  # Create a new class for tracking all histories.
-  # Must include Mongoid::History::Tracker
+=== Create a History Tracker
+
+Create a new class to track histories. All histories are stored in this tracker. The name of the class can be anything you like. The only requirement is that it includes `Mongoid::History::Tracker`
+
+  # app/models/history_tracker.rb
   class HistoryTracker
     include Mongoid::History::Tracker
   end
+
+Now it's good to verify this is done correctly, because nothing will work without this being correctly hooked up. You can check like this in irb:
+
+  # Assuming your history tracker is HistoryTracker
+  require 'mongoid'
+  require 'mongoid-history'
+  require './app/models/history_tracker'
+  Mongoid::History.tracker_class # Make sure it is the HistoryTracker class
+
+=== Create Trackable classes and objects
 
   class Post
     include Mongoid::Document
