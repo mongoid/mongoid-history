@@ -27,13 +27,17 @@ Create a new class to track histories. All histories are stored in this tracker.
     include Mongoid::History::Tracker
   end
 
-Now it's good to verify this is done correctly, because nothing will work without this being correctly hooked up. You can check like this in irb:
+=== Set the name of the tracker class
 
-  # Assuming your history tracker is HistoryTracker
-  require 'mongoid'
-  require 'mongoid-history'
-  require './app/models/history_tracker'
-  Mongoid::History.tracker_class # Make sure it is the HistoryTracker class
+You should manually set the tracker class name to make sure `HistoryTracker` can be found and loaded on demand. You can skip this step if you manually require your history tracker class before using any trackables. If you don't know what I'm talking about, then you should follow the example below.
+
+Here is an example of setting the tracker class name using a rails initializer
+
+  # config/initializers/mongoid-history.rb
+  # initializer for mongoid-history
+  # assuming HistoryTracker is your tracker class
+  Mongoid::History.tracker_class_name = :history_tracker
+
 
 === Create Trackable classes and objects
 
