@@ -27,9 +27,9 @@ Create a new class to track histories. All histories are stored in this tracker.
     include Mongoid::History::Tracker
   end
 
-=== Set the name of the tracker class
+=== Set Tracker Class Name
 
-You should manually set the tracker class name to make sure `HistoryTracker` can be found and loaded on demand. You can skip this step if you manually require your history tracker class before using any trackables. If you don't know what I'm talking about, then you should follow the example below.
+You should manually set the tracker class name to make sure your tracker can be found and loaded properly. You can skip this step if you manually require your tracker before using any trackables. If you don't know what I'm talking about, then you should just follow the example below.
 
 Here is an example of setting the tracker class name using a rails initializer
 
