@@ -71,15 +71,15 @@ describe Mongoid::History do
       end
 
       it "should assign scope" do
-        @comment.history_tracks.first.scope == "Post"
+        @comment.history_tracks.first.scope.should == "post"
       end
 
       it "should assign method" do
-        @comment.history_tracks.first.action == "create"
+        @comment.history_tracks.first.action.should == "create"
       end
 
       it "should assign association_chain" do
-        @comment.history_tracks.first.association_chain = [{:id => @post.id, :name => "Post"}, {:id => @comment.id, :name => "Comment"}]
+        @comment.history_tracks.first.association_chain.should == [{'id' => @post.id, 'name' => "Post"}, {'id' => @comment.id, 'name' => "Comment"}]
       end
     end
 
@@ -92,12 +92,12 @@ describe Mongoid::History do
 
       it "should assign destroy on track record" do
         @post.destroy
-        @post.history_tracks.last.action == "destroy"
+        @post.history_tracks.last.action.should == "destroy"
       end
 
       it "should return affected attributes from track record" do
         @post.destroy
-        @post.history_tracks.last.affected["title"] == "Test"
+        @post.history_tracks.last.affected["title"].should == "Test"
       end
 
     end
@@ -151,12 +151,12 @@ describe Mongoid::History do
 
       it "should assign scope" do
         @post.update_attributes(:title => "Another Test")
-        @post.history_tracks.first.scope == "Post"
+        @post.history_tracks.first.scope.should == "post"
       end
 
       it "should assign association_chain" do
         @post.update_attributes(:title => "Another Test")
-        @post.history_tracks.first.association_chain = [{:id => @post.id, :name => "Post"}]
+        @post.history_tracks.first.association_chain.should == [{'id' => @post.id, 'name' => "Post"}]
       end
 
       it "should exclude defined options" do
@@ -284,7 +284,7 @@ describe Mongoid::History do
         @track = @post.history_tracks.where(:version => 1).first
         @track.undo!(@user)
         @track.redo!(@user)
-        Post.where(:_id => @post.id).first == nil
+        Post.where(:_id => @post.id).first.should == nil
       end
     end
 
