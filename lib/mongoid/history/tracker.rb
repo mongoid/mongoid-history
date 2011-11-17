@@ -15,6 +15,12 @@ module Mongoid::History
       referenced_in :modifier,              :class_name => Mongoid::History.modifier_class_name
 
       Mongoid::History.tracker_class_name = self.name.tableize.singularize.to_sym
+
+      if defined?(ActionController) and defined?(ActionController::Base)
+        ActionController::Base.class_eval do
+          around_filter Mongoid::History::Sweeper.instance
+        end
+      end
     end
 
     def undo!(modifier)
