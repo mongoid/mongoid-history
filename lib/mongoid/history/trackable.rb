@@ -220,8 +220,8 @@ module Mongoid::History
         modified = {}
         changes.each_pair do |k, v|
           o, m = v
-          original[k] = o if o
-          modified[k] = m if m
+          original[k] = o unless o.nil?
+          modified[k] = m unless m.nil?
         end
 
         return original.easy_diff modified
