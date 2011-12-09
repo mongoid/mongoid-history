@@ -46,8 +46,6 @@ module Mongoid::History
         before_create :track_create if options[:track_create]
         before_destroy :track_destroy if options[:track_destroy]
 
-        Mongoid::History.trackable_classes ||= []
-        Mongoid::History.trackable_classes << self
         Mongoid::History.trackable_class_options ||= {}
         Mongoid::History.trackable_class_options[model_name] = options
       end
