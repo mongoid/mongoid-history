@@ -9,18 +9,11 @@ describe Mongoid::History::Trackable do
   end
 
   after :each do
-    Mongoid::History.trackable_classes = nil
     Mongoid::History.trackable_class_options = nil
   end
 
   it "should have #track_history" do
     MyModel.should respond_to :track_history
-  end
-
-  it "should append trackable_classes ONLY when #track_history is called" do
-    Mongoid::History.trackable_classes.should be_blank
-    MyModel.track_history
-    Mongoid::History.trackable_classes.should == [MyModel]
   end
 
   it "should append trackable_class_options ONLY when #track_history is called" do
@@ -50,7 +43,6 @@ describe Mongoid::History::Trackable do
     end
 
     after :each do
-      Mongoid::History.trackable_classes = nil
       Mongoid::History.trackable_class_options = nil
     end
 
