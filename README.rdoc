@@ -38,6 +38,16 @@ Here is an example of setting the tracker class name using a rails initializer
   # assuming HistoryTracker is your tracker class
   Mongoid::History.tracker_class_name = :history_tracker
 
+=== Set #current_user method name
+
+If You don't want to set modifier explicitly on every update You can set name of method which returns currently logged in user.
+
+Here is an example of setting the current_user_method using a rails initializer
+
+  # config/initializers/mongoid-history.rb
+  # initializer for mongoid-history
+  # assuming You're using devise/authlogic
+  Mongoid::History.current_user_method = :current_user
 
 === Create Trackable classes and objects
 
