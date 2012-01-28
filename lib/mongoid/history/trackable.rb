@@ -36,7 +36,7 @@ module Mongoid::History
         field options[:version_field].to_sym, :type => Integer
         referenced_in options[:modifier_field].to_sym, :class_name => Mongoid::History.modifier_class_name
 
-        include InstanceMethods
+        include MyInstanceMethods
         extend SingletonMethods
 
         delegate :history_trackable_options, :to => 'self.class'
@@ -69,7 +69,7 @@ module Mongoid::History
       end
     end
 
-    module InstanceMethods
+    module MyInstanceMethods
       def history_tracks
         @history_tracks ||= Mongoid::History.tracker_class.where(:scope => history_trackable_options[:scope], :association_chain => traverse_association_chain)
       end
