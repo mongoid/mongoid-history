@@ -27,7 +27,7 @@ describe Mongoid::History do
       field             :title
       field             :body
       embedded_in       :post, :inverse_of => :comments
-      track_history     :on => [:title, :body], :scope => :post, :track_create => true
+      track_history     :on => [:title, :body], :scope => :post, :track_create => true, :track_destroy => true
     end
 
     class User
@@ -234,10 +234,26 @@ describe Mongoid::History do
           "title" => "test"
         }
       end
-
+      
       it "should assign modifier" do
         @post.update_attributes(:title => "Another Test", :modifier => @another_user)
         @post.history_tracks.first.modifier.should == @another_user
+      end
+    end
+      
+    describe "on destroy embedded" do  
+      it "should be possible to re-create destroyed embedded" do
+        @comment.destroy
+        @comment.history_tracks.last.undo!(@user)
+        @post.reload
+        @post.comments.first.title.should == "test"
+      end
+      
+      it "should be possible to re-create destroyed embedded from parent" do 
+        @comment.destroy
+        @post.history_tracks_including_embedded.last.undo!(@user)
+        @post.reload
+        @post.comments.first.title.should == "test"
       end
     end
 
