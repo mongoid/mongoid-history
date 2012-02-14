@@ -30,16 +30,6 @@ module Mongoid::History
         trackable.update_attributes!(undo_attr(modifier))
       end
     end
-    
-    def create_standalone
-      class_name = association_chain.first["name"]
-      restored = class_name.constantize.new(modified)
-      restored.save!
-    end
-    
-    def create_on_parent
-      trackable_parents_and_trackable[-2].send(association_chain.last["name"].tableize).create!(modified)
-    end
 
     def redo!(modifier)
       if action.to_sym == :destroy
@@ -83,6 +73,17 @@ module Mongoid::History
     end
 
 private
+
+    def create_standalone
+      class_name = association_chain.first["name"]
+      restored = class_name.constantize.new(modified)
+      restored.save!
+    end
+    
+    def create_on_parent
+      trackable_parents_and_trackable[-2].send(association_chain.last["name"].tableize).create!(modified)
+    end
+
     def trackable_parents_and_trackable
       @trackable_parents_and_trackable ||= traverse_association_chain
     end
