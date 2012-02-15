@@ -262,6 +262,23 @@ describe Mongoid::History do
         @post.reload
         @post.comments.first.title.should == "test"
       end
+      
+      it "should be possible to destroy after re-create embedded from parent" do
+        @comment.destroy
+        @post.history_tracks.last.undo!(@user)
+        @post.history_tracks.last.undo!(@user)
+        @post.reload
+        @post.comments.count.should == 0
+      end
+      
+      it "should be possible to create with redo after undo create embedded from parent" do
+        @post.comments.create!(:title => "The second one")
+        @track = @post.history_tracks.last
+        @track.undo!(@user)
+        @track.redo!(@user)
+        @post.reload
+        @post.comments.count.should == 2
+      end
     end
 
     describe "non-embedded" do
@@ -280,9 +297,9 @@ describe Mongoid::History do
 
       it "should create a new history track after undo" do
         @post.update_attributes(:title => "Test2")
-        @post.history_tracks.where(:version => 1).first.undo!(@user)
+        @post.history_tracks.last.undo!(@user)
         @post.reload
-        @post.history_tracks.count.should == 2
+        @post.history_tracks.count.should == 3
       end
 
       it "should assign @user as the modifier of the newly created history track" do
@@ -294,7 +311,7 @@ describe Mongoid::History do
 
       it "should stay the same after undo and redo" do
         @post.update_attributes(:title => "Test2")
-        @track = @post.history_tracks.where(:version => 1).first
+        @track = @post.history_tracks.last
         @track.undo!(@user)
         @track.redo!(@user)
         @post2 = Post.where(:_id => @post.id).first

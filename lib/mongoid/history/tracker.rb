@@ -26,6 +26,8 @@ module Mongoid::History
     def undo!(modifier)
       if action.to_sym == :destroy
         association_chain.length > 1 ? create_on_parent : create_standalone
+      elsif action.to_sym == :create
+        trackable.destroy
       else
         trackable.update_attributes!(undo_attr(modifier))
       end
@@ -34,6 +36,8 @@ module Mongoid::History
     def redo!(modifier)
       if action.to_sym == :destroy
         trackable.destroy
+      elsif action.to_sym == :create
+        association_chain.length > 1 ? create_on_parent : create_standalone
       else
         trackable.update_attributes!(redo_attr(modifier))
       end
