@@ -71,13 +71,9 @@ module Mongoid::History
 
     module MyInstanceMethods
       def history_tracks
-        @history_tracks ||= Mongoid::History.tracker_class.where(:scope => history_trackable_options[:scope], :association_chain => traverse_association_chain)
+        @history_tracks ||= Mongoid::History.tracker_class.where(:scope => history_trackable_options[:scope], :association_chain => association_hash)
       end
       
-      def history_tracks_including_embedded
-        @history_tracks_including_embedded ||= Mongoid::History.tracker_class.where(:scope => history_trackable_options[:scope], :association_chain => association_hash)
-      end
-
       #  undo :from => 1, :to => 5
       #  undo 4
       #  undo :last => 10
