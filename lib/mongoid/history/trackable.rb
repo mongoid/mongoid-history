@@ -71,9 +71,9 @@ module Mongoid::History
 
     module MyInstanceMethods
       def history_tracks
-        @history_tracks ||= Mongoid::History.tracker_class.where(:scope => history_trackable_options[:scope], :association_chain => traverse_association_chain)
+        @history_tracks ||= Mongoid::History.tracker_class.where(:scope => history_trackable_options[:scope], :association_chain => association_hash)
       end
-
+      
       #  undo :from => 1, :to => 5
       #  undo 4
       #  undo :last => 10
@@ -128,8 +128,12 @@ module Mongoid::History
 
       def traverse_association_chain(node=self)
         list = node._parent ? traverse_association_chain(node._parent) : []
-        list << { 'name' => node.class.name, 'id' => node.id }
+        list << association_hash(node)
         list
+      end
+      
+      def association_hash(node=self)
+        { 'name' => node.class.name, 'id' => node.id }
       end
 
       def modified_attributes_for_update
