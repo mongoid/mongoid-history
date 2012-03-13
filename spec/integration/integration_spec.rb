@@ -16,6 +16,7 @@ describe Mongoid::History do
       field           :rating
 
       embeds_many     :comments
+      embeds_one      :section
       track_history   :on => [:title, :body], :track_destroy => true
     end
 
@@ -28,6 +29,16 @@ describe Mongoid::History do
       field             :body
       embedded_in       :post, :inverse_of => :comments
       track_history     :on => [:title, :body], :scope => :post, :track_create => true, :track_destroy => true
+    end
+    
+    class Section
+      include Mongoid::Document
+      include Mongoid::Timestamps
+      include Mongoid::History::Trackable
+      
+      field             :title
+      embedded_in       :post
+      track_history     :on => [:title], :scope => :post, :track_create => true, :track_destroy => true
     end
 
     class User
@@ -210,7 +221,7 @@ describe Mongoid::History do
       end
     end
 
-    describe "on update embedded" do
+    describe "on update embedded 1..N (embeds_many)" do
       it "should assign version on comment" do
         @comment.update_attributes(:title => "Test2")
         @comment.version.should == 2 # first track generated on creation
@@ -247,6 +258,56 @@ describe Mongoid::History do
         @post.history_tracks.last.modifier.should == @another_user
       end
     end
+    
+    describe "on update embedded 1..1 (embeds_one)" do
+      before(:each) do
+        @section = Section.new(:title => 'Technology')
+        @post.section = @section
+        @post.save!    
+        @post.reload
+        @section = @post.section
+      end
+      
+      it "should assign version on create section" do
+        @section.version.should == 1
+      end
+      
+      it "should assign version on section" do
+        @section.update_attributes(:title => 'Technology 2')
+        @section.version.should == 2 # first track generated on creation
+      end
+
+      it "should create a history track of version 2" do
+        @section.update_attributes(:title => 'Technology 2')
+        @section.history_tracks.where(:version => 2).first.should_not be_nil
+      end
+
+      it "should assign modified fields" do
+        @section.update_attributes(:title => 'Technology 2')
+        @section.history_tracks.where(:version => 2).first.modified.should == {
+          "title" => "Technology 2"
+        }
+      end
+      
+      it "should assign original fields" do
+        @section.update_attributes(:title => 'Technology 2')
+        @section.history_tracks.where(:version => 2).first.original.should == {
+          "title" => "Technology"
+        }
+      end
+      
+      it "should be possible to undo from parent" do
+        @section.update_attributes(:title => 'Technology 2')
+        @post.history_tracks.last.undo!(@user)
+        @section.reload
+        @section.title.should == "Technology"
+      end
+      
+      it "should assign modifier" do
+        @section.update_attributes(:title => "Business", :modifier => @another_user)
+        @post.history_tracks.last.modifier.should == @another_user
+      end
+    end    
       
     describe "on destroy embedded" do  
       it "should be possible to re-create destroyed embedded" do
