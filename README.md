@@ -11,7 +11,7 @@ This plugin implements multi-user undo, which allows users to undo any history c
 Upgrading to mongoid-history-0.2.0
 ----------------------------------
 
-If you are upgrade from 0.1.x to version 0.2.x, you need to run the following code **before** you update your tracker data. This is due to changes in `Mongoid::History::Tracker`'s `association_chain` field.
+If you are upgrade from 0.1.x to version 0.2.x, you need to run the following code **before** you start to use the 0.2.x. This is due to changes in `Mongoid::History::Tracker`'s `association_chain` field.
 
 ```
 Mongoid::History.tracker_class.all.each do |tracker|
