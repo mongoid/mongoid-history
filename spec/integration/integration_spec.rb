@@ -30,12 +30,12 @@ describe Mongoid::History do
       embedded_in       :post, :inverse_of => :comments
       track_history     :on => [:title, :body], :scope => :post, :track_create => true, :track_destroy => true
     end
-    
+
     class Section
       include Mongoid::Document
       include Mongoid::Timestamps
       include Mongoid::History::Trackable
-      
+
       field             :title
       embedded_in       :post
       track_history     :on => [:title], :scope => :post, :track_create => true, :track_destroy => true
@@ -245,33 +245,33 @@ describe Mongoid::History do
           "title" => "test"
         }
       end
-      
+
       it "should be possible to undo from parent" do
         @comment.update_attributes(:title => "Test 2")
         @post.history_tracks.last.undo!(@user)
         @comment.reload
         @comment.title.should == "test"
       end
-      
+
       it "should assign modifier" do
         @post.update_attributes(:title => "Another Test", :modifier => @another_user)
         @post.history_tracks.last.modifier.should == @another_user
       end
     end
-    
+
     describe "on update embedded 1..1 (embeds_one)" do
       before(:each) do
         @section = Section.new(:title => 'Technology')
         @post.section = @section
-        @post.save!    
+        @post.save!
         @post.reload
         @section = @post.section
       end
-      
+
       it "should assign version on create section" do
         @section.version.should == 1
       end
-      
+
       it "should assign version on section" do
         @section.update_attributes(:title => 'Technology 2')
         @section.version.should == 2 # first track generated on creation
@@ -288,42 +288,42 @@ describe Mongoid::History do
           "title" => "Technology 2"
         }
       end
-      
+
       it "should assign original fields" do
         @section.update_attributes(:title => 'Technology 2')
         @section.history_tracks.where(:version => 2).first.original.should == {
           "title" => "Technology"
         }
       end
-      
+
       it "should be possible to undo from parent" do
         @section.update_attributes(:title => 'Technology 2')
         @post.history_tracks.last.undo!(@user)
         @section.reload
         @section.title.should == "Technology"
       end
-      
+
       it "should assign modifier" do
         @section.update_attributes(:title => "Business", :modifier => @another_user)
         @post.history_tracks.last.modifier.should == @another_user
       end
-    end    
-      
-    describe "on destroy embedded" do  
+    end
+
+    describe "on destroy embedded" do
       it "should be possible to re-create destroyed embedded" do
         @comment.destroy
         @comment.history_tracks.last.undo!(@user)
         @post.reload
         @post.comments.first.title.should == "test"
       end
-      
-      it "should be possible to re-create destroyed embedded from parent" do 
+
+      it "should be possible to re-create destroyed embedded from parent" do
         @comment.destroy
         @post.history_tracks.last.undo!(@user)
         @post.reload
         @post.comments.first.title.should == "test"
       end
-      
+
       it "should be possible to destroy after re-create embedded from parent" do
         @comment.destroy
         @post.history_tracks.last.undo!(@user)
@@ -331,7 +331,7 @@ describe Mongoid::History do
         @post.reload
         @post.comments.count.should == 0
       end
-      
+
       it "should be possible to create with redo after undo create embedded from parent" do
         @post.comments.create!(:title => "The second one")
         @track = @post.history_tracks.last
