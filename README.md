@@ -13,7 +13,7 @@ Upgrading to mongoid-history-0.2.0
 
 If you are upgrade from 0.1.x to version 0.2.x, you need to run the following code **before** you start to use the 0.2.x. This is due to changes in `Mongoid::History::Tracker`'s `association_chain` field.
 
-```
+```ruby
 Mongoid::History.tracker_class.all.each do |tracker|
   tracker.association_chain[1,-1].each do |node|
     node['name'] = node['name'].tableize
@@ -83,7 +83,7 @@ Mongoid::History.current_user_method = :current_user
 
 When current_user_method is set mongoid-history call this method on each update and set it as modifier
 
-```
+```ruby
 # Assume that current_user return #<User _id: 1>
 post = Post.first
 post.update_attributes(:title => 'New title')
