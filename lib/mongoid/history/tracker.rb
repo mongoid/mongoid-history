@@ -71,8 +71,13 @@ module Mongoid::History
       @trackable_parents ||= trackable_parents_and_trackable[0, -1]
     end
 
+    def trackable_parent
+      @trackable_parent ||= trackable_parents_and_trackable[-2]
+    end
+
+
     def affected
-      @affected ||= (modified.keys | original.keys).inject({}){ |h,k| h[k] = 
+      @affected ||= (modified.keys | original.keys).inject({}){ |h,k| h[k] =
         trackable ? trackable.attributes[k] : modified[k]; h}
     end
 
@@ -81,7 +86,7 @@ private
     def re_create
       association_chain.length > 1 ? create_on_parent : create_standalone
     end
-    
+
     def re_destroy
       trackable.destroy
     end
@@ -91,24 +96,55 @@ private
       restored = class_name.constantize.new(modified)
       restored.save!
     end
-    
+
     def create_on_parent
-      trackable_parents_and_trackable[-2].send(association_chain.last["name"].tableize).create!(modified)
+      name = association_chain.last["name"]
+      if embeds_one?(trackable_parent, name)
+        trackable_parent.send("create_#{name}!", modified)
+      elsif embeds_many?(trackable_parent, name)
+         trackable_parent.send(name).create!(modified)
+      else
+        raise "This should never happen. Please report bug!"
+      end
     end
 
     def trackable_parents_and_trackable
       @trackable_parents_and_trackable ||= traverse_association_chain
     end
-    
+
+    def relation_of(doc, name)
+      meta = doc.reflect_on_association(name)
+      meta ? meta.relation : nil
+    end
+
+    def embeds_one?(doc, name)
+      relation_of(doc, name) == Mongoid::Relations::Embedded::One
+    end
+
+    def embeds_many?(doc, name)
+      relation_of(doc, name) == Mongoid::Relations::Embedded::Many
+    end
+
     def traverse_association_chain
       chain = association_chain.dup
       doc = nil
       documents = []
+
       begin
         node = chain.shift
         name = node['name']
-        col  = doc.nil? ? name.classify.constantize : doc.send(name.tableize)
-        doc  = col.where(:_id => node['id']).first
+
+        doc = if doc.nil?
+          # root association. First element of the association chain
+          klass = name.classify.constantize
+          klass.where(:_id => node['id']).first
+        elsif embeds_one?(doc, name)
+          doc.send(name)
+        elsif embeds_many?(doc, name)
+          doc.send(name).where(:_id => node['id']).first
+        else
+          raise "This should never happen. Please report bug."
+        end
         documents << doc
       end while( !chain.empty? )
       documents

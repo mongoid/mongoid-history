@@ -131,9 +131,22 @@ module Mongoid::History
         list << association_hash(node)
         list
       end
-      
+
       def association_hash(node=self)
-        { 'name' => node.class.name, 'id' => node.id }
+        # get all reflections of embedded_in association metadata
+        # and find the first association that matches _parent.
+        if node._parent
+          meta = node.reflect_on_all_associations(:embedded_in).find do |meta|
+            node._parent == node.send(meta.key)
+          end
+
+          inverse = node._parent.reflect_on_association(meta.inverse)
+        end
+
+        # if root node has no meta, and should use class name instead
+        name = meta ? meta.inverse.to_s : node.class.name
+
+        { 'name' => name, 'id' => node.id}
       end
 
       def modified_attributes_for_update

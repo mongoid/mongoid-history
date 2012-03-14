@@ -27,7 +27,7 @@ describe Mongoid::History do
 
       field             :title
       field             :body
-      embedded_in       :post, :inverse_of => :comments
+      embedded_in       :post
       track_history     :on => [:title, :body], :scope => :post, :track_create => true, :track_destroy => true
     end
 
@@ -90,7 +90,11 @@ describe Mongoid::History do
       end
 
       it "should assign association_chain" do
-        @comment.history_tracks.first.association_chain.should == [{'id' => @post.id, 'name' => "Post"}, {'id' => @comment.id, 'name' => "Comment"}]
+        expected = [
+          {'id' => @post.id, 'name' => "Post"},
+          {'id' => @comment.id, 'name' => "comments"}
+        ]
+        @comment.history_tracks.first.association_chain.should == expected
       end
     end
 
