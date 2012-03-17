@@ -25,6 +25,8 @@ end
 Install
 -------
 
+Currently this gem supports ruby 1.9.x only. ruby 1.8.7, ree and rubinus are not working right now.
+
 ```
 gem install mongoid-history
 ```
