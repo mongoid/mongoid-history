@@ -15,7 +15,7 @@ If you are upgrade from 0.1.x to version 0.2.x, you need to run the following co
 
 ```ruby
 Mongoid::History.tracker_class.all.each do |tracker|
-  tracker.association_chain[1,-1].each do |node|
+  tracker.association_chain[1..-1].each do |node|
     node['name'] = node['name'].tableize
   end
   tracker.save!
