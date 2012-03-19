@@ -30,7 +30,7 @@ module Mongoid::History
     end
 
     def before_create(track)
-      modifier_field = track.history_trackable_options[:modifier_field]
+      modifier_field = track.trackable.history_trackable_options[:modifier_field]
       modifier = track.send modifier_field
       track.send "#{modifier_field}=", current_user unless modifier
     end

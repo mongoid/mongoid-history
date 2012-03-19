@@ -5,6 +5,7 @@ module Mongoid::History
     included do
       include Mongoid::Document
       include Mongoid::Timestamps
+      attr_writer :trackable
 
       field       :association_chain,       :type => Array,     :default => []
       field       :modified,                :type => Hash
