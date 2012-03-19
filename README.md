@@ -8,8 +8,8 @@ In frustration of Mongoid::Versioning, I created this plugin for tracking histor
 
 This plugin implements multi-user undo, which allows users to undo any history change in any order. Undoing a document also creates a new history track. This is great for auditing and preventing vandalism, but it is probably not suitable for use cases such as a wiki.
 
-Upgrading to mongoid-history-0.2.0
-----------------------------------
+Upgrading from mongoid-history-0.1.x to >= 0.2
+------------------------------------------------
 
 If you are upgrade from 0.1.x to version 0.2.x, you need to run the following code **before** you start to use the 0.2.x. This is due to changes in `Mongoid::History::Tracker`'s `association_chain` field.
 
