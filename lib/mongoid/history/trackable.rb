@@ -73,7 +73,7 @@ module Mongoid::History
       def history_tracks
         @history_tracks ||= Mongoid::History.tracker_class.where(:scope => history_trackable_options[:scope], :association_chain => association_hash)
       end
-      
+
       #  undo :from => 1, :to => 5
       #  undo 4
       #  undo :last => 10
@@ -140,7 +140,7 @@ module Mongoid::History
             node._parent == node.send(meta.key)
           end
 
-          inverse = node._parent.reflect_on_association(meta.inverse)
+          inverse = node._parent.reflect_on_association(meta.inverse) if meta
         end
 
         # if root node has no meta, and should use class name instead
