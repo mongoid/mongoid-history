@@ -17,6 +17,10 @@ describe Mongoid::History do
 
       embeds_many     :comments
       embeds_one      :section
+      embeds_many     :tags, :cascade_callbacks => true
+
+      accepts_nested_attributes_for :tags, :allow_destroy => true
+
       track_history   :on => [:title, :body], :track_destroy => true
     end
 
@@ -49,6 +53,15 @@ describe Mongoid::History do
       field             :email
       field             :name
       track_history     :except => [:email]
+    end
+
+    class Tag
+      include Mongoid::Document
+      include Mongoid::Timestamps
+      include Mongoid::History::Trackable
+
+      field             :title
+      track_history     :on => [:title], :scope => :post, :track_create => true, :track_destroy => true
     end
   end
 
@@ -114,7 +127,6 @@ describe Mongoid::History do
         @post.destroy
         @post.history_tracks.last.affected["title"].should == "Test"
       end
-
     end
 
     describe "on update non-embedded" do
@@ -177,7 +189,7 @@ describe Mongoid::History do
       it "should exclude defined options" do
         @user.update_attributes(:name => "Aaron2", :email => "aaronsnewemail@randomemail.com")
         @user.history_tracks.first.modified.should == {
-            "name" => "Aaron2"
+          "name" => "Aaron2"
         }
       end
     end
@@ -343,6 +355,32 @@ describe Mongoid::History do
         @track.redo!(@user)
         @post.reload
         @post.comments.count.should == 2
+      end
+    end
+
+    describe "embedded with cascading callbacks" do
+      before(:each) do
+        @tag_foo = @post.tags.create(:title => "foo", :modifier => @user)
+        @tag_bar = @post.tags.create(:title => "bar", :modifier => @user)
+      end
+
+      it "should have cascaded the creation callbacks and set timestamps" do
+        @tag_foo.created_at.should_not be_nil
+        @tag_foo.updated_at.should_not be_nil
+      end
+
+      it "should allow an update through the parent model" do
+        update_hash = { "post" => { "tags_attributes" => { "1234" => { "id" => @tag_bar.id, "title" => "baz" } } } }
+        @post.update_attributes(update_hash["post"])
+        @post.tags.last.title.should == "baz"
+      end
+
+      it "should be possible to destroy through parent model using canoncial _destroy macro" do
+        @post.tags.count.should == 2
+        update_hash = { "post" => { "tags_attributes" => { "1234" => { "id" => @tag_bar.id, "title" => "baz", "_destroy" => "true"} } } }
+        @post.update_attributes(update_hash["post"])
+        @post.tags.count.should == 1
+        @post.history_tracks.last.action.should == "destroy"
       end
     end
 
