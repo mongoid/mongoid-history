@@ -382,6 +382,16 @@ describe Mongoid::History do
         @post.tags.count.should == 1
         @post.history_tracks.last.action.should == "destroy"
       end
+
+      it "should write relationship name for association_chain hiearchy instead of class name when using _destroy macro" do
+        update_hash = {"tags_attributes" => { "1234" => { "id" => @tag_foo.id, "_destroy" => "1"} } }
+        @post.update_attributes(update_hash)
+
+        #hisotrically this would have evaluated to 'Tags' and an error would be thrown
+        #on any call that walked up the association_chain, e.g. 'trackable'
+        @tag_foo.history_tracks.last.association_chain.last["name"].should == "tags"
+        lambda{ @tag_foo.history_tracks.last.trackable }.should_not raise_error
+      end
     end
 
     describe "non-embedded" do

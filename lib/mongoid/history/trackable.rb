@@ -133,18 +133,18 @@ module Mongoid::History
       end
 
       def association_hash(node=self)
-        # get all reflections of embedded_in association metadata
-        # and find the first association that matches _parent.
-        if node._parent
-          meta = node.reflect_on_all_associations(:embedded_in).find do |meta|
-            node._parent == node.send(meta.key)
-          end
 
-          inverse = node._parent.reflect_on_association(meta.inverse) if meta
+        #We prefer to look up associations through the parent record because
+        #we're assured, through the object creation, it'll exsist. Whereas we're not guarenteed
+        #the child to parent (embedded_in, belongs_to) relation will be defined
+        if node._parent
+          meta = _parent.relations.values.select do |relation|
+            relation.class_name == node.class.to_s
+          end.first
         end
 
         # if root node has no meta, and should use class name instead
-        name = meta ? meta.inverse.to_s : node.class.name
+        name = meta ? meta.key.to_s : node.class.name
 
         { 'name' => name, 'id' => node.id}
       end
