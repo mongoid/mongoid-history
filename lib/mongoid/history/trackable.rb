@@ -76,7 +76,18 @@ module Mongoid::History
 
       def history_tracks_by_wrapper(wrapper=nil, order_options={created_at: 'DESC'})
         wrapper ||= {class_name: self.class.name, id: self.id.to_s}
-        Mongoid::History.tracker_class.where(wrapper_object: wrapper).order(order_options)
+        @history_tracks_by_wrapper ||=
+          Mongoid::History.tracker_class.where(wrapper_object: wrapper).order(order_options)
+      end
+
+      def groupped_history_tracks
+        history_tracks_by_wrapper.collection.group(
+          { 
+            key: 'created_at', 
+            initial: {group: []}, 
+            reduce: 'function(obj,prev) {prev.group.push(obj);}' 
+          }
+        )
       end
 
       #  undo :from => 1, :to => 5
