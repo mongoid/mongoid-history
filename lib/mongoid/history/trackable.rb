@@ -74,6 +74,11 @@ module Mongoid::History
         @history_tracks ||= Mongoid::History.tracker_class.where(:scope => history_trackable_options[:scope], :association_chain => association_hash)
       end
 
+      def history_tracks_by_wrapper(wrapper=nil, order_options={created_at: 'DESC'})
+        wrapper ||= {class_name: self.class.name, id: self.id.to_s}
+        Mongoid::History.tracker_class.where(wrapper_object: wrapper).order(order_options)
+      end
+
       #  undo :from => 1, :to => 5
       #  undo 4
       #  undo :last => 10

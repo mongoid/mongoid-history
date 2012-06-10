@@ -13,6 +13,9 @@ module Mongoid::History
       field       :version,                 :type => Integer
       field       :action,                  :type => String
       field       :scope,                   :type => String
+      # to fetch history tracks by wrapper object
+      field       :wrapper_object,          :type => Hash # format: {class_name: '', id: BSON::ObjectId('')}
+      
       referenced_in :modifier,              :class_name => Mongoid::History.modifier_class_name
 
       Mongoid::History.tracker_class_name = self.name.tableize.singularize.to_sym
