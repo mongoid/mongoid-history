@@ -81,6 +81,9 @@ module Mongoid::History
       end
 
       def groupped_history_tracks
+
+        #TODO develop with this: http://www.dixis.com/?p=531
+        #     add group_by field and group by against this field
         history_tracks_by_wrapper.collection.group(
           { 
             key: 'created_at', 

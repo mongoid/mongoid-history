@@ -1,5 +1,7 @@
 Gemfile.lock
 
+.tasks
+
 .rvmrc
 
 # rcov generated

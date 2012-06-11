@@ -35,7 +35,7 @@ module Mongoid::History
       track.send "#{modifier_field}=", current_user unless modifier
 
       # set wrapper object to fetch history tracks by wrapper object
-      track.wrapper_object = {class_name: controller.controller_name.classify, id: controller.params[:id]}
+      track.wrapper_object = {class_name: controller.try(:controller_name).try(:classify), id: controller.try(:params).try(:[], :id}
     end
 
     def current_user
