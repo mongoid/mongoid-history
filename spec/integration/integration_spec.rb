@@ -59,9 +59,11 @@ describe Mongoid::History do
       include Mongoid::Document
       include Mongoid::Timestamps
       include Mongoid::History::Trackable
+      
+      belongs_to :updated_by, :class_name => "User"
 
       field             :title
-      track_history     :on => [:title], :scope => :post, :track_create => true, :track_destroy => true
+      track_history     :on => [:title], :scope => :post, :track_create => true, :track_destroy => true, :modifier_field => :updated_by
     end
   end
 
@@ -360,8 +362,8 @@ describe Mongoid::History do
 
     describe "embedded with cascading callbacks" do
       before(:each) do
-        @tag_foo = @post.tags.create(:title => "foo", :modifier => @user)
-        @tag_bar = @post.tags.create(:title => "bar", :modifier => @user)
+        @tag_foo = @post.tags.create(:title => "foo", :updated_by => @user)
+        @tag_bar = @post.tags.create(:title => "bar", :updated_by => @user)
       end
 
       it "should have cascaded the creation callbacks and set timestamps" do
@@ -391,6 +393,10 @@ describe Mongoid::History do
         # on any call that walked up the association_chain, e.g. 'trackable'
         @tag_foo.history_tracks.last.association_chain.last["name"].should == "tags"
         lambda{ @tag_foo.history_tracks.last.trackable }.should_not raise_error
+      end
+      
+      it "should save modifier" do
+        @tag_foo.history_tracks.last.modifier.should eq @user
       end
     end
 
