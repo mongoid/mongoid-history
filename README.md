@@ -122,7 +122,7 @@ class Post
 
   # Telling Mongoid::History how you want to track
   track_history   :on => [:title, :body],       # I want to track title and body fields only. Default is :all
-                  :modifier_field => :modifier, # Adds "referened_in :modifier" to track who made the change. Default is :modifier
+                  :modifier_field => :modifier, # Adds "referenced_in :modifier" to track who made the change. Default is :modifier
                   :version_field => :version,   # Adds "field :version, :type => Integer" to track current version. Default is :version
                   :track_create   =>  false,    # Do you want to track document creation? Default is false
                   :track_update   =>  true,     # Do you want to track document updates? Default is true
