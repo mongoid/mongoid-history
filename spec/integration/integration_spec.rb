@@ -362,8 +362,13 @@ describe Mongoid::History do
 
     describe "embedded with cascading callbacks" do
       before(:each) do
+        Thread.current[:mongoid_history_sweeper_controller] = self
+        self.stub!(:current_user).and_return @user
         @tag_foo = @post.tags.create(:title => "foo", :updated_by => @user)
-        @tag_bar = @post.tags.create(:title => "bar", :updated_by => @user)
+        @tag_bar = @post.tags.create(:title => "bar")
+      end
+      after(:each) do
+        Thread.current[:mongoid_history_sweeper_controller] = nil
       end
 
       it "should have cascaded the creation callbacks and set timestamps" do
@@ -397,6 +402,7 @@ describe Mongoid::History do
       
       it "should save modifier" do
         @tag_foo.history_tracks.last.modifier.should eq @user
+        @tag_bar.history_tracks.last.modifier.should eq @user
       end
     end
 
