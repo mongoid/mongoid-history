@@ -9,11 +9,14 @@ require 'database_cleaner'
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each {|f| require f}
 
 RSpec.configure do |config|
-  config.before(:suite) do
+  config.before :suite do
     DatabaseCleaner.strategy = :truncation
   end
-
-  config.after(:each) do
+  config.before :each do
+    Mongoid.observers = Mongoid::History::Sweeper
+    Mongoid.instantiate_observers
+  end
+  config.after :each do
     DatabaseCleaner.clean
   end
 end
@@ -21,3 +24,4 @@ end
 Mongoid.configure do |config|
   config.master = Mongo::Connection.new.db("mongoid-history")
 end
+
