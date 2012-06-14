@@ -4,16 +4,16 @@ mongoid-history
 [![Build Status](https://secure.travis-ci.org/aq1018/mongoid-history.png?branch=master)](http://travis-ci.org/aq1018/mongoid-history) [![Dependency Status](https://gemnasium.com/aq1018/mongoid-history.png?travis)](https://gemnasium.com/aq1018/mongoid-history)
 
 
-In frustration of Mongoid::Versioning, I created this plugin for tracking historical changes for any document, including embedded ones. It achieves this by storing all history tracks in a single collection that you define. (See Usage for more details) Embedded documents are referenced by storing an association path, which is an array of document_name and document_id fields starting from the top most parent document and down to the embedded document that should track history.
+In frustration of Mongoid::Versioning, I created this plugin for tracking historical changes for any document, including embedded ones. It achieves this by storing all history tracks in a single collection that you define. Embedded documents are referenced by storing an association path, which is an array of `document_name` and `document_id` fields starting from the top most parent document and down to the embedded document that should track history.
 
-This plugin implements multi-user undo, which allows users to undo any history change in any order. Undoing a document also creates a new history track. This is great for auditing and preventing vandalism, but it is probably not suitable for use cases such as a wiki.
+This plugin also implements multi-user undo, which allows users to undo any history change in any order. Undoing a document also creates a new history track. This is great for auditing and preventing vandalism, but it is probably not suitable for use cases such as a wiki.
 
 Note
 ----
 
 **Please don't use 0.1.8 and 0.2.0.**
 
-They won't work in Rails because there was an error in the sweeper that causes history tracker creation to fail. Upgrade to version 0.2.1 instead as it is able to track history on `embeds_one` documents correctly.
+These versions won't work in Rails because there was an error in the sweeper that causes history tracker creation to fail. Upgrade to version 0.2.1 instead as it's able to track history on `embeds_one` documents correctly.
 
 **Refactor in progress**
 
@@ -22,7 +22,7 @@ If you feel brave, you can look at the `refactor` branch and get a feel of what'
 Upgrading from mongoid-history-0.1.x to >= 0.2
 ------------------------------------------------
 
-If you are upgrade from 0.1.x to version 0.2.x, you need to run the following code **before** you start to use the 0.2.x. This is due to changes in `Mongoid::History::Tracker`'s `association_chain` field.
+If you are upgrading from 0.1.x to version 0.2.x and have existing data, run the following code **before** you start using 0.2.x. This is due to changes in `Mongoid::History::Tracker`'s `association_chain` field.
 
 ```ruby
 Mongoid::History.tracker_class.all.each do |tracker|
@@ -36,16 +36,7 @@ end
 Install
 -------
 
-Currently this gem supports ruby 1.9.x only. ruby 1.8.7, ree and rubinus are not working right now.
-
-```
-gem install mongoid-history
-```
-
-Rails 3
--------
-
-In your Gemfile:
+This gem supports Ruby 1.8.7, 1.9.2, 1.9.3, Ree and Rubinus. Add it to your `Gemfile` or run `gem install mongoid-history`.
 
 ```ruby
 gem 'mongoid-history'
@@ -54,9 +45,9 @@ gem 'mongoid-history'
 Usage
 -----
 
-Here is a quick example on how to use this plugin. For more details, please look at spec/integration/integration_spec.rb. It offers more detailed examples on how to use `Mongoid::History`.
+Here is a quick example on how to use this plugin.
 
-**Create a History Tracker**
+**Create a history tracker**
 
 Create a new class to track histories. All histories are stored in this tracker. The name of the class can be anything you like. The only requirement is that it includes `Mongoid::History::Tracker`
 
@@ -67,12 +58,11 @@ class HistoryTracker
 end
 ```
 
-**Set Tracker Class Name**
+**Set tracker class name**
 
+You should manually set the tracker class name to make sure your tracker can be found and loaded properly. You can skip this step if you manually require your tracker before using any trackables.
 
-You should manually set the tracker class name to make sure your tracker can be found and loaded properly. You can skip this step if you manually require your tracker before using any trackables. If you don't know what I'm talking about, then you should just follow the example below.
-
-Here is an example of setting the tracker class name using a rails initializer
+The following example sets the tracker class name using a Rails initializer.
 
 ```ruby
 # config/initializers/mongoid-history.rb
@@ -83,9 +73,9 @@ Mongoid::History.tracker_class_name = :history_tracker
 
 **Set `#current_user` method name**
 
-You can set name of method which returns currently logged in user if you don't want to set modifier explicitly on every update.
+You can set the name of the method that returns currently logged in user if you don't want to set `modifier` explicitly on every update.
 
-Here is an example of setting the current_user_method using a rails initializer
+The following example sets the `current_user_method` using a Rails initializer
 
 ```ruby
 # config/initializers/mongoid-history.rb
@@ -94,25 +84,25 @@ Here is an example of setting the current_user_method using a rails initializer
 Mongoid::History.current_user_method = :current_user
 ```
 
-When current_user_method is set mongoid-history call this method on each update and set it as modifier
+When `current_user_method` is set, mongoid-history will invoke this method on each update and set its result as the instance modifier.
 
 ```ruby
-# Assume that current_user return #<User _id: 1>
+# assume that current_user return #<User _id: 1>
 post = Post.first
 post.update_attributes(:title => 'New title')
 
 post.history_tracks.last.modifier #=> #<User _id: 1>
 ```
 
-***Create Trackable classes and objects***
+**Create trackable classes and objects**
 
 ```ruby
 class Post
   include Mongoid::Document
   include Mongoid::Timestamps
 
-  # History tracking all Post Documents
-  # Note: Tracking will not work until #track_history is invoked
+  # history tracking all Post documents
+  # note: tracking will not work until #track_history is invoked
   include Mongoid::History::Trackable
 
   field           :title
@@ -120,32 +110,32 @@ class Post
   field           :rating
   embeds_many     :comments
 
-  # Telling Mongoid::History how you want to track
-  track_history   :on => [:title, :body],       # I want to track title and body fields only. Default is :all
-                  :modifier_field => :modifier, # Adds "referenced_in :modifier" to track who made the change. Default is :modifier
-                  :version_field => :version,   # Adds "field :version, :type => Integer" to track current version. Default is :version
-                  :track_create   =>  false,    # Do you want to track document creation? Default is false
-                  :track_update   =>  true,     # Do you want to track document updates? Default is true
-                  :track_destroy  =>  false,    # Do you want to track document destruction? Default is false
+  # telling Mongoid::History how you want to track changes
+  track_history   :on => [:title, :body],       # track title and body fields only, default is :all
+                  :modifier_field => :modifier, # adds "referenced_in :modifier" to track who made the change, default is :modifier
+                  :version_field => :version,   # adds "field :version, :type => Integer" to track current version, default is :version
+                  :track_create   =>  false,    # track document creation, default is false
+                  :track_update   =>  true,     # track document updates, default is true
+                  :track_destroy  =>  false,    # track document destruction, default is false
 end
 
 class Comment
   include Mongoid::Document
   include Mongoid::Timestamps
 
-  # Declare that we want to track comments
+  # declare that we want to track comments
   include Mongoid::History::Trackable
 
   field             :title
   field             :body
   embedded_in       :post, :inverse_of => :comments
 
-  # Track title and body for all comments, scope it to post (the parent)
-  # Also track creation and destruction
+  # track title and body for all comments, scope it to post (the parent)
+  # also track creation and destruction
   track_history     :on => [:title, :body], :scope => :post, :track_create => true, :track_destroy => true
 end
 
-# The modifier can be specified as well
+# the modifier class
 class User
   include Mongoid::Document
   include Mongoid::Timestamps
@@ -193,21 +183,24 @@ Comment.disable_tracking do
   comment.update_attributes(:title => "Test 3")
 end
 ```
+For more examples, check out [spec/integration/integration_spec.rb](https://github.com/aq1018/mongoid-history/blob/master/spec/integration/integration_spec.rb).
 
 Contributing to mongoid-history
 -------------------------------
 
-* Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet
-* Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it
-* Fork the project
-* Start a feature/bugfix branch
-* Commit and push until you are happy with your contribution
-* Make sure to add tests for it. This is important so I don't break it in a future version unintentionally.
-* Please try not to mess with the Rakefile, version, or history. If you want to have your own version, or is otherwise necessary, that is fine, but please isolate to its own commit so I can cherry-pick around it.
+* Check out the latest code to make sure the feature hasn't been implemented or the bug hasn't been fixed yet.
+* Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it.
+* Fork the project.
+* Create a feature/bugfix branch.
+* Commit and push until you are happy with your changes.
+* Make sure to add tests.
+* Update the CHANGELOG for the next release.
+* Try not to mess with the Rakefile or version.
+* Make a pull request.
 
 Copyright
 ---------
 
-Copyright (c) 2011 Aaron Qian. See LICENSE.txt for
-further details.
+Copyright (c) 2011-2012 Aaron Qian. MIT License. 
+See [LICENSE.txt](https://github.com/aq1018/mongoid-history/blob/master/LICENSE.txt) for further details.
 
