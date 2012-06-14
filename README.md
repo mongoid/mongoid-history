@@ -36,7 +36,7 @@ end
 Install
 -------
 
-This gem supports Ruby 1.8.7, 1.9.2, 1.9.3, JRuby and Rubinus. Add it to your `Gemfile` or run `gem install mongoid-history`.
+This gem supports Ruby 1.8.7, 1.9.2, 1.9.3, JRuby and Rubinius. Add it to your `Gemfile` or run `gem install mongoid-history`.
 
 ```ruby
 gem 'mongoid-history'
