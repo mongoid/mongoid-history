@@ -362,11 +362,13 @@ describe Mongoid::History do
 
     describe "embedded with cascading callbacks" do
       before(:each) do
+        Mongoid.instantiate_observers
         Thread.current[:mongoid_history_sweeper_controller] = self
         self.stub!(:current_user).and_return @user
         @tag_foo = @post.tags.create(:title => "foo", :updated_by => @user)
         @tag_bar = @post.tags.create(:title => "bar")
       end
+      
       after(:each) do
         Thread.current[:mongoid_history_sweeper_controller] = nil
       end
