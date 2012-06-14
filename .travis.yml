@@ -6,4 +6,5 @@ rvm:
   - ruby-head
   - jruby
   - rbx
+  - ree
 

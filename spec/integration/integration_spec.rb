@@ -190,9 +190,8 @@ describe Mongoid::History do
 
       it "should exclude defined options" do
         @user.update_attributes(:name => "Aaron2", :email => "aaronsnewemail@randomemail.com")
-        @user.history_tracks.first.modified.should == {
-          "name" => "Aaron2"
-        }
+        @user.history_tracks.first.modified.keys.should include "name"
+        @user.history_tracks.first.modified.keys.should_not include "email"
       end
     end
 
