@@ -24,8 +24,6 @@ module Mongoid::History
         ActionController::Base.class_eval do
           around_filter Mongoid::History::Sweeper.instance
         end
-      else
-        p '==================================------> ActionController is not defined'
       end
     end
 
