@@ -44,7 +44,7 @@ module Mongoid::History
       track.wrapper_object = {class_name: controller.try(:controller_name).try(:classify), id: controller.try(:params).try(:[], :id)}
       
       # set history_group_id
-      track.history_group_id = controller.instance_variable_get(:@history_group_id) || Time.now.utc.strftime('%Y%m%d%H%M')
+      track.history_group_id = @history_group_id
     end
 
     def current_user
