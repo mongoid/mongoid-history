@@ -87,14 +87,12 @@ module Mongoid::History
 
       # fetch all history tracks as history_tracks_by_wrapper does
       # however this method also group fetched data by given field
-      def groupped_history_tracks(group_by_key='created_at')
-        #TODO develop with this: http://www.dixis.com/?p=531
-        #     add group_by field and group by against this field
-        #     so allow user can choose group_by field
+      def groupped_history_tracks(wrapper=nil, group_by_key='history_group_id')
+        wrapper ||= {class_name: self.class.name, id: self.id.to_s}
         @groupped_history_tracks ||= Mongoid::History.tracker_class.collection.group(
           { 
             key: group_by_key,
-            conditions: '',
+            cond: {wrapper_object: wrapper},
             initial: {group: []}, 
             reduce: 'function(obj,prev) {prev.group.push(obj);}' 
           }
