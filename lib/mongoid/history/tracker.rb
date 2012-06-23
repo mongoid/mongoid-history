@@ -15,6 +15,8 @@ module Mongoid::History
       field       :scope,                   :type => String
       # to fetch history tracks by wrapper object
       field       :wrapper_object,          :type => Hash # format: {class_name: '', id: BSON::ObjectId('')}
+      # this variable will be set insed model by user
+      field       :group_history_by         :type => String
       
       referenced_in :modifier,              :class_name => Mongoid::History.modifier_class_name
 

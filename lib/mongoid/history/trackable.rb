@@ -2,6 +2,10 @@ module Mongoid::History
   module Trackable
     extend ActiveSupport::Concern
 
+    included do
+      attr_accessor :group_history_by
+    end
+
     module ClassMethods
       def track_history(options={})
         model_name = self.name.tableize.singularize.to_sym
@@ -231,7 +235,7 @@ module Mongoid::History
         return unless should_track_update?
         current_version = (self.send(history_trackable_options[:version_field]) || 0 ) + 1
         self.send("#{history_trackable_options[:version_field]}=", current_version)
-        Mongoid::History.tracker_class.create!(history_tracker_attributes(:update).merge(:version => current_version, :action => "update", :trackable => self))
+        Mongoid::History.tracker_class.create!(history_tracker_attributes(:update).merge(:version => current_version, :action => "update", :trackable => self, group_history_by: group_history_by))
         clear_memoization
       end
 
