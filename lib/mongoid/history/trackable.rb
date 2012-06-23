@@ -89,14 +89,15 @@ module Mongoid::History
       # however this method also group fetched data by given field
       def groupped_history_tracks(wrapper=nil, group_by_key='history_group_id')
         wrapper ||= {class_name: self.class.name, id: self.id.to_s}
-        @groupped_history_tracks ||= Mongoid::History.tracker_class.collection.group(
-          { 
-            key: group_by_key,
-            cond: {wrapper_object: wrapper},
-            initial: {group: []}, 
-            reduce: 'function(obj,prev) {prev.group.push(obj);}' 
-          }
-        )
+
+        hash = { 
+          key: group_by_key,
+          cond: {wrapper_object: wrapper},
+          initial: {group: []}, 
+          reduce: 'function(obj,prev) {prev.group.push(obj);}' 
+        }
+
+        @groupped_history_tracks ||= Mongoid::History.tracker_class.collection.group(hash)
       end
 
       #  undo :from => 1, :to => 5
@@ -124,7 +125,7 @@ module Mongoid::History
         save!
       end
 
-    private
+      private
       def get_versions_criteria(options_or_version)
         if options_or_version.is_a? Hash
           options = options_or_version
@@ -176,15 +177,15 @@ module Mongoid::History
 
       def modified_attributes_for_update
         @modified_attributes_for_update ||= if history_trackable_options[:on] == :all
-          changes.reject do |k, v|
-            history_trackable_options[:except].include?(k)
-          end
-        else
-          changes.reject do |k, v|
-            !history_trackable_options[:on].include?(k)
-          end
+                                              changes.reject do |k, v|
+                                                history_trackable_options[:except].include?(k)
+                                              end
+                                            else
+                                              changes.reject do |k, v|
+                                                !history_trackable_options[:on].include?(k)
+                                              end
 
-        end
+                                            end
       end
 
       def modified_attributes_for_create
