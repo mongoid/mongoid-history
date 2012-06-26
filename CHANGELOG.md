@@ -1,6 +1,7 @@
 Next Release
 ------------
 
+* Fix: Allow sub-models to be tracked by using collection_name as the scope.
 * [#35](https://github.com/aq1018/mongoid-history/pull/35): Fix: sweeper references record of change, not the record changed - [@dblock](https://github.com/dblock).
 
 0.2.3 (4/20/2012)
