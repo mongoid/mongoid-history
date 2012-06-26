@@ -66,6 +66,21 @@ describe Mongoid::History::Trackable do
       MyModel.history_trackable_options.should == @expected_option
     end
 
+    context "sub-model" do
+      before :each do
+        class MySubModel < MyModel
+        end
+      end
+
+      it "should have default options" do
+        Mongoid::History.trackable_class_options[:my_model].should == @expected_option
+      end
+
+      it "should define #history_trackable_options" do
+        MySubModel.history_trackable_options.should == @expected_option
+      end
+    end
+
     context "track_history" do
 
       it "should be enabled on the current thread" do

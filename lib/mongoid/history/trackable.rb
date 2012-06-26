@@ -4,13 +4,13 @@ module Mongoid::History
 
     module ClassMethods
       def track_history(options={})
-        model_name = self.name.tableize.singularize.to_sym
+        scope_name = self.collection_name.singularize.to_sym
         default_options = {
           :on             =>  :all,
           :except         =>  [:created_at, :updated_at],
           :modifier_field =>  :modifier,
           :version_field  =>  :version,
-          :scope          =>  model_name,
+          :scope          =>  scope_name,
           :track_create   =>  false,
           :track_update   =>  true,
           :track_destroy  =>  false,
@@ -47,7 +47,7 @@ module Mongoid::History
         before_destroy :track_destroy if options[:track_destroy]
 
         Mongoid::History.trackable_class_options ||= {}
-        Mongoid::History.trackable_class_options[model_name] = options
+        Mongoid::History.trackable_class_options[scope_name] = options
       end
 
       def track_history?
@@ -246,9 +246,8 @@ module Mongoid::History
 
     module SingletonMethods
       def history_trackable_options
-        @history_trackable_options ||= Mongoid::History.trackable_class_options[self.name.tableize.singularize.to_sym]
+        @history_trackable_options ||= Mongoid::History.trackable_class_options[self.collection_name.singularize.to_sym]
       end
     end
-
   end
 end
