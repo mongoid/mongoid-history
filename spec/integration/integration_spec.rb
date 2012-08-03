@@ -17,7 +17,7 @@ describe Mongoid::History do
 
       embeds_many     :comments
       embeds_one      :section
-      embeds_many     :tags, :cascade_callbacks => true
+      embeds_many     :tags
 
       accepts_nested_attributes_for :tags, :allow_destroy => true
 
