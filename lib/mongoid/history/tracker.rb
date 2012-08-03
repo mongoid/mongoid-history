@@ -7,13 +7,14 @@ module Mongoid::History
       include Mongoid::Timestamps
       attr_writer :trackable
 
-      field       :association_chain,       :type => Array,     :default => []
-      field       :modified,                :type => Hash
-      field       :original,                :type => Hash
-      field       :version,                 :type => Integer
-      field       :action,                  :type => String
-      field       :scope,                   :type => String
-      referenced_in :modifier,              :class_name => Mongoid::History.modifier_class_name
+      field       :association_chain,       type: Array,     default: []
+      field       :modified,                type: Hash
+      field       :original,                type: Hash
+      field       :version,                 type: Integer
+      field       :action,                  type: String
+      field       :scope,                   type: String
+
+      belongs_to :modifier, class_name: Mongoid::History.modifier_class_name
 
       Mongoid::History.tracker_class_name = self.name.tableize.singularize.to_sym
 
@@ -138,11 +139,11 @@ private
         doc = if doc.nil?
           # root association. First element of the association chain
           klass = name.classify.constantize
-          klass.where(:_id => node['id']).first
+          klass.where(_id: node['id']).first
         elsif embeds_one?(doc, name)
           doc.send(name)
         elsif embeds_many?(doc, name)
-          doc.send(name).where(:_id => node['id']).first
+          doc.send(name).where(_id: node['id']).first
         else
           raise "This should never happen. Please report bug."
         end

@@ -1,13 +1,20 @@
-$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
-
 require 'rubygems'
-require 'bundler/setup'
+require 'spork'
 
-Bundler.require :default, :test
+Spork.prefork do
+  $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 
-Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each do |f| 
-  require f
+  require 'rubygems'
+  require 'bundler/setup'
+
+  Bundler.require :default, :test
+
+  Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each do |f| 
+    require f
+  end
 end
 
-require 'mongoid-history'
+Spork.each_run do
+  require 'mongoid-history'
+end
 
