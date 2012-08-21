@@ -1,7 +1,7 @@
 source "http://rubygems.org"
 
 gem "easy_diff"
-gem "mongoid", ">= 2.0.0"
+gem "mongoid", "~> 3"
 
 group :test do
   gem "bson_ext"
