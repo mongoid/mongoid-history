@@ -1,37 +1,17 @@
 mongoid-history
 ===============
 
-[![Build Status](https://secure.travis-ci.org/aq1018/mongoid-history.png?branch=master)](http://travis-ci.org/aq1018/mongoid-history) [![Dependency Status](https://gemnasium.com/aq1018/mongoid-history.png?travis)](https://gemnasium.com/aq1018/mongoid-history)
+[![Build Status](https://secure.travis-ci.org/aq1018/mongoid-history.png?branch=2.4-stable)](http://travis-ci.org/aq1018/mongoid-history) [![Dependency Status](https://gemnasium.com/aq1018/mongoid-history.png?travis)](https://gemnasium.com/aq1018/mongoid-history)
 
 
-In frustration of Mongoid::Versioning, I created this plugin for tracking historical changes for any document, including embedded ones. It achieves this by storing all history tracks in a single collection that you define. Embedded documents are referenced by storing an association path, which is an array of `document_name` and `document_id` fields starting from the top most parent document and down to the embedded document that should track history.
+In frustration of Mongoid::Versioning, I created this gem for tracking historical changes for any document, including embedded ones. It achieves this by storing all history tracks in a single collection that you define. Embedded documents are referenced by storing an association path, which is an array of `document_name` and `document_id` fields starting from the top most parent document and down to the embedded document that should track history.
 
-This plugin also implements multi-user undo, which allows users to undo any history change in any order. Undoing a document also creates a new history track. This is great for auditing and preventing vandalism, but it is probably not suitable for use cases such as a wiki.
+This gem also implements multi-user undo, which allows users to undo any history change in any order. Undoing a document also creates a new history track. This is great for auditing and preventing vandalism, but it is probably not suitable for use cases such as a wiki.
 
-Note
-----
+Stable Release
+--------------
 
-**Please don't use 0.1.8 and 0.2.0.**
-
-These versions won't work in Rails because there was an error in the sweeper that causes history tracker creation to fail. Upgrade to version 0.2.1 instead as it's able to track history on `embeds_one` documents correctly.
-
-**Refactor in progress**
-
-If you feel brave, you can look at the `refactor` branch and get a feel of what's coming. As I stated many times before, this gem was originally hacked up in one evening, and got patched many times by various fellow users. Thus the code has become pretty unmanagable over time.  The `refactor` branch tries repay this technical debt by breaking things down into smaller class and implement better tests. Stay tuned! :D
-
-Upgrading from mongoid-history-0.1.x to >= 0.2
-------------------------------------------------
-
-If you are upgrading from 0.1.x to version 0.2.x and have existing data, run the following code **before** you start using 0.2.x. This is due to changes in `Mongoid::History::Tracker`'s `association_chain` field.
-
-```ruby
-Mongoid::History.tracker_class.all.each do |tracker|
-  tracker.association_chain[1..-1].each do |node|
-    node['name'] = node['name'].tableize
-  end
-  tracker.save!
-end
-```
+You're reading the documentation for the stable 0.2.x release that supports Mongoid 2.4.x. For Mongoid 3.x support, see the [master](https://github.com/aq1018/mongoid-history) branch.
 
 Install
 -------
@@ -45,7 +25,7 @@ gem 'mongoid-history'
 Usage
 -----
 
-Here is a quick example on how to use this plugin.
+Here is a quick example on how to use this gem.
 
 **Create a history tracker**
 
@@ -184,6 +164,20 @@ Comment.disable_tracking do
 end
 ```
 For more examples, check out [spec/integration/integration_spec.rb](https://github.com/aq1018/mongoid-history/blob/master/spec/integration/integration_spec.rb).
+
+Upgrading from mongoid-history-0.1.x to >= 0.2
+------------------------------------------------
+
+If you are upgrading from 0.1.x to version 0.2.x and have existing data, run the following code **before** you start using 0.2.x. This is due to changes in `Mongoid::History::Tracker`'s `association_chain` field.
+
+```ruby
+Mongoid::History.tracker_class.all.each do |tracker|
+  tracker.association_chain[1..-1].each do |node|
+    node['name'] = node['name'].tableize
+  end
+  tracker.save!
+end
+```
 
 Contributing to mongoid-history
 -------------------------------
