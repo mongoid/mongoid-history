@@ -7,15 +7,15 @@ Mongoid-history tracks historical changes for any document, including embedded o
 
 This gem also implements multi-user undo, which allows users to undo any history change in any order. Undoing a document also creates a new history track. This is great for auditing and preventing vandalism, but is probably not suitable for use cases such as a wiki.
 
-Next Release
-------------
+Stable Release
+--------------
 
-You're reading the documentation for the next 3.x release that supports Mongoid 3.x. For 2.x compatible mongoid-history, please see the [2.x-stable branch](https://github.com/aq1018/mongoid-history/tree/2.4-stable).
+You're reading the documentation the 0.3.x release that supports Mongoid 3.x. For 2.x compatible mongoid-history, please use a 0.2.x version from the [2.x-stable branch](https://github.com/aq1018/mongoid-history/tree/2.4-stable).
 
 Install
 -------
 
-This gem supports Ruby 1.8.7, 1.9.2, 1.9.3, JRuby, Rubinius and REE. Add it to your `Gemfile` or run `gem install mongoid-history`.
+This gem supports Mongoid 3.x on Ruby 1.9.3 only. Add it to your `Gemfile` or run `gem install mongoid-history`.
 
 ```ruby
 gem 'mongoid-history'
@@ -37,7 +37,7 @@ end
 
 **Set tracker class name**
 
-You should manually set the tracker class name to make sure your tracker can be found and loaded properly. You can skip this step if you manually require your tracker before using any trackables.
+Manually set the tracker class name to make sure your tracker can be found and loaded properly. You can skip this step if you manually require your tracker before using any trackables.
 
 The following example sets the tracker class name using a Rails initializer.
 
