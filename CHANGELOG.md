@@ -1,7 +1,7 @@
-Next Release
-------------
+0.2.4 (8/21/2012)
+-----------------
 
-* Fix: Allow sub-models to be tracked by using collection_name as the scope.
+* [#38](https://github.com/aq1018/mongoid-history/pull/38) Fix: Allow sub-models to be tracked by using `collection_name` as the scope - [@acant](https://github.com/acant).
 * [#35](https://github.com/aq1018/mongoid-history/pull/35): Fix: sweeper references record of change, not the record changed - [@dblock](https://github.com/dblock).
 
 0.2.3 (4/20/2012)
