@@ -1,0 +1,8 @@
+test:
+  sessions:
+    default:
+      database: mongoid-history
+      hosts:
+        - localhost:27017
+      options:
+        consistency: :strong

@@ -4,7 +4,7 @@ module Mongoid::History
 
     module ClassMethods
       def track_history(options={})
-        scope_name = self.collection_name.singularize.to_sym
+        scope_name = self.collection_name.to_s.singularize.to_sym
         default_options = {
           :on             =>  :all,
           :except         =>  [:created_at, :updated_at],
@@ -34,7 +34,7 @@ module Mongoid::History
         end
 
         field options[:version_field].to_sym, :type => Integer
-        referenced_in options[:modifier_field].to_sym, :class_name => Mongoid::History.modifier_class_name
+        belongs_to options[:modifier_field].to_sym, :class_name => Mongoid::History.modifier_class_name
 
         include MyInstanceMethods
         extend SingletonMethods
@@ -246,7 +246,7 @@ module Mongoid::History
 
     module SingletonMethods
       def history_trackable_options
-        @history_trackable_options ||= Mongoid::History.trackable_class_options[self.collection_name.singularize.to_sym]
+        @history_trackable_options ||= Mongoid::History.trackable_class_options[self.collection_name.to_s.singularize.to_sym]
       end
     end
   end
