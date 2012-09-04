@@ -123,7 +123,7 @@ module Mongoid::History
       end
 
       def should_track_update?
-        track_history? && !modified_attributes_for_update.blank?
+        track_history? && !@modified_attributes_for_update.blank?
       end
 
       def traverse_association_chain(node=self)
