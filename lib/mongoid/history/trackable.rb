@@ -143,6 +143,7 @@ module Mongoid::History
             relation.class_name == node_class
           end.first
         end
+
         # if root node has no meta, and should use class name instead
         name = meta ? meta.key.to_s : node.class.name
 

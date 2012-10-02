@@ -68,7 +68,6 @@ describe Mongoid::History do
 
     class Foo < Comment
     end
-
   end
 
   before :each do
