@@ -82,6 +82,15 @@ module Mongoid::History
         trackable ? trackable.attributes[k] : modified[k]; h}
     end
 
+    def change_details
+      (modified.keys | original.keys).inject({}) do |h,k|
+        modification = trackable ? trackable.attributes[k] : modified[k]
+        original_value = original[k]
+        h[k] = {:original => original_value, :modified => modification}
+        h
+      end
+    end
+
 private
 
     def re_create
