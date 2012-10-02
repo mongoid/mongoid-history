@@ -65,6 +65,10 @@ describe Mongoid::History do
       field             :title
       track_history     :on => [:title], :scope => :post, :track_create => true, :track_destroy => true, :modifier_field => :updated_by
     end
+
+    class Foo < Comment
+    end
+
   end
 
   before :each do
@@ -81,7 +85,7 @@ describe Mongoid::History do
       end
 
       it "should assign title and body on modified" do
-        @comment.history_tracks.first.modified.should == {'title' => "test", 'body' =>  "comment"}
+        @comment.history_tracks.first.modified.should == {'title' => "test", 'body' =>  "comment", '_type' => 'Comment'}
       end
 
       it "should not assign title and body on original" do
@@ -547,6 +551,22 @@ describe Mongoid::History do
           @comment.title.should == "Test5"
         end
 
+      end
+    end
+
+    describe "embedded with a polymorphic trackable" do
+      before :each do
+        @foo = Foo.new(:title => 'a title', :body => 'a body')
+        @post.comments << @foo
+        @post.save
+      end
+
+      it "should assign interface name in association chain" do
+        @foo.update_attribute(:body, 'a changed body')
+        expected_root = {"name" => "Post", "id" => @post.id}
+        expected_node = {"name" => "comments", "id" => @foo.id}
+
+        @foo.history_tracks.first.association_chain.should == [expected_root, expected_node]
       end
     end
   end
