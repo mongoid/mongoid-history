@@ -18,10 +18,16 @@ module Mongoid::History
       Mongoid::History.tracker_class_name = self.name.tableize.singularize.to_sym
 
       if defined?(ActionController) and defined?(ActionController::Base)
-        ActionController::Base.class_eval do
-          around_filter Mongoid::History::Sweeper.instance
+        ActiveAdmin::BaseController.class_eval do
+          before_filter do |controller|
+            Mongoid::History::Sweeper.instance.before controller
+          end
+          after_filter do |controller|
+            Mongoid::History::Sweeper.instance.after controller
+          end
         end
       end
+
     end
 
     def undo!(modifier)
