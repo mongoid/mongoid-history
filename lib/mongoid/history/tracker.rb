@@ -23,7 +23,6 @@ module Mongoid::History
           after_filter { |controller| Mongoid::History::Sweeper.instance.after(controller) }
         end
       end
-
     end
 
     def undo!(modifier)
