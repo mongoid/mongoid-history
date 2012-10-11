@@ -17,14 +17,10 @@ module Mongoid::History
 
       Mongoid::History.tracker_class_name = self.name.tableize.singularize.to_sym
 
-      if defined?(ActiveAdmin) and defined?(ActiveAdmin::BaseController)
-        ActiveAdmin::BaseController.class_eval do
-          before_filter do |controller|
-            Mongoid::History::Sweeper.instance.before controller
-          end
-          after_filter do |controller|
-            Mongoid::History::Sweeper.instance.after controller
-          end
+      if defined?(ActionController) and defined?(ActionController::Base)
+        ActionController::Base.class_eval do
+          before_filter { |controller| Mongoid::History::Sweeper.instance.before(controller) }
+          after_filter { |controller| Mongoid::History::Sweeper.instance.after(controller) }
         end
       end
 
