@@ -19,7 +19,8 @@ module Mongoid::History
 
       if defined?(ActionController) and defined?(ActionController::Base)
         ActionController::Base.class_eval do
-          around_filter Mongoid::History::Sweeper.instance
+          before_filter { |controller| Mongoid::History::Sweeper.instance.before(controller) }
+          after_filter { |controller| Mongoid::History::Sweeper.instance.after(controller) }
         end
       end
     end
