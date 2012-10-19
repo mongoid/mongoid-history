@@ -83,11 +83,8 @@ module Mongoid::History
     end
 
     def change_details
-      (modified.keys | original.keys).inject({}) do |h,k|
-        modification = trackable ? trackable.attributes[k] : modified[k]
-        original_value = original[k]
-        h[k] = {:original => original_value, :modified => modification}
-        h
+      modified.keys.map do |field|
+        {:name => field, :original => original[field], :modified => modified[field]}
       end
     end
 

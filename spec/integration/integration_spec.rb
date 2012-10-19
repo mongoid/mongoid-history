@@ -196,6 +196,12 @@ describe Mongoid::History do
         @user.history_tracks.first.modified.keys.should include "name"
         @user.history_tracks.first.modified.keys.should_not include "email"
       end
+
+      it "should assign change_details" do
+        @user.update_attributes(:name => "Aaron2", :email => "aaronsnewemail@randomemail.com")
+        @user.history_tracks.first.change_details.should == [{:name=>"name", :original=>"Aaron", :modified=>"Aaron2"}]
+      end
+
     end
 
     describe "on update non-embedded twice" do
