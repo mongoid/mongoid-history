@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "mongoid-history"
-  s.version = "0.3.0"
+  s.version = "0.3.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Aaron Qian", "Justin Grimes"]
-  s.date = "2012-08-21"
+  s.date = "2012-11-16"
   s.description = "In frustration of Mongoid::Versioning, I created this plugin for tracking historical changes for any document, including embedded ones. It achieves this by storing all history tracks in a single collection that you define. (See Usage for more details) Embedded documents are referenced by storing an association path, which is an array of document_name and document_id fields starting from the top most parent document and down to the embedded document that should track history.\n\n  This plugin implements multi-user undo, which allows users to undo any history change in any order. Undoing a document also creates a new history track. This is great for auditing and preventing vandalism, but it is probably not suitable for use cases such as a wiki."
   s.email = ["aq1018@gmail.com", "justin.mgrimes@gmail.com"]
   s.extra_rdoc_files = [
