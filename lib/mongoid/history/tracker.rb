@@ -53,7 +53,7 @@ module Mongoid::History
     end
 
     def redo_attr(modifier)
-      redo_hash = affected.easy_unmerge(modified)
+      redo_hash = affected.easy_unmerge(original)
       redo_hash.easy_merge!(modified)
       modifier_field = trackable.history_trackable_options[:modifier_field]
       redo_hash[modifier_field] = modifier
