@@ -1,7 +1,13 @@
-Next Release
-------------
+0.3.1
+-----
 
 * [#45](https://github.com/aq1018/mongoid-history/pull/45) Fix: intermittent hash ordering issue with history_tracks - [@getaroom](https://github.com/getaroom).
+* Fix: tracking of array changes, undo and redo of field changes on non-embedded objects.
+
+0.3.0 (8/21/2012)
+-----------------
+
+* [#41](https://github.com/aq1018/mongoid-history/pull/41) Mongoid 3.x support - [@zambot](https://github.com/zambot).
 
 0.2.4 (8/21/2012)
 -----------------

@@ -52,6 +52,7 @@ describe Mongoid::History do
 
       field             :email
       field             :name
+      field             :aliases, :type => Array
       track_history     :except => [:email]
     end
 
@@ -59,7 +60,7 @@ describe Mongoid::History do
       include Mongoid::Document
       include Mongoid::Timestamps
       include Mongoid::History::Trackable
-      
+
       belongs_to :updated_by, :class_name => "User"
 
       field             :title
@@ -68,7 +69,7 @@ describe Mongoid::History do
   end
 
   before :each do
-    @user = User.create(:name => "Aaron", :email => "aaron@randomemail.com")
+    @user = User.create(:name => "Aaron", :email => "aaron@randomemail.com", :aliases => [ 'bob' ])
     @another_user = User.create(:name => "Another Guy", :email => "anotherguy@randomemail.com")
     @post = Post.create(:title => "Test", :body => "Post", :modifier => @user, :views => 100)
     @comment = @post.comments.create(:title => "test", :body => "comment", :modifier => @user)
@@ -189,10 +190,35 @@ describe Mongoid::History do
       end
 
       it "should exclude defined options" do
+        name = @user.name
         @user.update_attributes(:name => "Aaron2", :email => "aaronsnewemail@randomemail.com")
-        @user.history_tracks.first.modified.keys.should include "name"
-        @user.history_tracks.first.modified.keys.should_not include "email"
+        @user.history_tracks.first.original.keys.should == [ "name", "updated_at" ]
+        @user.history_tracks.first.original["name"].should == name
+        @user.history_tracks.first.modified.keys.should == [ "name", "updated_at" ]
+        @user.history_tracks.first.modified["name"].should == @user.name
       end
+
+      it "should undo field changes" do
+        name = @user.name
+        @user.update_attributes(:name => "Aaron2", :email => "aaronsnewemail@randomemail.com")
+        @user.history_tracks.first.undo! nil
+        @user.reload.name.should == name
+      end
+
+      it "should track array changes" do
+        aliases = @user.aliases
+        @user.update_attributes(:aliases => [ 'bob', 'joe' ])
+        @user.history_tracks.first.original["aliases"].should == aliases
+        @user.history_tracks.first.modified["aliases"].should == @user.aliases
+      end
+
+      it "should undo array changes" do
+        aliases = @user.aliases
+        @user.update_attributes(:aliases => [ 'bob', 'joe' ])
+        @user.history_tracks.first.undo! nil
+        @user.reload.aliases.should == aliases
+      end
+
     end
 
     describe "on update non-embedded twice" do
@@ -367,7 +393,7 @@ describe Mongoid::History do
         @tag_foo = @post.tags.create(:title => "foo", :updated_by => @user)
         @tag_bar = @post.tags.create(:title => "bar")
       end
-      
+
       after(:each) do
         Thread.current[:mongoid_history_sweeper_controller] = nil
       end
@@ -400,7 +426,7 @@ describe Mongoid::History do
         @tag_foo.history_tracks.last.association_chain.last["name"].should == "tags"
         lambda{ @tag_foo.history_tracks.last.trackable }.should_not raise_error
       end
-      
+
       it "should save modifier" do
         @tag_foo.history_tracks.last.modifier.should eq @user
         @tag_bar.history_tracks.last.modifier.should eq @user
