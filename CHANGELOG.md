@@ -1,3 +1,8 @@
+0.3.2
+-----
+
+* Added index support, also remove $elemMatch selector
+
 0.3.1
 -----
 
