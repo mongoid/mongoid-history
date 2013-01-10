@@ -15,8 +15,8 @@ module Mongoid::History
       field       :scope,                   :type => String
       belongs_to  :modifier,                :class_name => Mongoid::History.modifier_class_name
 
-      index(scope: 1)
-      index(association_chain: 1)
+      index(:scope => 1)
+      index(:association_chain => 1)
 
       Mongoid::History.tracker_class_name = self.name.tableize.singularize.to_sym
 

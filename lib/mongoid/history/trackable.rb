@@ -145,7 +145,7 @@ module Mongoid::History
         # if root node has no meta, and should use class name instead
         name = meta ? meta.key.to_s : node.class.name
 
-        { 'name' => name, 'id' => node.id}
+        ActiveSupport::OrderedHash['name', name, 'id', node.id]
       end
 
       def modified_attributes_for_update
