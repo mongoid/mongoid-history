@@ -1,7 +1,7 @@
-0.3.2
------
+Next Release
+------------
 
-* Added index support, also remove $elemMatch selector
+* [#54](https://github.com/aq1018/mongoid-history/pull/54) Use an index instead of the `$elemMatch` selector in `history_tracks` - [@vecio](https://github.com/vecio).
 
 0.3.1
 -----
