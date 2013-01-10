@@ -2,6 +2,7 @@ source "http://rubygems.org"
 
 gem "easy_diff"
 gem "mongoid", "~> 3.0.4"
+gem "activesupport"
 
 group :test do
   gem "rspec", "~> 2.11.0"

@@ -71,7 +71,7 @@ module Mongoid::History
 
     module MyInstanceMethods
       def history_tracks
-        @history_tracks ||= Mongoid::History.tracker_class.where(:scope => history_trackable_options[:scope], :association_chain => { "$elemMatch" => association_hash })
+        @history_tracks ||= Mongoid::History.tracker_class.where(:scope => history_trackable_options[:scope], :association_chain => association_hash)
       end
 
       #  undo :from => 1, :to => 5
@@ -82,7 +82,6 @@ module Mongoid::History
         versions.sort!{|v1, v2| v2.version <=> v1.version}
 
         versions.each do |v|
-          undo_attr = v.undo_attr(modifier)
           self.attributes = v.undo_attr(modifier)
         end
         save!
@@ -146,7 +145,7 @@ module Mongoid::History
         # if root node has no meta, and should use class name instead
         name = meta ? meta.key.to_s : node.class.name
 
-        { 'name' => name, 'id' => node.id}
+        ActiveSupport::OrderedHash['name', name, 'id', node.id]
       end
 
       def modified_attributes_for_update
