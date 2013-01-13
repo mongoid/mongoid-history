@@ -89,7 +89,8 @@ class Post
 
   # telling Mongoid::History how you want to track changes
   track_history   :on => [:title, :body],       # track title and body fields only, default is :all
-                  :modifier_field => :modifier, # adds "referenced_in :modifier" to track who made the change, default is :modifier
+                  :modifier_field => :modifier, # adds "belongs_to :modifier" to track who made the change, default is :modifier
+                  :modifier_field_inverse_of => :nil, # adds an ":inverse_of" option to the "belongs_to :modifier" relation, default is not set
                   :version_field => :version,   # adds "field :version, :type => Integer" to track current version, default is :version
                   :track_create   =>  false,    # track document creation, default is false
                   :track_update   =>  true,     # track document updates, default is true
@@ -179,5 +180,6 @@ Copyright
 ---------
 
 Copyright (c) 2011-2012 Aaron Qian. MIT License.
+
 See [LICENSE.txt](https://github.com/aq1018/mongoid-history/blob/master/LICENSE.txt) for further details.
 

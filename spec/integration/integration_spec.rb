@@ -1,11 +1,7 @@
-require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
+require 'spec_helper'
 
 describe Mongoid::History do
-  before :all do
-    class HistoryTracker
-      include Mongoid::History::Tracker
-    end
-
+  before :each do
     class Post
       include Mongoid::Document
       include Mongoid::Timestamps
@@ -66,9 +62,7 @@ describe Mongoid::History do
       field             :title
       track_history     :on => [:title], :scope => :post, :track_create => true, :track_destroy => true, :modifier_field => :updated_by
     end
-  end
 
-  before :each do
     @user = User.create(:name => "Aaron", :email => "aaron@randomemail.com", :aliases => [ 'bob' ])
     @another_user = User.create(:name => "Another Guy", :email => "anotherguy@randomemail.com")
     @post = Post.create(:title => "Test", :body => "Post", :modifier => @user, :views => 100)
@@ -118,7 +112,7 @@ describe Mongoid::History do
       it "should have two history track records in post" do
         lambda {
           @post.destroy
-        }.should change(HistoryTracker, :count).by(1)
+        }.should change(Tracker, :count).by(1)
       end
 
       it "should assign destroy on track record" do
@@ -136,13 +130,13 @@ describe Mongoid::History do
       it "should create a history track if changed attributes match tracked attributes" do
         lambda {
           @post.update_attributes(:title => "Another Test")
-        }.should change(HistoryTracker, :count).by(1)
+        }.should change(Tracker, :count).by(1)
       end
 
       it "should not create a history track if changed attributes do not match tracked attributes" do
         lambda {
           @post.update_attributes(:rating => "untracked")
-        }.should change(HistoryTracker, :count).by(0)
+        }.should change(Tracker, :count).by(0)
       end
 
       it "should assign modified fields" do
@@ -232,7 +226,7 @@ describe Mongoid::History do
         lambda {
           @post.update_attributes(:title => "Test2")
           @post.update_attributes(:title => "Test3")
-        }.should change(HistoryTracker, :count).by(2)
+        }.should change(Tracker, :count).by(2)
       end
 
       it "should create a history track of version 2" do
@@ -392,10 +386,6 @@ describe Mongoid::History do
         self.stub!(:current_user).and_return @user
         @tag_foo = @post.tags.create(:title => "foo", :updated_by => @user)
         @tag_bar = @post.tags.create(:title => "bar")
-      end
-
-      after(:each) do
-        Thread.current[:mongoid_history_sweeper_controller] = nil
       end
 
       it "should have cascaded the creation callbacks and set timestamps" do

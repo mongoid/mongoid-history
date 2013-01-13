@@ -8,10 +8,6 @@ describe Mongoid::History::Trackable do
     end
   end
 
-  after :each do
-    Mongoid::History.trackable_class_options = nil
-  end
-
   it "should have #track_history" do
     MyModel.should respond_to :track_history
   end
@@ -40,10 +36,6 @@ describe Mongoid::History::Trackable do
         :track_update   =>  true,
         :track_destroy  =>  false,
       }
-    end
-
-    after :each do
-      Mongoid::History.trackable_class_options = nil
     end
 
     it "should have default options" do

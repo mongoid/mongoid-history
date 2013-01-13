@@ -34,7 +34,10 @@ module Mongoid::History
         end
 
         field options[:version_field].to_sym, :type => Integer
-        belongs_to options[:modifier_field].to_sym, :class_name => Mongoid::History.modifier_class_name
+
+        belongs_to_modifier_options = { :class_name => Mongoid::History.modifier_class_name }
+        belongs_to_modifier_options[:inverse_of] = options[:modifier_field_inverse_of] if options.has_key?(:modifier_field_inverse_of)
+        belongs_to options[:modifier_field].to_sym, belongs_to_modifier_options
 
         include MyInstanceMethods
         extend SingletonMethods
