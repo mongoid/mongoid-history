@@ -83,7 +83,7 @@ module Mongoid::History
     end
 
     def change_details
-      modified.keys.map do |field|
+      (modified.keys | original.keys).map do |field|
         {:name => field, :original => original[field], :modified => modified[field]}
       end
     end
