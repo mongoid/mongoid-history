@@ -1,11 +1,11 @@
-Next Release
-------------
+0.3.2 (1/24/2013)
+-----------------
 
 * [#54](https://github.com/aq1018/mongoid-history/pull/54) Use an index instead of the `$elemMatch` selector in `history_tracks` - [@vecio](https://github.com/vecio).
 * [#11](https://github.com/aq1018/mongoid-history/issues/11) Added `:modifier_field_inverse_of` on `track_history` that defines the `:inverse_of` relationship of the modifier class - [@matekb](https://github.com/matekb), [@dblock](https://github.com/dblock).
 
-0.3.1
------
+0.3.1 (11/16/2012)
+------------------
 
 * [#45](https://github.com/aq1018/mongoid-history/pull/45) Fix: intermittent hash ordering issue with `history_tracks` - [@getaroom](https://github.com/getaroom).
 * [#50](https://github.com/aq1018/mongoid-history/pull/50) Fix: tracking of array changes, undo and redo of field changes on non-embedded objects - [@dblock](https://github.com/dblock).
