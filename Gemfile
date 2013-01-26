@@ -1,7 +1,7 @@
 source "http://rubygems.org"
 
 gem "easy_diff"
-gem "mongoid", "~> 3.0.4"
+gem "mongoid", "~> 3.0"
 gem "activesupport"
 
 group :test do
