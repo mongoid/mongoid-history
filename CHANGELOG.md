@@ -1,3 +1,7 @@
+Next Release
+-----------------
+* [#42](https://github.com/aq1018/mongoid-history/issues/42) Fix: corrected creation of association chain when using nested embedded documents - [@matekb](https://github.com/matekb)
+
 0.3.2 (1/24/2013)
 -----------------
 
