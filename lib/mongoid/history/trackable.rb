@@ -138,7 +138,7 @@ module Mongoid::History
         # we're assured, through the object creation, it'll exist. Whereas we're not guarenteed
         # the child to parent (embedded_in, belongs_to) relation will be defined
         if node._parent
-          meta = _parent.relations.values.select do |relation|
+          meta = node._parent.relations.values.select do |relation|
             node_class = node.metadata.class_name.to_s
             relation.class_name == node_class
           end.first
