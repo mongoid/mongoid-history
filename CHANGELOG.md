@@ -1,3 +1,8 @@
+Next Release
+-----------------
+
+* [#56](https://github.com/aq1018/mongoid-history/issues/56) Fix: now possible to undo setting (creating) attributes that was previously unset.
+
 0.3.2 (1/24/2013)
 -----------------
 
