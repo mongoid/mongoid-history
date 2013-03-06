@@ -52,6 +52,9 @@ module Mongoid::History
       undo_hash.easy_merge!(original)
       modifier_field = trackable.history_trackable_options[:modifier_field]
       undo_hash[modifier_field] = modifier
+      (modified.keys - undo_hash.keys).each do |k|
+        undo_hash[k] = nil
+      end
       undo_hash
     end
 

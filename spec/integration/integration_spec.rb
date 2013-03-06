@@ -198,6 +198,15 @@ describe Mongoid::History do
         @user.history_tracks.first.undo! nil
         @user.reload.name.should == name
       end
+      
+      it "should undo non-existing field changes" do
+        post = Post.create(:modifier => @user, :views => 100)
+        post.reload.title.should == nil
+        post.update_attributes(:title => "Aaron2")
+        post.reload.title.should == "Aaron2"
+        post.history_tracks.first.undo! nil
+        post.reload.title.should == nil
+      end
 
       it "should track array changes" do
         aliases = @user.aliases
@@ -536,6 +545,7 @@ describe Mongoid::History do
           @comment.undo! @user, :last => 2
           @comment.title.should == "Test2"
         end
+         
       end
 
       describe "redo" do
