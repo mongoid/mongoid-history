@@ -575,5 +575,34 @@ describe Mongoid::History do
 
       end
     end
+
+    describe "localized fields" do
+      before :each do
+        class Sausage
+          include Mongoid::Document
+          include Mongoid::History::Trackable
+
+          field           :flavour, localize: true
+          track_history   :on => [:flavour], :track_destroy => true
+        end
+      end
+      it "should correctly undo and redo" do
+        sausage = Sausage.create(flavour_translations: { 'en' => "Apple", 'nl' => 'Appel' } )
+        sausage.update_attributes(:flavour => "Guinness")
+
+        track = sausage.history_tracks.last
+
+        track.undo! @user
+        sausage.reload.flavour.should == "Apple"
+
+        track.redo! @user
+        sausage.reload.flavour.should == "Guinness"
+
+        sausage.destroy
+        sausage.history_tracks.last.action.should == "destroy"
+        sausage.history_tracks.last.undo! @user
+        sausage.reload.flavour.should == "Guinness"
+      end
+    end
   end
 end

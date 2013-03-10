@@ -55,7 +55,7 @@ module Mongoid::History
       (modified.keys - undo_hash.keys).each do |k|
         undo_hash[k] = nil
       end
-      undo_hash
+      localize_keys(undo_hash)
     end
 
     def redo_attr(modifier)
@@ -63,7 +63,7 @@ module Mongoid::History
       redo_hash.easy_merge!(modified)
       modifier_field = trackable.history_trackable_options[:modifier_field]
       redo_hash[modifier_field] = modifier
-      redo_hash
+      localize_keys(redo_hash)
     end
 
     def trackable_root
@@ -100,7 +100,7 @@ private
 
     def create_standalone
       class_name = association_chain.first["name"]
-      restored = class_name.constantize.new(modified)
+      restored = class_name.constantize.new(localize_keys(modified))
       restored.id = modified["_id"]
       restored.save!
     end
@@ -108,9 +108,9 @@ private
     def create_on_parent
       name = association_chain.last["name"]
       if embeds_one?(trackable_parent, name)
-        trackable_parent.send("create_#{name}!", modified)
+        trackable_parent.send("create_#{name}!", localize_keys(modified))
       elsif embeds_many?(trackable_parent, name)
-         trackable_parent.send(name).create!(modified)
+         trackable_parent.send(name).create!(localize_keys(modified))
       else
         raise "This should never happen. Please report bug!"
       end
@@ -156,6 +156,14 @@ private
         documents << doc
       end while( !chain.empty? )
       documents
+    end
+
+    def localize_keys(hash)
+      class_name = association_chain.first["name"]
+      class_name.constantize.localized_fields.keys.each do |name|
+        hash["#{name}_translations"] = hash.delete(name) if hash[name].present?
+      end
+      hash
     end
 
   end
