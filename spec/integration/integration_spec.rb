@@ -575,5 +575,24 @@ describe Mongoid::History do
 
       end
     end
+
+    describe "localized fields" do
+      before :each do
+        class Sausage
+          include Mongoid::Document
+          include Mongoid::History::Trackable
+
+          field             :flavour, localize: true
+          track_history
+        end
+      end
+      it "should correctly track" do
+        sausage = Sausage.create(flavour_translations: { 'en' => "Apple", 'nl' => 'Appel' } )
+        sausage.update_attributes(:flavour => "Guinness")
+        sausage.undo! @user
+        # puts sausage.flavour_translations.to_yaml
+        sausage.flavour.should == "Apple"
+      end
+    end
   end
 end
