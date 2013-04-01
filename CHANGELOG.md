@@ -1,5 +1,6 @@
-Next Release
------------------
+0.3.3 (1/4/2013)
+----------------
+
 * [#42](https://github.com/aq1018/mongoid-history/issues/42) Fix: corrected creation of association chain when using nested embedded documents - [@matekb](https://github.com/matekb).
 * [#56](https://github.com/aq1018/mongoid-history/issues/56) Fix: now possible to undo setting (creating) attributes that was previously unset - [@matekb](https://github.com/matekb).
 * [#49](https://github.com/aq1018/mongoid-history/issues/49) Fix: now correctly undo/redo localized fields - [@edejong](https://github.com/edejong).
