@@ -159,10 +159,10 @@ private
     end
 
     def localize_keys(hash)
-      class_name = association_chain.first["name"]
-      class_name.constantize.localized_fields.keys.each do |name|
+      klass = association_chain.first["name"].constantize
+      klass.localized_fields.keys.each do |name|
         hash["#{name}_translations"] = hash.delete(name) if hash[name].present?
-      end
+      end if klass.respond_to?(:localized_fields)
       hash
     end
 

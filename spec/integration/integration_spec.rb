@@ -198,7 +198,7 @@ describe Mongoid::History do
         @user.history_tracks.first.undo! nil
         @user.reload.name.should == name
       end
-      
+
       it "should undo non-existing field changes" do
         post = Post.create(:modifier => @user, :views => 100)
         post.reload.title.should == nil
@@ -545,7 +545,7 @@ describe Mongoid::History do
           @comment.undo! @user, :last => 2
           @comment.title.should == "Test2"
         end
-         
+
       end
 
       describe "redo" do
@@ -587,21 +587,23 @@ describe Mongoid::History do
         end
       end
       it "should correctly undo and redo" do
-        sausage = Sausage.create(flavour_translations: { 'en' => "Apple", 'nl' => 'Appel' } )
-        sausage.update_attributes(:flavour => "Guinness")
+        if Sausage.respond_to?(:localized_fields)
+          sausage = Sausage.create(flavour_translations: { 'en' => "Apple", 'nl' => 'Appel' } )
+          sausage.update_attributes(:flavour => "Guinness")
 
-        track = sausage.history_tracks.last
+          track = sausage.history_tracks.last
 
-        track.undo! @user
-        sausage.reload.flavour.should == "Apple"
+          track.undo! @user
+          sausage.reload.flavour.should == "Apple"
 
-        track.redo! @user
-        sausage.reload.flavour.should == "Guinness"
+          track.redo! @user
+          sausage.reload.flavour.should == "Guinness"
 
-        sausage.destroy
-        sausage.history_tracks.last.action.should == "destroy"
-        sausage.history_tracks.last.undo! @user
-        sausage.reload.flavour.should == "Guinness"
+          sausage.destroy
+          sausage.history_tracks.last.action.should == "destroy"
+          sausage.history_tracks.last.undo! @user
+          sausage.reload.flavour.should == "Guinness"
+        end
       end
     end
   end
