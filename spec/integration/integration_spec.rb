@@ -13,7 +13,7 @@ describe Mongoid::History do
 
       embeds_many     :comments
       embeds_one      :section
-      embeds_many     :tags #, :cascade_callbacks => true
+      embeds_many     :tags, :cascade_callbacks => true
 
       accepts_nested_attributes_for :tags, :allow_destroy => true
 
@@ -54,7 +54,7 @@ describe Mongoid::History do
 
     class Tag
       include Mongoid::Document
-      include Mongoid::Timestamps
+      # include Mongoid::Timestamps  (see: https://github.com/mongoid/mongoid/issues/3078)
       include Mongoid::History::Trackable
 
       belongs_to :updated_by, :class_name => "User"
@@ -405,10 +405,10 @@ describe Mongoid::History do
         @tag_bar = @post.tags.create(:title => "bar")
       end
 
-      it "should have cascaded the creation callbacks and set timestamps" do
-        @tag_foo.created_at.should_not be_nil
-        @tag_foo.updated_at.should_not be_nil
-      end
+      # it "should have cascaded the creation callbacks and set timestamps" do
+      #   @tag_foo.created_at.should_not be_nil
+      #   @tag_foo.updated_at.should_not be_nil
+      # end
 
       it "should allow an update through the parent model" do
         update_hash = { "post" => { "tags_attributes" => { "1234" => { "id" => @tag_bar.id, "title" => "baz" } } } }
