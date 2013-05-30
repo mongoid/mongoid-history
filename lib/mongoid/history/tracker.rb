@@ -88,7 +88,13 @@ module Mongoid::History
         trackable ? trackable.attributes[k] : modified[k]; h}
     end
 
-private
+    def change_details
+      (modified.keys | original.keys).map do |field|
+        {:name => field, :original => original[field], :modified => modified[field]}
+      end
+    end
+
+    private
 
     def re_create
       association_chain.length > 1 ? create_on_parent : create_standalone
