@@ -27,7 +27,7 @@ describe Mongoid::History do
 
       field             :title
       field             :body
-      embedded_in       :post
+      embedded_in       :commentable, polymorphic: true
       track_history     :on => [:title, :body], :scope => :post, :track_create => true, :track_destroy => true
     end
 
