@@ -141,7 +141,7 @@ module Mongoid::History
         # the child to parent (embedded_in, belongs_to) relation will be defined
         if node._parent
           meta = node._parent.relations.values.select do |relation|
-            relation.class_name == node.class.to_s
+            relation.class_name == node.metadata.class_name.to_s
           end.first
         end
 

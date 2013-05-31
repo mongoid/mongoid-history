@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe Mongoid::History::Tracker do
-  before :each do    
+  before :all do
     class Model
       include Mongoid::Document
       include Mongoid::History::Trackable
@@ -39,5 +39,6 @@ describe Mongoid::History::Tracker do
     model.save!
     
     model.undo! user
+    model.name.should == "Foo"
   end
 end
