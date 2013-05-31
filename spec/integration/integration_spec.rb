@@ -46,8 +46,12 @@ describe Mongoid::History do
       include Mongoid::Timestamps
       include Mongoid::History::Trackable
 
-      field             :email
       field             :name
+      field             :email
+      field             :phone
+      field             :address
+      field             :city
+      field             :country
       field             :aliases, :type => Array
       track_history     :except => [:email, :updated_at]
     end
@@ -66,7 +70,7 @@ describe Mongoid::History do
     class Foo < Comment
     end
 
-    @user = User.create(:name => "Aaron", :email => "aaron@randomemail.com", :aliases => [ 'bob' ])
+    @user = User.create(name: "Aaron", email: "aaron@randomemail.com", aliases: ['bob'], country: 'Canada', city: 'Toronto', address: '21 Jump Street')
     @another_user = User.create(:name => "Another Guy", :email => "anotherguy@randomemail.com")
     @post = Post.create(:title => "Test", :body => "Post", :modifier => @user, :views => 100)
     @comment = @post.comments.create(:title => "test", :body => "comment", :modifier => @user)
@@ -224,12 +228,65 @@ describe Mongoid::History do
         @user.history_tracks.first.undo! nil
         @user.reload.aliases.should == aliases
       end
+    end
 
-      it "should assign change_details" do
-        @user.update_attributes(:name => "Aaron2", :email => "aaronsnewemail@randomemail.com")
-        @user.history_tracks.first.change_details.should == [{:name=>"name", :original=>"Aaron", :modified=>"Aaron2"}]
+    describe "#tracked_changes" do
+      before do
+        @user.update_attributes(name: "Aaron2", email: nil, country: '',  city: nil, phone: '867-5309', aliases: ['','bill','james'])
       end
+      subject{ @user.history_tracks.first.tracked_changes }
+      it{ should be_a HashWithIndifferentAccess }
+      it "should track changed field" do
+        subject[:name].should == {from: "Aaron", to:"Aaron2"}.with_indifferent_access
+      end
+      it "should track added field" do
+        subject[:phone].should == {to: "867-5309"}.with_indifferent_access
+      end
+      it "should track removed field" do
+        subject[:city].should == {from: "Toronto"}.with_indifferent_access
+      end
+      it "should not consider blank as removed" do
+        subject[:country].should == {from: "Canada", to: ''}.with_indifferent_access
+      end
+      it "should track changed array field" do
+        subject[:aliases].should == {from: ["bob"], to: ["", "bill", "james"]}.with_indifferent_access
+      end
+      it "should not track unmodified field" do
+        subject[:address].should be_nil
+      end
+      it "should not track untracked fields" do
+        subject[:email].should be_nil
+      end
+    end
 
+    describe "#tracked_edits" do
+      before do
+        @user.update_attributes(name: "Aaron2", email: nil, country: '', city: nil, phone: '867-5309', aliases: ['','bill','james'])
+      end
+      subject{ @user.history_tracks.first.tracked_edits }
+      it{ should be_a HashWithIndifferentAccess }
+      it "should track changed field" do
+        subject[:modify].should == {name: {from: "Aaron", to:"Aaron2"}}.with_indifferent_access
+      end
+      it "should track added field" do
+        subject[:add].should == {phone: "867-5309"}.with_indifferent_access
+      end
+      it "should track removed field and consider blank as removed" do
+        subject[:remove].should == {city: "Toronto", country: "Canada"}.with_indifferent_access
+      end
+      it "should track changed array field" do
+        subject[:array].should == {aliases: {remove: ["bob"], add: ["", "bill", "james"]}}.with_indifferent_access
+      end
+      it "should not track unmodified field" do
+        %w(add modify remove array).each do |edit|
+          subject[edit][:address].should be_nil
+        end
+      end
+      it "should not track untracked fields" do
+        %w(add modify remove array).each do |edit|
+          subject[edit][:email].should be_nil
+        end
+      end
     end
 
     describe "on update non-embedded twice" do
