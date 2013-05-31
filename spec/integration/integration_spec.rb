@@ -491,26 +491,21 @@ describe Mongoid::History do
       it "should undo changes" do
         @comment.update_attributes(:title => "Test2")
         @comment.history_tracks.where(:version => 2).first.undo!(@user)
-        # reloading an embedded document === KAMIKAZE
-        # at least for the current release of mongoid...
-        @post.reload
-        @comment = @post.comments.first
+        @comment.reload
         @comment.title.should == "test"
       end
 
       it "should create a new history track after undo" do
         @comment.update_attributes(:title => "Test2")
         @comment.history_tracks.where(:version => 2).first.undo!(@user)
-        @post.reload
-        @comment = @post.comments.first
+        @comment.reload
         @comment.history_tracks.count.should == 3
       end
 
       it "should assign @user as the modifier of the newly created history track" do
         @comment.update_attributes(:title => "Test2")
         @comment.history_tracks.where(:version => 2).first.undo!(@user)
-        @post.reload
-        @comment = @post.comments.first
+        @comment.reload
         @comment.history_tracks.where(:version => 3).first.modifier.should == @user
       end
 
@@ -519,10 +514,8 @@ describe Mongoid::History do
         @track = @comment.history_tracks.where(:version => 2).first
         @track.undo!(@user)
         @track.redo!(@user)
-        @post2 = Post.where(:_id => @post.id).first
-        @comment2 = @post2.comments.first
-
-        @comment.title.should == @comment2.title
+        @comment.reload
+        @comment.title.should == "Test2"
       end
     end
 
@@ -626,7 +619,6 @@ describe Mongoid::History do
         @foo.update_attribute(:body, 'a changed body')
         expected_root = {"name" => "Post", "id" => @post.id}
         expected_node = {"name" => "comments", "id" => @foo.id}
-
         @foo.history_tracks.first.association_chain.should == [expected_root, expected_node]
       end
     end
