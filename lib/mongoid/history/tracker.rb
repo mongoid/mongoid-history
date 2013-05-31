@@ -104,6 +104,7 @@ module Mongoid::History
     #     array: { field_4: {add: ['foo', 'bar'], remove: ['baz']} } }
     def tracked_edits
       @tracked_edits ||= tracked_changes.inject(HashWithIndifferentAccess.new) do |h,(k,v)|
+        return h if v[:from].blank? && v[:to].blank?
         if v[:from].blank?
           h[:add] ||={}
           h[:add][k] = v[:to]
