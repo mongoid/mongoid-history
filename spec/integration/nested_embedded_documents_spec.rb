@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe Mongoid::History::Tracker do
-  before :each do    
+  before :all do
     class Model
       include Mongoid::Document
       include Mongoid::History::Trackable
@@ -59,7 +59,7 @@ describe Mongoid::History::Tracker do
 
   it "should be able to track history for nested embedded documents" do
     user = User.new
-    user.save
+    user.save!
     
     model = Model.new({name: "m1name"})
     model.user = user
@@ -68,8 +68,10 @@ describe Mongoid::History::Tracker do
     embedded2 = embedded1.embtwos.create({name: "e2name"})
 
     embedded2.name = "a new name"
-    embedded2.save
+    embedded2.save!
     
-    model.history_tracks.first.undo! user 
+    model.history_tracks.first.undo! user
+    embedded1.reload.name.should == "e1name"
+    embedded2.reload.name.should == "e2name"
   end
 end
