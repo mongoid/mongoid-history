@@ -5,9 +5,7 @@ require 'bundler/setup'
 
 Bundler.require :default, :test
 
-Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each do |f| 
-  require f
-end
+Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each {|f| require f}
 
 require 'mongoid-history'
 

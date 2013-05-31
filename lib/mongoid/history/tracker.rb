@@ -82,13 +82,62 @@ module Mongoid::History
       @trackable_parent ||= trackable_parents_and_trackable[-2]
     end
 
-
-    def affected
-      @affected ||= (modified.keys | original.keys).inject({}){ |h,k| h[k] =
-        trackable ? trackable.attributes[k] : modified[k]; h}
+    # Outputs a :from, :to hash for each affected field.
+    #
+    # @result Hash a change set in the format:
+    #   { field_1: {to: new_val}, field_2: {from: old_val, to: new_val} }
+    def tracked_changes
+      @tracked_changes ||= (modified.keys | original.keys).inject(HashWithIndifferentAccess.new) do |h,k|
+        h[k] = {from: original[k], to: modified[k]}.delete_if{|k,v| v.nil?}
+        h
+      end.delete_if{|k,v| v.blank?}
     end
 
-private
+    # Outputs summary of edit actions performed: :add, :modify, :remove, or :array.
+    # Does deep comparison of arrays. Useful for creating human-readable representations
+    # of the history tracker. Considers changing a value to 'blank' to be a removal.
+    #
+    # @result Hash a change set in the format:
+    #   { add: { field_1: new_val, ... },
+    #     modify: { field_2: {from: old_val, to: new_val}, ... },
+    #     remove: { field_3: old_val },
+    #     array: { field_4: {add: ['foo', 'bar'], remove: ['baz']} } }
+    def tracked_edits
+      @tracked_edits ||= tracked_changes.inject(HashWithIndifferentAccess.new) do |h,(k,v)|
+        return h if v[:from].blank? && v[:to].blank?
+        if v[:from].blank?
+          h[:add] ||={}
+          h[:add][k] = v[:to]
+        elsif v[:to].blank?
+          h[:remove] ||={}
+          h[:remove][k] = v[:from]
+        else
+          if v[:from].is_a?(Array) && v[:to].is_a?(Array)
+            h[:array] ||={}
+            old_values = v[:from] - v[:to]
+            new_values = v[:to] - v[:from]
+            h[:array][k] = {add: new_values, remove: old_values}.delete_if{|k,v| v.blank?}
+          else
+            h[:modify] ||={}
+            h[:modify][k] = v
+          end
+        end
+        h
+      end
+    end
+
+    # Similar to changes, but only includes the new (modified) value for each
+    # affected field. Included for legacy compatibility.
+    #
+    # @deprecated
+    #
+    # @result Hash a change set in the format:
+    #   { field_1: new_val, field_2: new_val }
+    def affected
+      @affected ||= tracked_changes.inject(HashWithIndifferentAccess.new){|h,(k,v)| h[k]=v[:to]; h}
+    end
+
+    private
 
     def re_create
       association_chain.length > 1 ? create_on_parent : create_standalone
