@@ -23,7 +23,7 @@ describe Mongoid::History::Tracker do
       include Mongoid::History::Trackable
       
       field :name
-      embeds_many :embtwos
+      embeds_many :embtwos, store_as: :ems
       embedded_in :model
       
       track_history   :on => :all,       # track title and body fields only, default is :all

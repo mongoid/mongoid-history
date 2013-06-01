@@ -11,8 +11,8 @@ describe Mongoid::History do
       field           :body
       field           :rating
 
-      embeds_many     :comments
-      embeds_one      :section
+      embeds_many     :comments, store_as: :coms
+      embeds_one      :section, store_as: :sec
       embeds_many     :tags, :cascade_callbacks => true
 
       accepts_nested_attributes_for :tags, :allow_destroy => true
@@ -112,7 +112,7 @@ describe Mongoid::History do
       it "should assign association_chain" do
         expected = [
           {'id' => post.id, 'name' => "Post"},
-          {'id' => comment.id, 'name' => "comments"}
+          {'id' => comment.id, 'name' => "coms"}
         ]
         comment.history_tracks.first.association_chain.should == expected
       end
@@ -362,6 +362,7 @@ describe Mongoid::History do
 
       it "should be possible to undo from parent" do
         comment.update_attributes(:title => "Test 2")
+        user
         post.history_tracks.last.undo!(user)
         comment.reload
         comment.title.should == "test"
@@ -684,7 +685,7 @@ describe Mongoid::History do
       it "should assign interface name in association chain" do
         foo.update_attribute(:body, 'a changed body')
         expected_root = {"name" => "Post", "id" => post.id}
-        expected_node = {"name" => "comments", "id" => foo.id}
+        expected_node = {"name" => "coms", "id" => foo.id}
         foo.history_tracks.first.association_chain.should == [expected_root, expected_node]
       end
     end
