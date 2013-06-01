@@ -78,6 +78,7 @@ describe Mongoid::History do
   let(:another_user){ User.create(:name => "Another Guy", :email => "anotherguy@randomemail.com") }
   let(:post){ Post.create(:title => "Test", :body => "Post", :modifier => user, :views => 100) }
   let(:comment){ post.comments.create(:title => "test", :body => "comment", :modifier => user) }
+  let(:tag){ Tag.create(:title => "test") }
 
   describe "track" do
     describe "on creation" do
@@ -234,60 +235,88 @@ describe Mongoid::History do
     end
 
     describe "#tracked_changes" do
-      before do
-        user.update_attributes(name: "Aaron2", email: nil, country: '',  city: nil, phone: '867-5309', aliases: ['','bill','james'])
+      context "create action" do
+        subject{ tag.history_tracks.first.tracked_changes }
+        it "consider all fields values as :to" do
+          subject[:title].should == {to: "test"}.with_indifferent_access
+        end
       end
-      subject{ user.history_tracks.first.tracked_changes }
-      it{ should be_a HashWithIndifferentAccess }
-      it "should track changed field" do
-        subject[:n].should == {from: "Aaron", to:"Aaron2"}.with_indifferent_access
+      context "destroy action" do
+        subject{ tag.destroy; tag.history_tracks.last.tracked_changes }
+        it "consider all fields values as :from" do
+          subject[:title].should == {from: "test"}.with_indifferent_access
+        end
       end
-      it "should track added field" do
-        subject[:phone].should == {to: "867-5309"}.with_indifferent_access
-      end
-      it "should track removed field" do
-        subject[:city].should == {from: "Toronto"}.with_indifferent_access
-      end
-      it "should not consider blank as removed" do
-        subject[:country].should == {from: "Canada", to: ''}.with_indifferent_access
-      end
-      it "should track changed array field" do
-        subject[:aliases].should == {from: ["bob"], to: ["", "bill", "james"]}.with_indifferent_access
-      end
-      it "should not track unmodified field" do
-        subject[:address].should be_nil
-      end
-      it "should not track untracked fields" do
-        subject[:email].should be_nil
+      context "update action" do
+        subject{ user.history_tracks.first.tracked_changes }
+        before do
+          user.update_attributes(name: "Aaron2", email: nil, country: '',  city: nil, phone: '867-5309', aliases: ['','bill','james'])
+        end
+        it{ should be_a HashWithIndifferentAccess }
+        it "should track changed field" do
+          subject[:n].should == {from: "Aaron", to:"Aaron2"}.with_indifferent_access
+        end
+        it "should track added field" do
+          subject[:phone].should == {to: "867-5309"}.with_indifferent_access
+        end
+        it "should track removed field" do
+          subject[:city].should == {from: "Toronto"}.with_indifferent_access
+        end
+        it "should not consider blank as removed" do
+          subject[:country].should == {from: "Canada", to: ''}.with_indifferent_access
+        end
+        it "should track changed array field" do
+          subject[:aliases].should == {from: ["bob"], to: ["", "bill", "james"]}.with_indifferent_access
+        end
+        it "should not track unmodified field" do
+          subject[:address].should be_nil
+        end
+        it "should not track untracked fields" do
+          subject[:email].should be_nil
+        end
       end
     end
 
     describe "#tracked_edits" do
-      before do
-        user.update_attributes(name: "Aaron2", email: nil, country: '', city: nil, phone: '867-5309', aliases: ['','bill','james'])
-      end
-      subject{ user.history_tracks.first.tracked_edits }
-      it{ should be_a HashWithIndifferentAccess }
-      it "should track changed field" do
-        subject[:modify].should == {n: {from: "Aaron", to:"Aaron2"}}.with_indifferent_access
-      end
-      it "should track added field" do
-        subject[:add].should == {phone: "867-5309"}.with_indifferent_access
-      end
-      it "should track removed field and consider blank as removed" do
-        subject[:remove].should == {city: "Toronto", country: "Canada"}.with_indifferent_access
-      end
-      it "should track changed array field" do
-        subject[:array].should == {aliases: {remove: ["bob"], add: ["", "bill", "james"]}}.with_indifferent_access
-      end
-      it "should not track unmodified field" do
-        %w(add modify remove array).each do |edit|
-          subject[edit][:address].should be_nil
+      context "create action" do
+        subject{ tag.history_tracks.first.tracked_edits }
+        it "consider all edits as ;add" do
+          subject[:add].should == {title: "test"}.with_indifferent_access
         end
       end
-      it "should not track untracked fields" do
-        %w(add modify remove array).each do |edit|
-          subject[edit][:email].should be_nil
+      context "destroy action" do
+        subject{ tag.destroy; tag.history_tracks.last.tracked_edits }
+        it "consider all edits as ;remove" do
+          subject[:remove].should == {title: "test"}.with_indifferent_access
+        end
+      end
+      context "update action" do
+        subject{ user.history_tracks.first.tracked_edits }
+        before do
+          user.update_attributes(name: "Aaron2", email: nil, country: '', city: nil, phone: '867-5309', aliases: ['','bill','james'])
+        end
+        it{ should be_a HashWithIndifferentAccess }
+        it "should track changed field" do
+          subject[:modify].should == {n: {from: "Aaron", to:"Aaron2"}}.with_indifferent_access
+        end
+        it "should track added field" do
+          subject[:add].should == {phone: "867-5309"}.with_indifferent_access
+        end
+        it "should track removed field and consider blank as removed" do
+          subject[:remove].should == {city: "Toronto", country: "Canada"}.with_indifferent_access
+        end
+        it "should track changed array field" do
+          subject[:array].should == {aliases: {remove: ["bob"], add: ["", "bill", "james"]}}.with_indifferent_access
+        end
+        it "should not track unmodified field" do
+          %w(add modify remove array).each do |edit|
+            subject[edit][:address].should be_nil
+          end
+        end
+        it "should not track untracked fields" do
+          %w(add modify remove array).each do |edit|
+            subject[edit][:email].should be_nil
+          end
         end
       end
     end
@@ -687,6 +716,30 @@ describe Mongoid::History do
         expected_root = {"name" => "Post", "id" => post.id}
         expected_node = {"name" => "coms", "id" => foo.id}
         foo.history_tracks.first.association_chain.should == [expected_root, expected_node]
+      end
+    end
+
+    describe "#trackable_parent_class" do
+      context "a non-embedded model" do
+        it "should return the trackable parent class" do
+          tag.history_tracks.first.trackable_parent_class.should == Tag
+        end
+        it "should return the parent class even if the trackable is deleted" do
+          tracker = tag.history_tracks.first
+          tag.destroy
+          tracker.trackable_parent_class.should == Tag
+        end
+      end
+      context "an embedded model" do
+        it "should return the trackable parent class" do
+          comment.update_attributes(title: "Foo")
+          comment.history_tracks.first.trackable_parent_class.should == Post
+        end
+        it "should return the parent class even if the trackable is deleted" do
+          tracker = comment.history_tracks.first
+          comment.destroy
+          tracker.trackable_parent_class.should == Post
+        end
       end
     end
   end

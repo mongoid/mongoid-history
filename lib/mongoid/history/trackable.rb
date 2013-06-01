@@ -167,6 +167,7 @@ module Mongoid::History
 
       def modified_attributes_for_destroy
         @modified_attributes_for_destroy ||= attributes.inject({}) do |h,(k,v)|
+          # TODO: this next line should be `h[k] = [v, nil]` but it is left as-is for legacy purposes
           h[k] = [nil, v]
           h
         end.select{|k, v| self.class.tracked_field?(k, :destroy)}
@@ -241,7 +242,7 @@ module Mongoid::History
       # Whether or not the field should be tracked.
       #
       # @param [ String | Symbol ] field The name or alias of the field
-      # @param [ Symbol ] action The optional action name (:create, :update, or :destroy)
+      # @param [ String | Symbol ] action The optional action name (:create, :update, or :destroy)
       #
       # @return [ Boolean ] whether or not the field is tracked for the given action
       def tracked_field?(field, action = :update)
@@ -250,11 +251,11 @@ module Mongoid::History
 
       # Retrieves the list of tracked fields for a given action.
       #
-      # @param [ Symbol ] action The action name (:create, :update, or :destroy)
+      # @param [ String | Symbol ] action The action name (:create, :update, or :destroy)
       #
       # @return [ Array < String > ] the list of tracked fields for the given action
       def tracked_fields_for_action(action)
-        case action
+        case action.to_sym
           when :destroy then tracked_fields + reserved_tracked_fields
           else tracked_fields
         end
