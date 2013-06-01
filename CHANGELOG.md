@@ -2,8 +2,9 @@ Next Release
 ------------
 
 * Your contribution here.
-
 * Support for polymorphic embedded classes [@tstepp](https://github.com/tstepp)
+* Support for Mongoid field aliases, e.g. `field :n, as: :name` [@johnnyshields](https://github.com/johnnyshields)
+* Support for Mongoid embedded aliases, e.g. `embeds_many :comments, store_as: :coms` [@johnnyshields](https://github.com/johnnyshields)
 * Add `#tracked_changes` and `#tracked_edits` methods to `Tracker` class for nicer change summaries [@johnnyshields](https://github.com/johnnyshields) and [@tstepp](https://github.com/tstepp)
 * Tests: Added spec for nested embedded documents [@matekb](https://github.com/matekb)
 * Tests: Test run time cut in half (~2.5s versus ~5s) by using `#let` helper and removing class initialization before each test [@johnnyshields](https://github.com/johnnyshields)
