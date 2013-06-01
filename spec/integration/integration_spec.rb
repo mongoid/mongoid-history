@@ -11,8 +11,8 @@ describe Mongoid::History do
       field           :body
       field           :rating
 
-      embeds_many     :comments
-      embeds_one      :section
+      embeds_many     :comments, store_as: :coms
+      embeds_one      :section, store_as: :sec
       embeds_many     :tags, :cascade_callbacks => true
 
       accepts_nested_attributes_for :tags, :allow_destroy => true
@@ -25,7 +25,7 @@ describe Mongoid::History do
       include Mongoid::Timestamps
       include Mongoid::History::Trackable
 
-      field             :title
+      field             :t, as: :title
       field             :body
       embedded_in       :commentable, polymorphic: true
       track_history     :on => [:title, :body], :scope => :post, :track_create => true, :track_destroy => true
@@ -36,7 +36,7 @@ describe Mongoid::History do
       include Mongoid::Timestamps
       include Mongoid::History::Trackable
 
-      field             :title
+      field             :t, as: :title
       embedded_in       :post
       track_history     :on => [:title], :scope => :post, :track_create => true, :track_destroy => true
     end
@@ -46,8 +46,8 @@ describe Mongoid::History do
       include Mongoid::Timestamps
       include Mongoid::History::Trackable
 
-      field             :name
-      field             :email
+      field             :n, as: :name
+      field             :em, as: :email
       field             :phone
       field             :address
       field             :city
@@ -86,7 +86,7 @@ describe Mongoid::History do
       end
 
       it "should assign title and body on modified" do
-        comment.history_tracks.first.modified.should == {'title' => "test", 'body' =>  "comment", '_type' => 'Comment'}
+        comment.history_tracks.first.modified.should == {'t' => "test", 'body' =>  "comment", '_type' => 'Comment'}
       end
 
       it "should not assign title and body on original" do
@@ -112,7 +112,7 @@ describe Mongoid::History do
       it "should assign association_chain" do
         expected = [
           {'id' => post.id, 'name' => "Post"},
-          {'id' => comment.id, 'name' => "comments"}
+          {'id' => comment.id, 'name' => "coms"}
         ]
         comment.history_tracks.first.association_chain.should == expected
       end
@@ -196,10 +196,10 @@ describe Mongoid::History do
       it "should exclude defined options" do
         name = user.name
         user.update_attributes(:name => "Aaron2", :email => "aaronsnewemail@randomemail.com")
-        user.history_tracks.first.original.keys.should == [ "name" ]
-        user.history_tracks.first.original["name"].should == name
-        user.history_tracks.first.modified.keys.should == [ "name" ]
-        user.history_tracks.first.modified["name"].should == user.name
+        user.history_tracks.first.original.keys.should == [ "n" ]
+        user.history_tracks.first.original["n"].should == name
+        user.history_tracks.first.modified.keys.should == [ "n" ]
+        user.history_tracks.first.modified["n"].should == user.name
       end
 
       it "should undo field changes" do
@@ -240,7 +240,7 @@ describe Mongoid::History do
       subject{ user.history_tracks.first.tracked_changes }
       it{ should be_a HashWithIndifferentAccess }
       it "should track changed field" do
-        subject[:name].should == {from: "Aaron", to:"Aaron2"}.with_indifferent_access
+        subject[:n].should == {from: "Aaron", to:"Aaron2"}.with_indifferent_access
       end
       it "should track added field" do
         subject[:phone].should == {to: "867-5309"}.with_indifferent_access
@@ -269,7 +269,7 @@ describe Mongoid::History do
       subject{ user.history_tracks.first.tracked_edits }
       it{ should be_a HashWithIndifferentAccess }
       it "should track changed field" do
-        subject[:modify].should == {name: {from: "Aaron", to:"Aaron2"}}.with_indifferent_access
+        subject[:modify].should == {n: {from: "Aaron", to:"Aaron2"}}.with_indifferent_access
       end
       it "should track added field" do
         subject[:add].should == {phone: "867-5309"}.with_indifferent_access
@@ -347,21 +347,22 @@ describe Mongoid::History do
       end
 
       it "should assign modified fields" do
-        comment.update_attributes(:title => "Test2")
+        comment.update_attributes(:t => "Test2")
         comment.history_tracks.where(:version => 2).first.modified.should == {
-          "title" => "Test2"
+          "t" => "Test2"
         }
       end
 
       it "should assign original fields" do
         comment.update_attributes(:title => "Test2")
         comment.history_tracks.where(:version => 2).first.original.should == {
-          "title" => "test"
+          "t" => "test"
         }
       end
 
       it "should be possible to undo from parent" do
         comment.update_attributes(:title => "Test 2")
+        user
         post.history_tracks.last.undo!(user)
         comment.reload
         comment.title.should == "test"
@@ -400,14 +401,14 @@ describe Mongoid::History do
       it "should assign modified fields" do
         section.update_attributes(:title => 'Technology 2')
         section.history_tracks.where(:version => 2).first.modified.should == {
-          "title" => "Technology 2"
+          "t" => "Technology 2"
         }
       end
 
       it "should assign original fields" do
         section.update_attributes(:title => 'Technology 2')
         section.history_tracks.where(:version => 2).first.original.should == {
-          "title" => "Technology"
+          "t" => "Technology"
         }
       end
 
@@ -684,7 +685,7 @@ describe Mongoid::History do
       it "should assign interface name in association chain" do
         foo.update_attribute(:body, 'a changed body')
         expected_root = {"name" => "Post", "id" => post.id}
-        expected_node = {"name" => "comments", "id" => foo.id}
+        expected_node = {"name" => "coms", "id" => foo.id}
         foo.history_tracks.first.association_chain.should == [expected_root, expected_node]
       end
     end

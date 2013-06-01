@@ -156,10 +156,10 @@ module Mongoid::History
 
     def create_on_parent
       name = association_chain.last["name"]
-      if embeds_one?(trackable_parent, name)
-        trackable_parent.send("create_#{name}!", localize_keys(modified))
-      elsif embeds_many?(trackable_parent, name)
-         trackable_parent.send(name).create!(localize_keys(modified))
+      if trackable_parent.class.embeds_one?(name)
+        trackable_parent.create_embedded(name, localize_keys(modified))
+      elsif trackable_parent.class.embeds_many?(name)
+        trackable_parent.get_embedded(name).create!(localize_keys(modified))
       else
         raise "This should never happen. Please report bug!"
       end
@@ -167,19 +167,6 @@ module Mongoid::History
 
     def trackable_parents_and_trackable
       @trackable_parents_and_trackable ||= traverse_association_chain
-    end
-
-    def relation_of(doc, name)
-      meta = doc.reflect_on_association(name)
-      meta ? meta.relation : nil
-    end
-
-    def embeds_one?(doc, name)
-      relation_of(doc, name) == Mongoid::Relations::Embedded::One
-    end
-
-    def embeds_many?(doc, name)
-      relation_of(doc, name) == Mongoid::Relations::Embedded::Many
     end
 
     def traverse_association_chain
@@ -195,10 +182,10 @@ module Mongoid::History
           # root association. First element of the association chain
           klass = name.classify.constantize
           klass.where(:_id => node['id']).first
-        elsif embeds_one?(doc, name)
-          doc.send(name)
-        elsif embeds_many?(doc, name)
-          doc.send(name).where(:_id => node['id']).first
+        elsif doc.class.embeds_one?(name)
+          doc.get_embedded(name)
+        elsif doc.class.embeds_many?(name)
+          doc.get_embedded(name).where(:_id => node['id']).first
         else
           raise "This should never happen. Please report bug."
         end

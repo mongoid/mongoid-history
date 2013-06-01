@@ -23,14 +23,13 @@ module Mongoid::History
         options[:except] = [options[:except]] unless options[:except].is_a? Array
         options[:except] << options[:version_field]
         options[:except] << "#{options[:modifier_field]}_id".to_sym
-        options[:except] += [:_id, :id]
-        options[:except] = options[:except].map(&:to_s).flatten.compact.uniq
-        options[:except].map(&:to_s)
+        options[:except] += [:_id]
+        options[:except] = options[:except].map{|field| database_field_name(field)}.compact.uniq
 
         # normalize fields to track to either :all or an array of strings
         if options[:on] != :all
           options[:on] = [options[:on]] unless options[:on].is_a? Array
-          options[:on] = options[:on].map(&:to_s).flatten.uniq
+          options[:on] = options[:on].map{|field| database_field_name(field)}.compact.uniq
         end
 
         field options[:version_field].to_sym, :type => Integer
@@ -101,6 +100,14 @@ module Mongoid::History
         save!
       end
 
+      def get_embedded(name)
+        self.send(self.class.embedded_alias(name))
+      end
+
+      def create_embedded(name, value)
+        self.send("create_#{self.class.embedded_alias(name)}!", value)
+      end
+
     private
       def get_versions_criteria(options_or_version)
         if options_or_version.is_a? Hash
@@ -154,11 +161,11 @@ module Mongoid::History
       def modified_attributes_for_update
         @modified_attributes_for_update ||= if history_trackable_options[:on] == :all
           changes.reject do |k, v|
-            history_trackable_options[:except].include?(k)
+            history_trackable_options[:except].include?(database_field_name(k))
           end
         else
           changes.reject do |k, v|
-            !history_trackable_options[:on].include?(k)
+            !history_trackable_options[:on].include?(database_field_name(k))
           end
 
         end
@@ -170,7 +177,7 @@ module Mongoid::History
           h[k] = [nil, v]
           h
         end.reject do |k, v|
-          history_trackable_options[:except].include?(k)
+          history_trackable_options[:except].include?(database_field_name(k))
         end
       end
 
@@ -249,6 +256,28 @@ module Mongoid::History
     module SingletonMethods
       def history_trackable_options
         @history_trackable_options ||= Mongoid::History.trackable_class_options[self.collection_name.to_s.singularize.to_sym]
+      end
+
+      def embeds_one?(name)
+        relation_of(name) == Mongoid::Relations::Embedded::One
+      end
+
+      def embeds_many?(name)
+        relation_of(name) == Mongoid::Relations::Embedded::Many
+      end
+
+      def embedded_alias(name)
+        @embedded_aliases ||= relations.inject(HashWithIndifferentAccess.new) do |h,(k,v)|
+          h[v[:store_as]||k]=k; h
+        end
+        @embedded_aliases[name]
+      end
+
+      protected
+
+      def relation_of(name)
+        meta = reflect_on_association(embedded_alias(name))
+        meta ? meta.relation : nil
       end
     end
   end
