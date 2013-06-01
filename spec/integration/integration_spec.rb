@@ -86,7 +86,7 @@ describe Mongoid::History do
       end
 
       it "should assign title and body on modified" do
-        comment.history_tracks.first.modified.should == {'t' => "test", 'body' =>  "comment", '_type' => 'Comment'}
+        comment.history_tracks.first.modified.should == {'t' => "test", 'body' =>  "comment"}
       end
 
       it "should not assign title and body on original" do

@@ -18,15 +18,11 @@ module Mongoid::History
 
         options = default_options.merge(options)
 
-        # normalize except fields
-        # manually ensure _id, id, version will not be tracked in history
+        # normalize :except fields to an array of database field strings
         options[:except] = [options[:except]] unless options[:except].is_a? Array
-        options[:except] << options[:version_field]
-        options[:except] << "#{options[:modifier_field]}_id".to_sym
-        options[:except] += [:_id]
         options[:except] = options[:except].map{|field| database_field_name(field)}.compact.uniq
 
-        # normalize fields to track to either :all or an array of strings
+        # normalize :on fields to either :all or an array of database field strings
         if options[:on] != :all
           options[:on] = [options[:on]] unless options[:on].is_a? Array
           options[:on] = options[:on].map{|field| database_field_name(field)}.compact.uniq
@@ -159,34 +155,21 @@ module Mongoid::History
       end
 
       def modified_attributes_for_update
-        @modified_attributes_for_update ||= if history_trackable_options[:on] == :all
-          changes.reject do |k, v|
-            history_trackable_options[:except].include?(database_field_name(k))
-          end
-        else
-          changes.reject do |k, v|
-            !history_trackable_options[:on].include?(database_field_name(k))
-          end
-
-        end
+        @modified_attributes_for_update ||= changes.select{|k, v| self.class.tracked_field?(k, :update)}
       end
 
       def modified_attributes_for_create
-        @modified_attributes_for_create ||= attributes.inject({}) do |h, pair|
-          k,v =  pair
+        @modified_attributes_for_create ||= attributes.inject({}) do |h,(k,v)|
           h[k] = [nil, v]
           h
-        end.reject do |k, v|
-          history_trackable_options[:except].include?(database_field_name(k))
-        end
+        end.select{|k, v| self.class.tracked_field?(k, :create)}
       end
 
       def modified_attributes_for_destroy
-        @modified_attributes_for_destroy ||= attributes.inject({}) do |h, pair|
-          k,v =  pair
+        @modified_attributes_for_destroy ||= attributes.inject({}) do |h,(k,v)|
           h[k] = [nil, v]
           h
-        end
+        end.select{|k, v| self.class.tracked_field?(k, :destroy)}
       end
 
       def history_tracker_attributes(method)
@@ -254,29 +237,92 @@ module Mongoid::History
     end
 
     module SingletonMethods
+
+      # Whether or not the field should be tracked.
+      #
+      # @param [ String | Symbol ] field The name or alias of the field
+      # @param [ Symbol ] action The optional action name (:create, :update, or :destroy)
+      #
+      # @return [ Boolean ] whether or not the field is tracked for the given action
+      def tracked_field?(field, action = :update)
+        tracked_fields_for_action(action).include? database_field_name(field)
+      end
+
+      # Retrieves the list of tracked fields for a given action.
+      #
+      # @param [ Symbol ] action The action name (:create, :update, or :destroy)
+      #
+      # @return [ Array < String > ] the list of tracked fields for the given action
+      def tracked_fields_for_action(action)
+        case action
+          when :destroy then tracked_fields + reserved_tracked_fields
+          else tracked_fields
+        end
+      end
+
+      # Retrieves the memoized base list of tracked fields, excluding reserved fields.
+      #
+      # @return [ Array < String > ] the base list of tracked database field names
+      def tracked_fields
+        @tracked_fields ||= self.fields.map do |k,v|
+          v.instance_of?(Mongoid::Fields::Standard) || v.instance_of?(Mongoid::Fields::Localized) ? k : nil
+        end.compact.select do |field|
+          h = history_trackable_options
+          (h[:on]==:all || h[:on].include?(field)) && !h[:except].include?(field)
+        end - reserved_tracked_fields
+      end
+
+      # Retrieves the memoized list of reserved tracked fields, which are only included for certain actions.
+      #
+      # @return [ Array < String > ] the list of reserved database field names
+      def reserved_tracked_fields
+        @reserved_tracked_fields ||= ["_id", history_trackable_options[:version_field].to_s, "#{history_trackable_options[:modifier_field]}_id"]
+      end
+
       def history_trackable_options
         @history_trackable_options ||= Mongoid::History.trackable_class_options[self.collection_name.to_s.singularize.to_sym]
       end
 
-      def embeds_one?(name)
-        relation_of(name) == Mongoid::Relations::Embedded::One
+      # Indicates whether there is an Embedded::One relation for the given embedded field.
+      #
+      # @param [ String | Symbol ] embed The name of the embedded field
+      #
+      # @return [ Boolean ] true if there is an Embedded::One relation for the given embedded field
+      def embeds_one?(embed)
+        relation_of(embed) == Mongoid::Relations::Embedded::One
       end
 
-      def embeds_many?(name)
-        relation_of(name) == Mongoid::Relations::Embedded::Many
+      # Indicates whether there is an Embedded::Many relation for the given embedded field.
+      #
+      # @param [ String | Symbol ] embed The name of the embedded field
+      #
+      # @return [ Boolean ] true if there is an Embedded::Many relation for the given embedded field
+      def embeds_many?(embed)
+        relation_of(embed) == Mongoid::Relations::Embedded::Many
       end
 
-      def embedded_alias(name)
-        @embedded_aliases ||= relations.inject(HashWithIndifferentAccess.new) do |h,(k,v)|
-          h[v[:store_as]||k]=k; h
-        end
-        @embedded_aliases[name]
+      # Retrieves the database representation of an embedded field name, in case the :store_as option is used.
+      #
+      # @param [ String | Symbol ] embed The name or alias of the embedded field
+      #
+      # @return [ String ] the database name of the embedded field
+      def embedded_alias(embed)
+        embedded_aliases[embed]
       end
 
       protected
 
-      def relation_of(name)
-        meta = reflect_on_association(embedded_alias(name))
+      # Retrieves the memoized hash of embedded aliases and their associated database representations.
+      #
+      # @return [ Hash < String, String > ] hash of embedded aliases (keys) to database representations (values)
+      def embedded_aliases
+        @embedded_aliases ||= relations.inject(HashWithIndifferentAccess.new) do |h,(k,v)|
+          h[v[:store_as]||k]=k; h
+        end
+      end
+
+      def relation_of(embed)
+        meta = reflect_on_association(embedded_alias(embed))
         meta ? meta.relation : nil
       end
     end
