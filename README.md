@@ -162,6 +162,22 @@ Comment.disable_tracking do
 end
 ```
 
+**Retrieving the list of tracked fields**
+
+```ruby
+class Book
+  ...
+  field             :title
+  field             :author
+  field             :price
+  track_history     :on => [:title, :price]
+end
+
+Book.tracked_fields           #=> ["title", "price"]
+Book.tracked_field?(:title)   #=> true
+Book.tracked_field?(:author)  #=> false
+```
+
 **Displaying history trackers as an audit trail**
 
 In your Controller:
