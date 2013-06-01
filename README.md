@@ -161,6 +161,50 @@ Comment.disable_tracking do
   comment.update_attributes(:title => "Test 3")
 end
 ```
+
+**Displaying history trackers as an audit trail**
+
+In your Controller:
+
+```ruby
+# Fetch history trackers
+@trackers = HistoryTracker.limit(25)
+
+# get change set for the first tracker
+@changes = @trackers.first.tracked_changes
+  #=> {field: {to: val1, from: val2}}
+
+# get edit set for the first tracker
+@edits = @trackers.first.tracked_changes
+  #=> { add: {field: val},
+  #     remove: {field: val},
+  #     modify: { to: val1, from: val2 },
+  #     array: { add: [val2], remove: [val1] } }
+```
+
+In your View, you might do something like (example in HAML format):
+
+```haml
+%ul.changes
+  - (@edits[:add]||[]).each do |k,v|
+    %li.remove Added field #{k} value #{v}
+
+  - (@edits[:modify]||[]).each do |k,v|
+    %li.modify Changed field #{k} from #{v[:from]} to #{v[:to]}
+
+  - (@edits[:array]||[]).each do |k,v|
+    %li.modify
+      - if v[:remove].nil?
+        Changed field #{k} by adding #{v[:add]}
+      - elsif v[:add].nil?
+        Changed field #{k} by removing #{v[:remove]}
+      - else
+        Changed field #{k} by adding #{v[:add]} and removing #{v[:remove]}
+
+  - (@edits[:remove]||[]).each do |k,v|
+    %li.remove Removed field #{k} (was previously #{v})
+```
+
 For more examples, check out [spec/integration/integration_spec.rb](https://github.com/aq1018/mongoid-history/blob/master/spec/integration/integration_spec.rb).
 
 Contributing to mongoid-history
