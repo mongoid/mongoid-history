@@ -154,6 +154,21 @@ module Mongoid::History
         ActiveSupport::OrderedHash['name', name, 'id', node.id]
       end
 
+      # Returns a Hash of field name to pairs of original and modified values
+      # for each tracked field for a given action.
+      #
+      # @param [ String | Symbol ] action The modification action (:create, :update, :destroy)
+      #
+      # @return [ Hash<String, Array<Object>> ] the pairs of original and modified
+      #   values for each field
+      def modified_attributes_for_action(action)
+        case action.to_sym
+          when :destroy then modified_attributes_for_destroy
+          when :create then modified_attributes_for_create
+          else modified_attributes_for_update
+        end
+      end
+
       def modified_attributes_for_update
         @modified_attributes_for_update ||= changes.select{|k, v| self.class.tracked_field?(k, :update)}
       end
@@ -167,26 +182,21 @@ module Mongoid::History
 
       def modified_attributes_for_destroy
         @modified_attributes_for_destroy ||= attributes.inject({}) do |h,(k,v)|
-          # TODO: this next line should be `h[k] = [v, nil]` but it is left as-is for legacy purposes
-          h[k] = [nil, v]
+          h[k] = [v, nil]
           h
         end.select{|k, v| self.class.tracked_field?(k, :destroy)}
       end
 
-      def history_tracker_attributes(method)
+      def history_tracker_attributes(action)
         return @history_tracker_attributes if @history_tracker_attributes
 
         @history_tracker_attributes = {
           :association_chain  => traverse_association_chain,
           :scope              => history_trackable_options[:scope],
-          :modifier        => send(history_trackable_options[:modifier_field])
+          :modifier           => send(history_trackable_options[:modifier_field])
         }
 
-        original, modified = transform_changes(case method
-          when :destroy then modified_attributes_for_destroy
-          when :create then modified_attributes_for_create
-          else modified_attributes_for_update
-        end)
+        original, modified = transform_changes(modified_attributes_for_action(action))
 
         @history_tracker_attributes[:original] = original
         @history_tracker_attributes[:modified] = modified
