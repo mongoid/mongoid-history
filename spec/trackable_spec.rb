@@ -1,13 +1,12 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 
-describe Mongoid::History::Trackable do
-  before :each do
-    class MyModel
-      include Mongoid::Document
-      include Mongoid::History::Trackable
-    end
-  end
+class MyModel
+  include Mongoid::Document
+  include Mongoid::History::Trackable
+  field :foo
+end
 
+describe Mongoid::History::Trackable do
   it "should have #track_history" do
     MyModel.should respond_to :track_history
   end
@@ -19,27 +18,26 @@ describe Mongoid::History::Trackable do
   end
 
   describe "#track_history" do
-    before :each do
-      class MyModel
-        include Mongoid::Document
-        include Mongoid::History::Trackable
-        track_history
-      end
-
-      @expected_option = {
-        :on             =>  :all,
+    before :all do
+      MyModel.track_history
+      @persisted_history_options = Mongoid::History.trackable_class_options
+    end
+    before(:each){ Mongoid::History.trackable_class_options = @persisted_history_options }
+    let(:expected_option) do
+      { :on             =>  :all,
         :modifier_field =>  :modifier,
         :version_field  =>  :version,
         :scope          =>  :my_model,
-        :except         =>  ["created_at", "updated_at", "version", "modifier_id", "_id"],
+        :except         =>  ["created_at", "updated_at"],
         :track_create   =>  false,
         :track_update   =>  true,
-        :track_destroy  =>  false,
-      }
+        :track_destroy  =>  false }
     end
+    let(:regular_fields){ ["foo"] }
+    let(:reserved_fields){ ["_id", "version", "modifier_id"] }
 
     it "should have default options" do
-      Mongoid::History.trackable_class_options[:my_model].should == @expected_option
+      Mongoid::History.trackable_class_options[:my_model].should == expected_option
     end
 
     it "should define callback function #track_update" do
@@ -55,7 +53,43 @@ describe Mongoid::History::Trackable do
     end
 
     it "should define #history_trackable_options" do
-      MyModel.history_trackable_options.should == @expected_option
+      MyModel.history_trackable_options.should == expected_option
+    end
+
+    describe "#tracked_fields" do
+      it "should return the tracked field list" do
+        MyModel.tracked_fields.should == regular_fields
+      end
+    end
+
+    describe "#reserved_tracked_fields" do
+      it "should return the protected field list" do
+        MyModel.reserved_tracked_fields.should == reserved_fields
+      end
+    end
+
+    describe "#tracked_fields_for_action" do
+      it "should include the reserved fields for destroy" do
+        MyModel.tracked_fields_for_action(:destroy).should == regular_fields + reserved_fields
+      end
+      it "should not include the reserved fields for update" do
+        MyModel.tracked_fields_for_action(:update).should == regular_fields
+      end
+      it "should not include the reserved fields for create" do
+        MyModel.tracked_fields_for_action(:create).should == regular_fields
+      end
+    end
+
+    describe "#tracked_field?" do
+      it "should not include the reserved fields by default" do
+        MyModel.tracked_field?(:_id).should be_false
+      end
+      it "should include the reserved fields for destroy" do
+        MyModel.tracked_field?(:_id, :destroy).should be_true
+      end
+      it "should allow field aliases" do
+        MyModel.tracked_field?(:id, :destroy).should be_true
+      end
     end
 
     context "sub-model" do
@@ -65,11 +99,11 @@ describe Mongoid::History::Trackable do
       end
 
       it "should have default options" do
-        Mongoid::History.trackable_class_options[:my_model].should == @expected_option
+        Mongoid::History.trackable_class_options[:my_model].should == expected_option
       end
 
       it "should define #history_trackable_options" do
-        MySubModel.history_trackable_options.should == @expected_option
+        MySubModel.history_trackable_options.should == expected_option
       end
     end
 
