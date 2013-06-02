@@ -9,6 +9,7 @@ Next Release
 * Add `#tracked_changes` and `#tracked_edits` methods to `Tracker` class for nicer change summaries - [@johnnyshields](https://github.com/johnnyshields) and [@tstepp](https://github.com/tstepp)
 * Refactored and exposed `#trackable_parent_class` in `Tracker`, which returns the class of the trackable regardless of whether the trackable itself has been destroyed - [@johnnyshields](https://github.com/johnnyshields)
 * Add class-level `#tracked_field?` and `#tracked_fields` methods; refactor logic to determine whether a field is tracked - [@johnnyshields](https://github.com/johnnyshields)
+* Fix bug in Trackable#track_update where `return` condition at beginning of method caused a short-circuit where memoization would not be cleared properly. - [@johnnyshields](https://github.com/johnnyshields)
 * Tests: Added spec for nested embedded documents - [@matekb](https://github.com/matekb)
 * Tests: Test run time cut in half (~2.5s versus ~5s) by using `#let` helper and removing class initialization before each test - [@johnnyshields](https://github.com/johnnyshields)
 * Tests: Remove `database_cleaner` gem in favor of `Mongoid.purge!` - [@johnnyshields](https://github.com/johnnyshields)

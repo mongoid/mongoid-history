@@ -127,10 +127,6 @@ module Mongoid::History
         versions.desc(:version)
       end
 
-      def should_track_update?
-        track_history? && !modified_attributes_for_update.blank?
-      end
-
       def traverse_association_chain(node=self)
         list = node._parent ? traverse_association_chain(node._parent) : []
         list << association_hash(node)
@@ -203,30 +199,19 @@ module Mongoid::History
         @history_tracker_attributes
       end
 
-      def track_update
-        return unless should_track_update?
-        current_version = (self.send(history_trackable_options[:version_field]) || 0 ) + 1
-        self.send("#{history_trackable_options[:version_field]}=", current_version)
-        Mongoid::History.tracker_class.create!(history_tracker_attributes(:update).merge(:version => current_version, :action => "update", :trackable => self))
-        clear_memoization
+      def track_create
+        track_history_for_action(:create)
       end
 
-      def track_create
-        return unless track_history?
-        current_version = (self.send(history_trackable_options[:version_field]) || 0 ) + 1
-        self.send("#{history_trackable_options[:version_field]}=", current_version)
-        Mongoid::History.tracker_class.create!(history_tracker_attributes(:create).merge(:version => current_version, :action => "create", :trackable => self))
-        clear_memoization
+      def track_update
+        track_history_for_action(:update)
       end
 
       def track_destroy
-        return unless track_history?
-        current_version = (self.send(history_trackable_options[:version_field]) || 0 ) + 1
-        Mongoid::History.tracker_class.create!(history_tracker_attributes(:destroy).merge(:version => current_version, :action => "destroy", :trackable => self))
-        clear_memoization
+        track_history_for_action(:destroy)
       end
 
-      def clear_memoization
+      def clear_trackable_memoization
         @history_tracker_attributes =  nil
         @modified_attributes_for_create = nil
         @modified_attributes_for_update = nil
@@ -245,6 +230,20 @@ module Mongoid::History
         [ original, modified ]
       end
 
+      protected
+
+      def track_history_for_action?(action)
+        track_history? && !(action.to_sym == :update && modified_attributes_for_update.blank?)
+      end
+
+      def track_history_for_action(action)
+        if track_history_for_action?(action)
+          current_version = (self.send(history_trackable_options[:version_field]) || 0 ) + 1
+          self.send("#{history_trackable_options[:version_field]}=", current_version)
+          Mongoid::History.tracker_class.create!(history_tracker_attributes(action.to_sym).merge(version: current_version, action: action.to_s, trackable: self))
+        end
+        clear_trackable_memoization
+      end
     end
 
     module SingletonMethods
