@@ -274,9 +274,7 @@ module Mongoid::History
       #
       # @return [ Array < String > ] the base list of tracked database field names
       def tracked_fields
-        @tracked_fields ||= self.fields.map do |k,v|
-          v.instance_of?(Mongoid::Fields::Standard) || v.instance_of?(Mongoid::Fields::Localized) ? k : nil
-        end.compact.select do |field|
+        @tracked_fields ||= self.fields.keys.select do |field|
           h = history_trackable_options
           (h[:on]==:all || h[:on].include?(field)) && !h[:except].include?(field)
         end - reserved_tracked_fields
