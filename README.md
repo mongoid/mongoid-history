@@ -2,6 +2,7 @@ mongoid-history
 ===============
 
 [![Build Status](https://secure.travis-ci.org/aq1018/mongoid-history.png?branch=master)](http://travis-ci.org/aq1018/mongoid-history)
+[![Code Climate](https://codeclimate.com/github/aq1018/mongoid-history.png)](https://codeclimate.com/github/aq1018/mongoid-history)
 
 Mongoid-history tracks historical changes for any document, including embedded ones. It achieves this by storing all history tracks in a single collection that you define. Embedded documents are referenced by storing an association path, which is an array of `document_name` and `document_id` fields starting from the top most parent document and down to the embedded document that should track history.
 

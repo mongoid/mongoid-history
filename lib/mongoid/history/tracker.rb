@@ -82,23 +82,16 @@ module Mongoid::History
       @trackable_parent ||= trackable_parents_and_trackable[-2]
     end
 
-    # Outputs a :from, :to hash for each affected field.
+    # Outputs a :from, :to hash for each affected field. Intentionally excludes fields
+    # which are not tracked, even if there are tracked values for such fields
+    # present in the database.
     #
-    # @return Hash a change set in the format:
+    # @return [ HashWithIndifferentAccess ] a change set in the format:
     #   { field_1: {to: new_val}, field_2: {from: old_val, to: new_val} }
     def tracked_changes
       @tracked_changes ||= (modified.keys | original.keys).inject(HashWithIndifferentAccess.new) do |h,k|
-
-        # HACK: transformation is required due to bug in Trackable#modified_attributes_for_destroy method
-        h[k] = self.action=='destroy' ?
-            {from: modified[k], to: original[k]} :
-            {from: original[k], to: modified[k]}
-
-        # HACK: Trackable#modified_attributes_for_destroy method
-        h[k].delete_if{|k,v| v.nil?}
+        h[k] = {from: original[k], to: modified[k]}.delete_if{|k,v| v.nil?}
         h
-
-      # HACK: the `!trackable_class.tracked_field?(k)` bit is a hack for :destroy case
       end.delete_if{|k,v| v.blank? || !trackable_parent_class.tracked_field?(k)}
     end
 
@@ -106,7 +99,7 @@ module Mongoid::History
     # Does deep comparison of arrays. Useful for creating human-readable representations
     # of the history tracker. Considers changing a value to 'blank' to be a removal.
     #
-    # @return Hash a change set in the format:
+    # @return [ HashWithIndifferentAccess ] a change set in the format:
     #   { add: { field_1: new_val, ... },
     #     modify: { field_2: {from: old_val, to: new_val}, ... },
     #     remove: { field_3: old_val },
@@ -135,15 +128,19 @@ module Mongoid::History
       end
     end
 
-    # Similar to changes, but only includes the new (modified) value for each
-    # affected field. Included for legacy compatibility.
+    # Similar to #tracked_changes, but contains only a single value for each
+    # affected field:
+    #   - :create and :update return the modified values
+    #   - :destroy returns original values
+    # Included for legacy compatibility.
     #
     # @deprecated
     #
-    # @return [ Hash ] a change set in the format:
-    #   { field_1: new_val, field_2: new_val }
+    # @return [ HashWithIndifferentAccess ] a change set in the format:
+    #   { field_1: value, field_2: value }
     def affected
-      @affected ||= tracked_changes.inject(HashWithIndifferentAccess.new){|h,(k,v)| h[k]=v[:to]||v[:from]; h}
+      target = action.to_sym == :destroy ? :from : :to
+      @affected ||= tracked_changes.inject(HashWithIndifferentAccess.new){|h,(k,v)| h[k] = v[target]; h}
     end
 
     # Returns the class of the trackable, irrespective of whether the trackable object
@@ -165,17 +162,17 @@ module Mongoid::History
     end
 
     def create_standalone
-      restored = trackable_parent_class.new(localize_keys(modified))
-      restored.id = modified["_id"]
+      restored = trackable_parent_class.new(localize_keys(original))
+      restored.id = original["_id"]
       restored.save!
     end
 
     def create_on_parent
       name = association_chain.last["name"]
       if trackable_parent.class.embeds_one?(name)
-        trackable_parent.create_embedded(name, localize_keys(modified))
+        trackable_parent.create_embedded(name, localize_keys(original))
       elsif trackable_parent.class.embeds_many?(name)
-        trackable_parent.get_embedded(name).create!(localize_keys(modified))
+        trackable_parent.get_embedded(name).create!(localize_keys(original))
       else
         raise "This should never happen. Please report bug!"
       end
