@@ -319,6 +319,13 @@ describe Mongoid::History do
           end
         end
       end
+      context "with empty values" do
+        subject{ Tracker.new }
+        it "should skip empty values" do
+          subject.stub(:tracked_changes).and_return({name:{to:'',from:[]}, city:{to:'Toronto',from:''}})
+          subject.tracked_edits.should == {add: {city: "Toronto"}}.with_indifferent_access
+        end
+      end
     end
 
     describe "on update non-embedded twice" do

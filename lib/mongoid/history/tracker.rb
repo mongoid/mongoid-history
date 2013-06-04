@@ -106,22 +106,23 @@ module Mongoid::History
     #     array: { field_4: {add: ['foo', 'bar'], remove: ['baz']} } }
     def tracked_edits
       @tracked_edits ||= tracked_changes.inject(HashWithIndifferentAccess.new) do |h,(k,v)|
-        return h if v[:from].blank? && v[:to].blank?
-        if v[:from].blank?
-          h[:add] ||={}
-          h[:add][k] = v[:to]
-        elsif v[:to].blank?
-          h[:remove] ||={}
-          h[:remove][k] = v[:from]
-        else
-          if v[:from].is_a?(Array) && v[:to].is_a?(Array)
-            h[:array] ||={}
-            old_values = v[:from] - v[:to]
-            new_values = v[:to] - v[:from]
-            h[:array][k] = {add: new_values, remove: old_values}.delete_if{|k,v| v.blank?}
+        unless v[:from].blank? && v[:to].blank?
+          if v[:from].blank?
+            h[:add] ||={}
+            h[:add][k] = v[:to]
+          elsif v[:to].blank?
+            h[:remove] ||={}
+            h[:remove][k] = v[:from]
           else
-            h[:modify] ||={}
-            h[:modify][k] = v
+            if v[:from].is_a?(Array) && v[:to].is_a?(Array)
+              h[:array] ||={}
+              old_values = v[:from] - v[:to]
+              new_values = v[:to] - v[:from]
+              h[:array][k] = {add: new_values, remove: old_values}.delete_if{|k,v| v.blank?}
+            else
+              h[:modify] ||={}
+              h[:modify][k] = v
+            end
           end
         end
         h
