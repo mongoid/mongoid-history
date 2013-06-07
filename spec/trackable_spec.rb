@@ -6,6 +6,10 @@ class MyModel
   field :foo
 end
 
+class HistoryTracker
+  include Mongoid::History::Tracker
+end
+
 describe Mongoid::History::Trackable do
   it "should have #track_history" do
     MyModel.should respond_to :track_history
@@ -27,6 +31,7 @@ describe Mongoid::History::Trackable do
       { :on             =>  :all,
         :modifier_field =>  :modifier,
         :version_field  =>  :version,
+        :changes_method =>  :changes,
         :scope          =>  :my_model,
         :except         =>  ["created_at", "updated_at"],
         :track_create   =>  false,
@@ -141,7 +146,29 @@ describe Mongoid::History::Trackable do
         end
       end
 
-    end
+      context ":changes_method" do
+        it "should default to :changes" do
+          m = MyModel.create
+          m.should_receive(:changes).exactly(3).times.and_call_original
+          m.should_not_receive(:my_changes)
+          m.save
+        end
 
+        it "should allow an alternate method to be specified" do
+          class MyModel3 < MyModel
+            track_history :changes_method => :my_changes
+
+            def my_changes
+              {}
+            end
+          end
+
+          m = MyModel3.create
+          m.should_receive(:changes).twice.and_call_original
+          m.should_receive(:my_changes).once.and_call_original
+          m.save
+        end
+      end
+    end
   end
 end
