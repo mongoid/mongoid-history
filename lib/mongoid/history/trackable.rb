@@ -10,6 +10,7 @@ module Mongoid::History
           :except         =>  [:created_at, :updated_at],
           :modifier_field =>  :modifier,
           :version_field  =>  :version,
+          :changes_method =>  :changes,
           :scope          =>  scope_name,
           :track_create   =>  false,
           :track_update   =>  true,
@@ -151,11 +152,11 @@ module Mongoid::History
 
       def modified_attributes_for_update
         @modified_attributes_for_update ||= if history_trackable_options[:on] == :all
-          changes.reject do |k, v|
+          self.send(history_trackable_options[:changes_method]).reject do |k, v|
             history_trackable_options[:except].include?(k)
           end
         else
-          changes.reject do |k, v|
+          self.send(history_trackable_options[:changes_method]).reject do |k, v|
             !history_trackable_options[:on].include?(k)
           end
 
