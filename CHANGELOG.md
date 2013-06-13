@@ -2,8 +2,8 @@ Next Release
 ------------
 
 * Your contribution here.
-* Add :changes_method option
-* [API Change] :destroy action now stores trackers in the format original=value, modified=nil (previously it was the reverse) - [@johnnyshields](https://github.com/johnnyshields)
+* Add `:changes_method` that optionally overrides which method to call to collect changes - [@joelnordel](https://github.com/joelnordell).
+* [API Change] The `:destroy` action now stores trackers in the format `original=value, modified=nil` (previously it was the reverse) - [@johnnyshields](https://github.com/johnnyshields)
 * Support for polymorphic embedded classes - [@tstepp](https://github.com/tstepp)
 * Support for Mongoid field aliases, e.g. `field :n, as: :name` - [@johnnyshields](https://github.com/johnnyshields)
 * Support for Mongoid embedded aliases, e.g. `embeds_many :comments, store_as: :coms` - [@johnnyshields](https://github.com/johnnyshields)
