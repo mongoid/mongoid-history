@@ -222,6 +222,61 @@ In your View, you might do something like (example in HAML format):
     %li.remove Removed field #{k} (was previously #{v})
 ```
 
+**Using an alternate changes method**
+
+Sometimes you may wish to provide an alternate method for determining which changes should be tracked.  For example, if you are using embedded documents
+and nested attributes, you may wish to write your own changes method that includes changes from the embedded documents.
+
+Mongoid::History provides an option named `:changes_method` which allows you to do this.  It defaults to `:changes`, which is the standard changes method.
+
+Example:
+
+```ruby
+class Foo
+  include Mongoid::Document
+  include Mongoid::Timestamps
+  include Mongoid::History::Trackable
+
+  field      :bar
+  embeds_one :baz
+  accepts_nested_attributes_for :baz
+
+  # use changes_with_baz to include baz's changes in this document's
+  # history.
+  track_history     :changes_method => :changes_with_baz
+
+  def changes_with_baz
+    if baz.changed?
+      changes.merge( :baz => summarized_changes(baz) )
+    else
+      changes
+    end
+  end
+
+  private
+  # This method takes the changes from an embedded doc and formats them
+  # in a summarized way, similar to how the embedded doc appears in the
+  # parent document's attributes
+  def summarized_changes obj
+    obj.changes.keys.map do |field|
+      next unless obj.respond_to?("#{field}_change")
+      [ { field => obj.send("#{field}_change")[0] },
+        { field => obj.send("#{field}_change")[1] } ]
+    end.compact.transpose.map do |fields|
+      fields.inject({}) {|map,f| map.merge(f)}
+    end
+  end
+end
+
+class Baz
+  include Mongoid::Document
+  include Mongoid::Timestamps
+
+  embedded_in :foo
+  field :value
+end
+```
+
 For more examples, check out [spec/integration/integration_spec.rb](https://github.com/aq1018/mongoid-history/blob/master/spec/integration/integration_spec.rb).
 
 Contributing to mongoid-history

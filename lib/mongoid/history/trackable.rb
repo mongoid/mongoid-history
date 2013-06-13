@@ -10,6 +10,7 @@ module Mongoid::History
           :except         =>  [:created_at, :updated_at],
           :modifier_field =>  :modifier,
           :version_field  =>  :version,
+          :changes_method =>  :changes,
           :scope          =>  scope_name,
           :track_create   =>  false,
           :track_update   =>  true,
@@ -166,7 +167,7 @@ module Mongoid::History
       end
 
       def modified_attributes_for_update
-        @modified_attributes_for_update ||= changes.select{|k, v| self.class.tracked_field?(k, :update)}
+        @modified_attributes_for_update ||= self.send(history_trackable_options[:changes_method]).select{|k, v| self.class.tracked_field?(k, :update)}
       end
 
       def modified_attributes_for_create
