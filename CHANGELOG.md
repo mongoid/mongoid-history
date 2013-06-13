@@ -1,3 +1,8 @@
+Next Release
+------------
+
+* [#75](http://github.com/aq1018/mongoid-history/pull/75): Add :changes_method option
+
 0.2.4 (8/21/2012)
 -----------------
 
