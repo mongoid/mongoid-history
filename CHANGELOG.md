@@ -2,6 +2,7 @@ Next Release
 ------------
 
 * Your contribution here.
+* Add :changes_method option
 * [API Change] :destroy action now stores trackers in the format original=value, modified=nil (previously it was the reverse) - [@johnnyshields](https://github.com/johnnyshields)
 * Support for polymorphic embedded classes - [@tstepp](https://github.com/tstepp)
 * Support for Mongoid field aliases, e.g. `field :n, as: :name` - [@johnnyshields](https://github.com/johnnyshields)
