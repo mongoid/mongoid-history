@@ -51,7 +51,7 @@ module Mongoid::History
 
       def track_history?
         enabled = Thread.current[track_history_flag]
-        enabled.nil? ? true : enabled
+        Mongoid::History.enabled? && (enabled.nil? ? true : enabled)
       end
 
       def disable_tracking(&block)

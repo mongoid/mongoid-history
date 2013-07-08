@@ -322,7 +322,7 @@ describe Mongoid::History do
       context "with empty values" do
         subject{ Tracker.new }
         it "should skip empty values" do
-          subject.stub(:tracked_changes).and_return({name:{to:'',from:[]}, city:{to:'Toronto',from:''}})
+          subject.stub(:tracked_changes){ {name:{to:'',from:[]}, city:{to:'Toronto',from:''}} }
           subject.tracked_edits.should == {add: {city: "Toronto"}}.with_indifferent_access
         end
       end
@@ -502,8 +502,8 @@ describe Mongoid::History do
       
       before(:each) do
         Mongoid.instantiate_observers
-        Thread.current[:mongoid_history_sweeper_controller] = self
-        self.stub!(:current_user).and_return user
+        Thread.current[:mongoid_history_sweeper_controller] = Mongoid::History::Sweeper.instance
+        Mongoid::History::Sweeper.instance.stub(:current_user){ user }
       end
 
       # it "should have cascaded the creation callbacks and set timestamps" do
@@ -538,6 +538,7 @@ describe Mongoid::History do
       end
 
       it "should save modifier" do
+        Thread.current[:mongoid_history_sweeper_controller].current_user.should eq user
         tag_foo.history_tracks.last.modifier.should eq user
         tag_bar.history_tracks.last.modifier.should eq user
       end
