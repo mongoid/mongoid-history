@@ -112,62 +112,128 @@ describe Mongoid::History::Trackable do
       end
     end
 
-    context "track_history" do
+    describe "#track_history?" do
 
-      it "should be enabled on the current thread" do
-        MyModel.new.track_history?.should == true
-      end
+      context "when tracking is globally enabled" do
 
-      it "should be disabled within disable_tracking" do
-        MyModel.disable_tracking do
-          MyModel.new.track_history?.should == false
+        it "should be enabled on the current thread" do
+          Mongoid::History.enabled?.should == true
+          MyModel.new.track_history?.should == true
+        end
+
+        it "should be disabled within disable_tracking" do
+          MyModel.disable_tracking do
+            Mongoid::History.enabled?.should == true
+            MyModel.new.track_history?.should == false
+          end
+        end
+
+        it "should be rescued if an exception occurs" do
+          begin
+            MyModel.disable_tracking do
+              raise "exception"
+            end
+          rescue
+          end
+          Mongoid::History.enabled?.should == true
+          MyModel.new.track_history?.should == true
+        end
+
+        it "should be disabled only for the class that calls disable_tracking" do
+          class MyModel2
+            include Mongoid::Document
+            include Mongoid::History::Trackable
+            track_history
+          end
+
+          MyModel.disable_tracking do
+            Mongoid::History.enabled?.should == true
+            MyModel2.new.track_history?.should == true
+          end
         end
       end
 
-      it "should be rescued if an exception occurs" do
-        begin
+      context "when tracking is globally disabled" do
+
+        around(:each) do |example|
+          Mongoid::History.disable do
+            example.run
+          end
+        end
+
+        it "should be disabled by the global disablement" do
+          Mongoid::History.enabled?.should == false
+          MyModel.new.track_history?.should == false
+        end
+
+        it "should be disabled within disable_tracking" do
           MyModel.disable_tracking do
-            raise "exception"
+            Mongoid::History.enabled?.should == false
+            MyModel.new.track_history?.should == false
+          end
+        end
+
+        it "should be rescued if an exception occurs" do
+          begin
+            MyModel.disable_tracking do
+              raise "exception"
+            end
+          rescue
+          end
+          Mongoid::History.enabled?.should == false
+          MyModel.new.track_history?.should == false
+        end
+
+        it "should be disabled only for the class that calls disable_tracking" do
+          class MyModel2
+            include Mongoid::Document
+            include Mongoid::History::Trackable
+            track_history
+          end
+
+          MyModel.disable_tracking do
+            Mongoid::History.enabled?.should == false
+            MyModel2.new.track_history?.should == false
+          end
+        end
+      end
+
+      it "should rescue errors through both local and global tracking scopes" do
+        begin
+          Mongoid::History.disable do
+            MyModel.disable_tracking do
+              raise "exception"
+            end
           end
         rescue
         end
+        Mongoid::History.enabled?.should == true
         MyModel.new.track_history?.should == true
       end
+    end
 
-      it "should be disabled only for the class that calls disable_tracking" do
-        class MyModel2
-          include Mongoid::Document
-          include Mongoid::History::Trackable
-          track_history
-        end
+    describe ":changes_method" do
 
-        MyModel.disable_tracking do
-          MyModel2.new.track_history?.should == true
-        end
+      it "should default to :changes" do
+        m = MyModel.create
+        m.should_receive(:changes).exactly(3).times.and_call_original
+        m.should_not_receive(:my_changes)
+        m.save
       end
 
-      context ":changes_method" do
-        it "should default to :changes" do
-          m = MyModel.create
-          m.should_receive(:changes).exactly(3).times.and_call_original
-          m.should_not_receive(:my_changes)
-          m.save
-        end
+      it "should allow an alternate method to be specified" do
+        class MyModel3 < MyModel
+          track_history :changes_method => :my_changes
 
-        it "should allow an alternate method to be specified" do
-          class MyModel3 < MyModel
-            track_history :changes_method => :my_changes
-
-            def my_changes
-              {}
-            end
+          def my_changes
+            {}
           end
-
-          m = MyModel3.create
-          m.should_receive(:changes).twice.and_call_original
-          m.should_receive(:my_changes).once.and_call_original
-          m.save
         end
+
+        m = MyModel3.create
+        m.should_receive(:changes).twice.and_call_original
+        m.should_receive(:my_changes).once.and_call_original
+        m.save
       end
     end
   end

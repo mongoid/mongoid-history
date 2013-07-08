@@ -161,6 +161,12 @@ post.undo! user
 Comment.disable_tracking do
   comment.update_attributes(:title => "Test 3")
 end
+
+# globally disable all history tracking
+Mongoid::History.disable do
+  comment.update_attributes(:title => "Test 3")
+  user.update_attributes(:name => "Eddie Van Halen")
+end
 ```
 
 **Retrieving the list of tracked fields**
