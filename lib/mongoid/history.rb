@@ -21,8 +21,7 @@ module Mongoid
     end
 
     def self.enabled?
-      enabled = Thread.current[GLOBAL_TRACK_HISTORY_FLAG]
-      enabled.nil? ? true : enabled
+      Thread.current[GLOBAL_TRACK_HISTORY_FLAG] != false
     end
   end
 end
