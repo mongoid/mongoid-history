@@ -1,7 +1,6 @@
-Next Release
-------------
+0.4.0 (6/12/2013)
+-----------------
 
-* Your contribution here.
 * Add Mongoid::History.disable and Mongoid::History.enabled? methods for global tracking disablement - [@johnnyshields](https://github.com/johnnyshields)
 * Add `:changes_method` that optionally overrides which method to call to collect changes - [@joelnordel](https://github.com/joelnordell).
 * [API Change] The `:destroy` action now stores trackers in the format `original=value, modified=nil` (previously it was the reverse) - [@johnnyshields](https://github.com/johnnyshields)
