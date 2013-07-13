@@ -198,7 +198,7 @@ In your Controller:
   #=> {field: {to: val1, from: val2}}
 
 # get edit set for the first tracker
-@edits = @trackers.first.tracked_changes
+@edits = @trackers.first.tracked_edits
   #=> { add: {field: val},
   #     remove: {field: val},
   #     modify: { to: val1, from: val2 },
