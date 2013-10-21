@@ -8,10 +8,10 @@ Gem::Specification.new do |s|
   s.version = "0.4.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Aaron Qian", "Justin Grimes"]
-  s.date = "2013-07-12"
-  s.description = "In frustration of Mongoid::Versioning, I created this plugin for tracking historical changes for any document, including embedded ones. It achieves this by storing all history tracks in a single collection that you define. (See Usage for more details) Embedded documents are referenced by storing an association path, which is an array of document_name and document_id fields starting from the top most parent document and down to the embedded document that should track history.\n\n  This plugin implements multi-user undo, which allows users to undo any history change in any order. Undoing a document also creates a new history track. This is great for auditing and preventing vandalism, but it is probably not suitable for use cases such as a wiki."
-  s.email = ["aq1018@gmail.com", "justin.mgrimes@gmail.com"]
+  s.authors = ["Aaron Qian", "Justin Grimes", "Daniel Doubrovkine"]
+  s.date = "2013-10-21"
+  s.description = "This library tracks historical changes for any document, including embedded ones. It achieves this by storing all history tracks in a single collection that you define. Embedded documents are referenced by storing an association path, which is an array of document_name and document_id fields starting from the top most parent document and down to the embedded document that should track history. Mongoid-history implements multi-user undo, which allows users to undo any history change in any order. Undoing a document also creates a new history track. This is great for auditing and preventing vandalism, but it is probably not suitable for use cases such as a wiki."
+  s.email = ["aq1018@gmail.com", "justin.mgrimes@gmail.com", "dblock@dblock.org"]
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.md"
@@ -28,7 +28,6 @@ Gem::Specification.new do |s|
     "VERSION",
     "lib/mongoid-history.rb",
     "lib/mongoid/history.rb",
-    "lib/mongoid/history/sweeper.rb",
     "lib/mongoid/history/trackable.rb",
     "lib/mongoid/history/tracker.rb",
     "mongoid-history.gemspec",
@@ -45,23 +44,23 @@ Gem::Specification.new do |s|
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
   s.rubygems_version = "1.8.25"
-  s.summary = "history tracking, auditing, undo, redo for mongoid"
+  s.summary = "Track and audit, undo and redo changes on Mongoid documents."
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<easy_diff>, [">= 0"])
-      s.add_runtime_dependency(%q<mongoid>, ["~> 3.0"])
+      s.add_runtime_dependency(%q<mongoid>, [">= 3.0"])
       s.add_runtime_dependency(%q<activesupport>, [">= 0"])
     else
       s.add_dependency(%q<easy_diff>, [">= 0"])
-      s.add_dependency(%q<mongoid>, ["~> 3.0"])
+      s.add_dependency(%q<mongoid>, [">= 3.0"])
       s.add_dependency(%q<activesupport>, [">= 0"])
     end
   else
     s.add_dependency(%q<easy_diff>, [">= 0"])
-    s.add_dependency(%q<mongoid>, ["~> 3.0"])
+    s.add_dependency(%q<mongoid>, [">= 3.0"])
     s.add_dependency(%q<activesupport>, [">= 0"])
   end
 end
