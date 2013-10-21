@@ -10,6 +10,7 @@ describe Mongoid::History do
       field           :title
       field           :body
       field           :rating
+      field           :views, type: Integer
 
       embeds_many     :comments, store_as: :coms
       embeds_one      :section, store_as: :sec
@@ -496,15 +497,9 @@ describe Mongoid::History do
     end
 
     describe "embedded with cascading callbacks" do
-      
+
       let(:tag_foo){ post.tags.create(:title => "foo", :updated_by => user) }
       let(:tag_bar){ post.tags.create(:title => "bar") }
-      
-      before(:each) do
-        Mongoid.instantiate_observers
-        Thread.current[:mongoid_history_sweeper_controller] = Mongoid::History::Sweeper.instance
-        Mongoid::History::Sweeper.instance.stub(:current_user){ user }
-      end
 
       # it "should have cascaded the creation callbacks and set timestamps" do
       #   tag_foo; tag_bar # initialize
@@ -524,7 +519,7 @@ describe Mongoid::History do
         update_hash = { "post" => { "tags_attributes" => { "1234" => { "id" => tag_bar.id, "title" => "baz", "_destroy" => "true"} } } }
         post.update_attributes(update_hash["post"])
         post.tags.count.should == 1
-        post.history_tracks.last.action.should == "destroy"
+        post.history_tracks.to_a.last.action.should == "destroy"
       end
 
       it "should write relationship name for association_chain hiearchy instead of class name when using _destroy macro" do
@@ -535,12 +530,6 @@ describe Mongoid::History do
         # on any call that walked up the association_chain, e.g. 'trackable'
         tag_foo.history_tracks.last.association_chain.last["name"].should == "tags"
         lambda{ tag_foo.history_tracks.last.trackable }.should_not raise_error
-      end
-
-      it "should save modifier" do
-        Thread.current[:mongoid_history_sweeper_controller].current_user.should eq user
-        tag_foo.history_tracks.last.modifier.should eq user
-        tag_bar.history_tracks.last.modifier.should eq user
       end
     end
 

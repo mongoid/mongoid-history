@@ -1,12 +1,14 @@
 Next Release
 ------------
 
+* Fixed compatibility with Mongoid 4.x - [@dblock](https://github.com/dblock).
+* `Mongoid::History::Sweeper` has been removed, in accorance with Mongoid 4.x (see [#3108](https://github.com/mongoid/mongoid/issues/3108)) and Rails 4.x observer deprecation - [@dblock](https://github.com/dblock).
 * Your contribution here.
 
 0.4.0 (6/12/2013)
 -----------------
 
-* Add Mongoid::History.disable and Mongoid::History.enabled? methods for global tracking disablement - [@johnnyshields](https://github.com/johnnyshields).
+* Add `Mongoid::History.disable` and `Mongoid::History.enabled?` methods for global tracking disablement - [@johnnyshields](https://github.com/johnnyshields).
 * Add `:changes_method` that optionally overrides which method to call to collect changes - [@joelnordel](https://github.com/joelnordell).
 * [API Change] The `:destroy` action now stores trackers in the format `original=value, modified=nil` (previously it was the reverse) - [@johnnyshields](https://github.com/johnnyshields).
 * Support for polymorphic embedded classes - [@tstepp](https://github.com/tstepp).
