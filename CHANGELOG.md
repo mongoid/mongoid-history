@@ -3,6 +3,7 @@ Next Release
 
 * Fixed compatibility with Mongoid 4.x - [@dblock](https://github.com/dblock).
 * `Mongoid::History::Sweeper` has been removed, in accorance with Mongoid 4.x (see [#3108](https://github.com/mongoid/mongoid/issues/3108)) and Rails 4.x observer deprecation - [@dblock](https://github.com/dblock).
+* Default modifier parameter to `nil` in `undo!` and `redo!` - [@dblock](https://github.com/dblock).
 * Your contribution here.
 
 0.4.0 (6/12/2013)

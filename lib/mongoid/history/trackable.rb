@@ -75,7 +75,7 @@ module Mongoid::History
       #  undo :from => 1, :to => 5
       #  undo 4
       #  undo :last => 10
-      def undo!(modifier, options_or_version=nil)
+      def undo!(modifier = nil, options_or_version = nil)
         versions = get_versions_criteria(options_or_version).to_a
         versions.sort!{|v1, v2| v2.version <=> v1.version}
 
@@ -85,7 +85,7 @@ module Mongoid::History
         save!
       end
 
-      def redo!(modifier, options_or_version=nil)
+      def redo!(modifier = nil, options_or_version = nil)
         versions = get_versions_criteria(options_or_version).to_a
         versions.sort!{|v1, v2| v1.version <=> v2.version}
 

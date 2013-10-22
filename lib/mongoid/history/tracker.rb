@@ -21,7 +21,7 @@ module Mongoid::History
       Mongoid::History.tracker_class_name = self.name.tableize.singularize.to_sym
     end
 
-    def undo!(modifier)
+    def undo!(modifier = nil)
       if action.to_sym == :destroy
         re_create
       elsif action.to_sym == :create
@@ -31,7 +31,7 @@ module Mongoid::History
       end
     end
 
-    def redo!(modifier)
+    def redo!(modifier = nil)
       if action.to_sym == :destroy
         re_destroy
       elsif action.to_sym == :create

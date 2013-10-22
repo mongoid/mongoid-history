@@ -5,7 +5,7 @@ describe Mongoid::History::Tracker do
     class Model
       include Mongoid::Document
       include Mongoid::History::Trackable
-      
+
       field :name, type: String
       belongs_to :user, inverse_of: :models
       has_and_belongs_to_many :external_users, class_name: "User", inverse_of: :external_models
@@ -18,7 +18,7 @@ describe Mongoid::History::Tracker do
                   :track_update   =>  true,     # track document updates, default is true
                   :track_destroy  =>  false    # track document destruction, default is false
     end
-    
+
     class User
       include Mongoid::Document
       has_many :models, :dependent => :destroy, inverse_of: :user
@@ -29,17 +29,20 @@ describe Mongoid::History::Tracker do
   it "should be possible to undo when having multiple relations to modifier class" do
     user = User.new
     user.save
-    
+
     model = Model.new
     model.name = "Foo"
     model.user = user
     model.save!
-    
+
     model.name = "Bar"
     model.save!
-    
+
     model.undo! user
     model.name.should == "Foo"
+
+    model.redo! user, 1
+    model.name.should == "Bar"
   end
 
   it "should track foreign key relations" do

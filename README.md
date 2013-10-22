@@ -128,6 +128,9 @@ comment.redo! user, :from => 1, :to => 4
 # redo last 3 versions
 comment.redo! user, :last => 3
 
+# redo version 1
+comment.redo! user, 1
+
 # delete post
 post.destroy
 
