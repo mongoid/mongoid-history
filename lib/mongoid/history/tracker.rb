@@ -27,8 +27,7 @@ module Mongoid::History
       elsif action.to_sym == :create
         re_destroy
       else
-        trackable.assign_attributes!(undo_attr(modifier))
-        trackable.save!
+        trackable.update_attributes!(undo_attr(modifier), :without_protection => true)
       end
     end
 
@@ -38,7 +37,7 @@ module Mongoid::History
       elsif action.to_sym == :create
         re_create
       else
-        trackable.update_attributes!(redo_attr(modifier))
+        trackable.update_attributes!(redo_attr(modifier), :without_protection => true)
       end
     end
 

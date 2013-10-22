@@ -641,6 +641,25 @@ describe Mongoid::History do
           comment.title.should == "Test2"
         end
 
+        context "protected attributes" do
+          before :each do
+            Comment.attr_accessible(nil)
+          end
+
+          after :each do
+            Comment.attr_protected(nil)
+          end
+
+          it "should undo last version when no parameter is specified on protected attributes" do
+            comment.undo! user
+            comment.title.should == "Test3"
+          end
+
+          it "should recognize :last options on model with protected attributes" do
+            comment.undo! user, :last => 2
+            comment.title.should == "Test2"
+          end
+        end
       end
 
       describe "redo" do
@@ -666,6 +685,26 @@ describe Mongoid::History do
         it "should recognize :last options" do
           comment.redo! user, :last => 1
           comment.title.should == "Test5"
+        end
+
+        context "protected attributes" do
+          before :each do
+            Comment.attr_accessible(nil)
+          end
+
+          after :each do
+            Comment.attr_protected(nil)
+          end
+
+          it "should recognize parameter as version number" do
+            comment.redo! user, 2
+            comment.title.should == "Test2"
+          end
+
+          it "should recognize :from, :to options" do
+            comment.redo! user,  :from => 2, :to => 4
+            comment.title.should == "Test4"
+          end
         end
 
       end
