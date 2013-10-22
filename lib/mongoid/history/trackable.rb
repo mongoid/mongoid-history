@@ -80,7 +80,7 @@ module Mongoid::History
         versions.sort!{|v1, v2| v2.version <=> v1.version}
 
         versions.each do |v|
-          self.attributes = v.undo_attr(modifier)
+          assign_attributes!(v.undo_attr(modifier))
         end
         save!
       end
@@ -102,6 +102,12 @@ module Mongoid::History
 
       def create_embedded(name, value)
         self.send("create_#{self.class.embedded_alias(name)}!", value)
+      end
+
+      def assign_attributes!(version_attributes)
+        version_attributes.each do |attribute, value|
+          send("#{attribute}=", value)
+        end
       end
 
     private
