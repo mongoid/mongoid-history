@@ -208,6 +208,28 @@ In your View, you might do something like (example in HAML format):
     %li.remove Removed field #{k} (was previously #{v})
 ```
 
+**Adding Userstamp on History Trackers**
+
+To track the User in the application who created the HistoryTracker, please add the 
+[Mongoid::Userstamp gem](https://github.com/tbpro/mongoid_userstamp) to your HistoryTracker class.
+This will add a field called `created_by` and an accessor `creator` to the model (you can rename these via gem config). 
+
+```
+class MyHistoryTracker
+  include Mongoid::History::Tracker
+  include Mongoid::Userstamp
+end
+```
+
+*Migrating Userstamp from Previous Versions*
+
+Since October 2013, Mongoid::History itself no longer supports the userstamp natively. In order to migrate, follow the 
+instructions above then run the following command:
+
+```
+MyHistoryTracker.all.each{|ht| ht.rename(:modifier_id, :created_by)
+```
+
 **Using an alternate changes method**
 
 Sometimes you may wish to provide an alternate method for determining which changes should be tracked.  For example, if you are using embedded documents
