@@ -80,7 +80,8 @@ module Mongoid::History
         versions.sort!{|v1, v2| v2.version <=> v1.version}
 
         versions.each do |v|
-          self.attributes = v.undo_attr(modifier)
+          undo_attr = v.undo_attr(modifier)
+          self.attributes.merge!(undo_attr)
         end
         save!
       end
@@ -91,7 +92,7 @@ module Mongoid::History
 
         versions.each do |v|
           redo_attr = v.redo_attr(modifier)
-          self.attributes = redo_attr
+          self.attributes.merge!(redo_attr)
         end
         save!
       end
