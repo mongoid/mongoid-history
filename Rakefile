@@ -28,7 +28,10 @@ RSpec::Core::RakeTask.new(:spec) do |spec|
   spec.rspec_opts = "--color --format progress"
 end
 
-task :default => :spec
+require 'rubocop/rake_task'
+Rubocop::RakeTask.new(:rubocop)
+
+task default: [:rubocop, :spec]
 
 require 'yard'
 YARD::Rake::YardocTask.new

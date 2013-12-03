@@ -9,11 +9,10 @@ describe Mongoid::History::Tracker do
 
       field :body
 
-      track_history :on => [ :body ], :track_create => true, :track_update => true, :track_destroy => true
+      track_history on: [:body], track_create: true, track_update: true, track_destroy: true
     end
 
     class Prompt < Element
-
     end
   end
 

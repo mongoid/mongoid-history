@@ -26,20 +26,20 @@ describe Mongoid::History::Trackable do
       MyModel.track_history
       @persisted_history_options = Mongoid::History.trackable_class_options
     end
-    before(:each){ Mongoid::History.trackable_class_options = @persisted_history_options }
+    before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
     let(:expected_option) do
-      { :on             =>  :all,
-        :modifier_field =>  :modifier,
-        :version_field  =>  :version,
-        :changes_method =>  :changes,
-        :scope          =>  :my_model,
-        :except         =>  ["created_at", "updated_at"],
-        :track_create   =>  false,
-        :track_update   =>  true,
-        :track_destroy  =>  false }
+      { on: :all,
+        modifier_field: :modifier,
+        version_field: :version,
+        changes_method: :changes,
+        scope: :my_model,
+        except: ["created_at", "updated_at"],
+        track_create: false,
+        track_update: true,
+        track_destroy: false }
     end
-    let(:regular_fields){ ["foo"] }
-    let(:reserved_fields){ ["_id", "version", "modifier_id"] }
+    let(:regular_fields) { ["foo"] }
+    let(:reserved_fields) { ["_id", "version", "modifier_id"] }
 
     it "should have default options" do
       Mongoid::History.trackable_class_options[:my_model].should == expected_option
@@ -223,7 +223,7 @@ describe Mongoid::History::Trackable do
 
       it "should allow an alternate method to be specified" do
         class MyModel3 < MyModel
-          track_history :changes_method => :my_changes
+          track_history changes_method: :my_changes
 
           def my_changes
             {}

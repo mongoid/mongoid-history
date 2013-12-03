@@ -12,12 +12,10 @@ module Mongoid
     end
 
     def self.disable(&block)
-      begin
-        Thread.current[GLOBAL_TRACK_HISTORY_FLAG] = false
-        yield
-      ensure
-        Thread.current[GLOBAL_TRACK_HISTORY_FLAG] = true
-      end
+      Thread.current[GLOBAL_TRACK_HISTORY_FLAG] = false
+      yield
+    ensure
+      Thread.current[GLOBAL_TRACK_HISTORY_FLAG] = true
     end
 
     def self.enabled?

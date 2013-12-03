@@ -6,7 +6,11 @@ gem "activesupport"
 
 group :test do
   gem "rspec", ">= 2.11.0"
-  gem "yard"
   gem "bundler", ">= 1.0.0"
+end
+
+group :development do
+  gem 'rubocop', '~> 0.15.0'
+  gem "yard"
   gem "jeweler"
 end

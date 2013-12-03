@@ -11,4 +11,3 @@ RSpec.configure do |config|
     Mongoid::History.trackable_class_options = nil
   end
 end
-
