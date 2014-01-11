@@ -1,9 +1,7 @@
-$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
+$:.push File.expand_path('../../lib', __FILE__)
 
-require 'rubygems'
-require 'bundler/setup'
-
-Bundler.require :default, :test
+require 'active_support/all'
+require 'mongoid'
 
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| require f }
 

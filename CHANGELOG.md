@@ -15,6 +15,8 @@ Next Release
 * Fixed `undo!` and `redo!` for mass-assignment protected attributes - [@mati0090](https://github.com/mati0090).
 * Implemented Rubocop, Ruby style linter - [@dblock](https://github.com/dblock).
 * Remove unneeded coma from README - [@matsprea](https://github.com/matsprea).
+* Replace Jeweler with Gem-Release - [@johnnyshields](https://github.com/johnnyshields).
+* Track version as a Ruby file - [@johnnyshields](https://github.com/johnnyshields).
 
 0.4.0 (6/12/2013)
 -----------------
