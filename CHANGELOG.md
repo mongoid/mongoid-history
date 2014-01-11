@@ -1,12 +1,20 @@
 Next Release
 ------------
 
+Next Release
+------------
+
+* Your contribution here.
+
+0.4.1 (1/11/2014)
+-----------------
+
 * Fixed compatibility with Mongoid 4.x - [@dblock](https://github.com/dblock).
 * `Mongoid::History::Sweeper` has been removed, in accorance with Mongoid 4.x (see [#3108](https://github.com/mongoid/mongoid/issues/3108)) and Rails 4.x observer deprecation - [@dblock](https://github.com/dblock).
 * Default modifier parameter to `nil` in `undo!` and `redo!` - [@dblock](https://github.com/dblock).
 * Fixed `undo!` and `redo!` for mass-assignment protected attributes - [@mati0090](https://github.com/mati0090).
 * Implemented Rubocop, Ruby style linter - [@dblock](https://github.com/dblock).
-* Your contribution here.
+* Remove unneeded coma from README - [@matsprea](https://github.com/matsprea).
 
 0.4.0 (6/12/2013)
 -----------------
