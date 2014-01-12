@@ -10,7 +10,6 @@ Gem::Specification.new do |s|
   s.email       = ['aq1018@gmail.com', 'justin.mgrimes@gmail.com', 'dblock@dblock.org']
   s.homepage    = 'http://github.com/aq1018/mongoid-history'
   s.license     = 'MIT'
-  s.date        = '2011-03-04'
 
   s.files         = `git ls-files`.split($/)
   s.executables   = s.files.grep(%r{^bin/}) { |f| File.basename(f) }
