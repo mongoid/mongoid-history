@@ -29,4 +29,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rubocop', '~> 0.15.0'
   s.add_development_dependency 'yard'
   s.add_development_dependency 'gem-release'
+  s.add_development_dependency 'coveralls'
 end
