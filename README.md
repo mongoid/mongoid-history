@@ -9,7 +9,7 @@ mongoid-history
 
 Mongoid-history tracks historical changes for any document, including embedded ones. It achieves this by storing all history tracks in a single collection that you define. Embedded documents are referenced by storing an association path, which is an array of `document_name` and `document_id` fields starting from the top most parent document and down to the embedded document that should track history.
 
-This gem also implements multi-user undo, which allows users to undo any history change in any order. Undoing a document also creates a new history track. This is great for auditing and preventing vandalism, but is probably not suitable for use cases such as a wiki.
+This gem also implements multi-user undo, which allows users to undo any history change in any order. Undoing a document also creates a new history track. This is great for auditing and preventing vandalism, but is probably not suitable for use cases such as a wiki ( but we won't stop you either).
 
 Stable Release
 --------------
@@ -213,9 +213,9 @@ In your View, you might do something like (example in HAML format):
 
 **Adding Userstamp on History Trackers**
 
-To track the User in the application who created the HistoryTracker, please add the 
+To track the User in the application who created the HistoryTracker, please add the
 [Mongoid::Userstamp gem](https://github.com/tbpro/mongoid_userstamp) to your HistoryTracker class.
-This will add a field called `created_by` and an accessor `creator` to the model (you can rename these via gem config). 
+This will add a field called `created_by` and an accessor `creator` to the model (you can rename these via gem config).
 
 ```
 class MyHistoryTracker
@@ -226,7 +226,7 @@ end
 
 *Migrating Userstamp from Previous Versions*
 
-Since October 2013, Mongoid::History itself no longer supports the userstamp natively. In order to migrate, follow the 
+Since October 2013, Mongoid::History itself no longer supports the userstamp natively. In order to migrate, follow the
 instructions above then run the following command:
 
 ```
