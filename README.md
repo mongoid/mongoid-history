@@ -310,3 +310,7 @@ Copyright (c) 2011-2012 Aaron Qian. MIT License.
 
 See [LICENSE.txt](https://github.com/aq1018/mongoid-history/blob/master/LICENSE.txt) for further details.
 
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/aq1018/mongoid-history/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
