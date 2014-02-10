@@ -226,7 +226,7 @@ end
 
 *Migrating Userstamp from Previous Versions*
 
-Since October 2013, Mongoid::History itself no longer supports the userstamp natively. In order to migrate, follow the
+Since October 2013 (mongoid-history version 0.4.1 and onwards), Mongoid::History itself no longer supports the userstamp natively. In order to migrate, follow the
 instructions above then run the following command:
 
 ```
