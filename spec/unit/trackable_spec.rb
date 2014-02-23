@@ -35,6 +35,7 @@ describe Mongoid::History::Trackable do
     before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
     let(:expected_option) do
       { on: :all,
+        tracker_class_name: nil,
         modifier_field: :modifier,
         version_field: :version,
         changes_method: :changes,
