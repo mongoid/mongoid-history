@@ -190,7 +190,7 @@ module Mongoid::History
         doc = if doc.nil?
                 # root association. First element of the association chain
                 klass = name.classify.constantize
-                klass.where(_id: node['id']).first
+                klass.unscoped.where(_id: node['id']).first
               elsif doc.class.embeds_one?(name)
                 doc.get_embedded(name)
               elsif doc.class.embeds_many?(name)
