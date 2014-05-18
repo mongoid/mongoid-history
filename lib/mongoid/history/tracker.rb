@@ -189,12 +189,13 @@ module Mongoid::History
         name = node['name']
         doc = if doc.nil?
                 # root association. First element of the association chain
+                # unscoped is added to remove any default_scope defined in model
                 klass = name.classify.constantize
-                klass.where(_id: node['id']).first
+                klass.unscoped.where(_id: node['id']).first
               elsif doc.class.embeds_one?(name)
                 doc.get_embedded(name)
               elsif doc.class.embeds_many?(name)
-                doc.get_embedded(name).where(_id: node['id']).first
+                doc.get_embedded(name).unscoped.where(_id: node['id']).first
               else
                 raise "This should never happen. Please report bug."
               end

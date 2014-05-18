@@ -784,5 +784,96 @@ describe Mongoid::History do
         end
       end
     end
+
+    describe "when default scope is present" do
+      before do
+        class Post
+          default_scope where(title: nil)
+        end
+        class Comment
+          default_scope where(title: nil)
+        end
+        class User
+          default_scope where(name: nil)
+        end
+        class Tag
+          default_scope where(title: nil)
+        end
+      end
+
+      describe "post" do
+
+        it "should correctly undo and redo" do
+          post.update_attributes(:title => 'a new title')
+          track = post.history_tracks.last
+          track.undo! user
+          post.reload.title.should == 'Test'
+          track.redo! user
+          post.reload.title.should == 'a new title'
+        end
+
+        it "should stay the same after undo and redo" do
+          post.update_attributes(:title => 'testing')
+          track = post.history_tracks.last
+          track.undo! user
+          track.redo! user
+          post.reload.title.should == 'testing'
+        end
+      end
+      describe "comment" do
+        it "should correctly undo and redo" do
+          comment.update_attributes(:title => 'a new title')
+          track = comment.history_tracks.last
+          track.undo! user
+          comment.reload.title.should == 'test'
+          track.redo! user
+          comment.reload.title.should == 'a new title'
+        end
+
+        it "should stay the same after undo and redo" do
+          comment.update_attributes(:title => 'testing')
+          track = comment.history_tracks.last
+          track.undo! user
+          track.redo! user
+          comment.reload.title.should == 'testing'
+        end
+      end
+      describe "user" do
+        it "should correctly undo and redo" do
+          user.update_attributes(:name => 'a new name')
+          track = user.history_tracks.last
+          track.undo! user
+          user.reload.name.should == 'Aaron'
+          track.redo! user
+          user.reload.name.should == 'a new name'
+        end
+
+        it "should stay the same after undo and redo" do
+          user.update_attributes(:name => 'testing')
+          track = user.history_tracks.last
+          track.undo! user
+          track.redo! user
+          user.reload.name.should == 'testing'
+        end
+      end
+      describe "tag" do
+        it "should correctly undo and redo" do
+          tag.update_attributes(:title => 'a new title')
+          track = tag.history_tracks.last
+          track.undo! user
+          tag.reload.title.should == 'test'
+          track.redo! user
+          tag.reload.title.should == 'a new title'
+        end
+
+        it "should stay the same after undo and redo" do
+          tag.update_attributes(:title => 'testing')
+          track = tag.history_tracks.last
+          track.undo! user
+          track.redo! user
+          tag.reload.title.should == 'testing'
+        end
+      end
+    end
   end
 end
