@@ -7,18 +7,18 @@ describe Mongoid::History do
       include Mongoid::Timestamps
       include Mongoid::History::Trackable
 
-      field           :title
-      field           :body
-      field           :rating
-      field           :views, type: Integer
+      field :title
+      field :body
+      field :rating
+      field :views, type: Integer
 
-      embeds_many     :comments, store_as: :coms
-      embeds_one      :section, store_as: :sec
-      embeds_many     :tags, cascade_callbacks: true
+      embeds_many :comments, store_as: :coms
+      embeds_one :section, store_as: :sec
+      embeds_many :tags, cascade_callbacks: true
 
       accepts_nested_attributes_for :tags, allow_destroy: true
 
-      track_history   on: [:title, :body], track_destroy: true
+      track_history on: [:title, :body], track_destroy: true
     end
 
     class Comment
@@ -26,10 +26,10 @@ describe Mongoid::History do
       include Mongoid::Timestamps
       include Mongoid::History::Trackable
 
-      field             :t, as: :title
-      field             :body
-      embedded_in       :commentable, polymorphic: true
-      track_history     on: [:title, :body], scope: :post, track_create: true, track_destroy: true
+      field :t, as: :title
+      field :body
+      embedded_in :commentable, polymorphic: true
+      track_history on: [:title, :body], scope: :post, track_create: true, track_destroy: true
     end
 
     class Section
@@ -37,9 +37,9 @@ describe Mongoid::History do
       include Mongoid::Timestamps
       include Mongoid::History::Trackable
 
-      field             :t, as: :title
-      embedded_in       :post
-      track_history     on: [:title], scope: :post, track_create: true, track_destroy: true
+      field :t, as: :title
+      embedded_in :post
+      track_history on: [:title], scope: :post, track_create: true, track_destroy: true
     end
 
     class User
@@ -47,14 +47,14 @@ describe Mongoid::History do
       include Mongoid::Timestamps
       include Mongoid::History::Trackable
 
-      field             :n, as: :name
-      field             :em, as: :email
-      field             :phone
-      field             :address
-      field             :city
-      field             :country
-      field             :aliases, type: Array
-      track_history     except: [:email, :updated_at]
+      field :n, as: :name
+      field :em, as: :email
+      field :phone
+      field :address
+      field :city
+      field :country
+      field :aliases, type: Array
+      track_history except: [:email, :updated_at]
     end
 
     class Tag
@@ -64,8 +64,8 @@ describe Mongoid::History do
 
       belongs_to :updated_by, class_name: "User"
 
-      field             :title
-      track_history     on: [:title], scope: :post, track_create: true, track_destroy: true, modifier_field: :updated_by
+      field :title
+      track_history on: [:title], scope: :post, track_create: true, track_destroy: true, modifier_field: :updated_by
     end
 
     class Foo < Comment
@@ -722,8 +722,8 @@ describe Mongoid::History do
           include Mongoid::Document
           include Mongoid::History::Trackable
 
-          field           :flavour, localize: true
-          track_history   on: [:flavour], track_destroy: true
+          field :flavour, localize: true
+          track_history on: [:flavour], track_destroy: true
         end
       end
       it "should correctly undo and redo" do

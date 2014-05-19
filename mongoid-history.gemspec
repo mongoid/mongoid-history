@@ -1,4 +1,4 @@
-$:.push File.expand_path('../lib', __FILE__)
+$LOAD_PATH.push File.expand_path('../lib', __FILE__)
 require 'mongoid/history/version'
 
 Gem::Specification.new do |s|
@@ -11,12 +11,12 @@ Gem::Specification.new do |s|
   s.homepage    = 'http://github.com/aq1018/mongoid-history'
   s.license     = 'MIT'
 
-  s.files         = `git ls-files`.split($/)
+  s.files         = `git ls-files`.split($INPUT_RECORD_SEPARATOR)
   s.executables   = s.files.grep(%r{^bin/}) { |f| File.basename(f) }
   s.test_files    = s.files.grep(%r{^(test|spec|features)/})
   s.require_paths = ['lib']
 
-  s.post_install_message = File.read('UPGRADING') if File.exists?('UPGRADING')
+  s.post_install_message = File.read('UPGRADING') if File.exist?('UPGRADING')
 
   s.add_runtime_dependency 'easy_diff'
   s.add_runtime_dependency 'mongoid', '>= 3.0'
@@ -25,7 +25,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'bundler'
-  s.add_development_dependency 'rubocop', '~> 0.15.0'
+  s.add_development_dependency 'rubocop', '0.21.0'
   s.add_development_dependency 'yard'
   s.add_development_dependency 'gem-release'
   s.add_development_dependency 'coveralls'

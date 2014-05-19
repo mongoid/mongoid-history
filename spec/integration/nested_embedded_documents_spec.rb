@@ -10,12 +10,12 @@ describe Mongoid::History::Tracker do
       belongs_to :user, inverse_of: :models
       embeds_many :embones
 
-      track_history   on: :all,       # track title and body fields only, default is :all
-                      modifier_field: :modifier, # adds "referenced_in :modifier" to track who made the change, default is :modifier
-                      version_field: :version,   # adds "field :version, :type => Integer" to track current version, default is :version
-                      track_create: false,    # track document creation, default is false
-                      track_update: true,     # track document updates, default is true
-                      track_destroy: false    # track document destruction, default is false
+      track_history on: :all,       # track title and body fields only, default is :all
+                    modifier_field: :modifier, # adds "referenced_in :modifier" to track who made the change, default is :modifier
+                    version_field: :version,   # adds "field :version, :type => Integer" to track current version, default is :version
+                    track_create: false,    # track document creation, default is false
+                    track_update: true,     # track document updates, default is true
+                    track_destroy: false    # track document destruction, default is false
     end
 
     class Embone
@@ -26,13 +26,13 @@ describe Mongoid::History::Tracker do
       embeds_many :embtwos, store_as: :ems
       embedded_in :model
 
-      track_history   on: :all,       # track title and body fields only, default is :all
-                      modifier_field: :modifier, # adds "referenced_in :modifier" to track who made the change, default is :modifier
-                      version_field: :version,   # adds "field :version, :type => Integer" to track current version, default is :version
-                      track_create: false,    # track document creation, default is false
-                      track_update: true,     # track document updates, default is true
-                      track_destroy: false,    # track document destruction, default is false
-                      scope: :model
+      track_history on: :all,       # track title and body fields only, default is :all
+                    modifier_field: :modifier, # adds "referenced_in :modifier" to track who made the change, default is :modifier
+                    version_field: :version,   # adds "field :version, :type => Integer" to track current version, default is :version
+                    track_create: false,    # track document creation, default is false
+                    track_update: true,     # track document updates, default is true
+                    track_destroy: false,    # track document destruction, default is false
+                    scope: :model
     end
 
     class Embtwo
@@ -42,13 +42,13 @@ describe Mongoid::History::Tracker do
       field :name
       embedded_in :embone
 
-      track_history   on: :all,       # track title and body fields only, default is :all
-                      modifier_field: :modifier, # adds "referenced_in :modifier" to track who made the change, default is :modifier
-                      version_field: :version,   # adds "field :version, :type => Integer" to track current version, default is :version
-                      track_create: false,    # track document creation, default is false
-                      track_update: true,     # track document updates, default is true
-                      track_destroy: false,    # track document destruction, default is false
-                      scope: :model
+      track_history on: :all,       # track title and body fields only, default is :all
+                    modifier_field: :modifier, # adds "referenced_in :modifier" to track who made the change, default is :modifier
+                    version_field: :version,   # adds "field :version, :type => Integer" to track current version, default is :version
+                    track_create: false,    # track document creation, default is false
+                    track_update: true,     # track document updates, default is true
+                    track_destroy: false,    # track document destruction, default is false
+                    scope: :model
     end
 
     class User

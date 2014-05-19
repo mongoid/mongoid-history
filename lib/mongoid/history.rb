@@ -11,7 +11,7 @@ module Mongoid
       @tracker_class ||= tracker_class_name.to_s.classify.constantize
     end
 
-    def self.disable(&block)
+    def self.disable(&_block)
       Thread.current[GLOBAL_TRACK_HISTORY_FLAG] = false
       yield
     ensure

@@ -1,7 +1,7 @@
 AllCops:
-  Excludes:
-    - vendor/**
-    - bin/**
+  Exclude:
+    - vendor/**/*
+    - bin/**/*
 
 LineLength:
   Enabled: false
@@ -22,11 +22,6 @@ CollectionMethods:
 
 Encoding:
   # no need to always specify encoding
-  Enabled: false
-
-HashMethods:
-  # key? instead of has_key?
-  # value? instead of has_value?
   Enabled: false
 
 StringLiterals:
@@ -72,4 +67,10 @@ HandleExceptions:
   Enabled: false
 
 MultilineBlockChain:
+  Enabled: false
+
+FileName:
+  Enabled: false
+
+RegexpLiteral:
   Enabled: false
