@@ -1,9 +1,7 @@
 Next Release
 ------------
 
-Next Release
-------------
-
+* Fixed compatibility with models using `default_scope` - [@mrjlynch](https://github.com/mrjlynch).
 * Your contribution here.
 
 0.4.1 (1/11/2014)
