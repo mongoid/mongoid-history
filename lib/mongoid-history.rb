@@ -2,6 +2,7 @@ require 'easy_diff'
 
 require 'mongoid/history'
 require 'mongoid/history/version'
+require 'mongoid/history/mongoid'
 require 'mongoid/history/tracker'
 require 'mongoid/history/trackable'
 

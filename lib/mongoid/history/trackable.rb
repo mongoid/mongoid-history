@@ -140,7 +140,11 @@ module Mongoid
           # the child to parent (embedded_in, belongs_to) relation will be defined
           if node._parent
             meta = node._parent.relations.values.select do |relation|
-              relation.class_name == node.metadata.class_name.to_s
+              if Mongoid::History.mongoid3?
+                relation.class_name == node.metadata.class_name.to_s
+              else
+                relation.class_name == node.relation_metadata.class_name.to_s
+              end
             end.first
           end
 

@@ -1,6 +1,7 @@
 Next Release
 ------------
 
+* Fixed compatibility with Mongoid 4.x, which removed `attr_accessible` in favor of protected attributes - [@dblock](https://github.com/dblock).
 * Fixed compatibility with models using `default_scope` - [@mrjlynch](https://github.com/mrjlynch).
 * Your contribution here.
 

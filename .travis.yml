@@ -10,3 +10,7 @@ rvm:
   - 1.9.3
   - rbx-2
   - jruby-19mode
+
+env:
+  - MONGOID_VERSION=3
+  - MONGOID_VERSION=4

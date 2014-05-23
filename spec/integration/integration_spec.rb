@@ -647,23 +647,25 @@ describe Mongoid::History do
           comment.title.should == "Test2"
         end
 
-        context "protected attributes" do
-          before :each do
-            Comment.attr_accessible(nil)
-          end
+        if Mongoid::History.mongoid3?
+          context "protected attributes" do
+            before :each do
+              Comment.attr_accessible(nil)
+            end
 
-          after :each do
-            Comment.attr_protected(nil)
-          end
+            after :each do
+              Comment.attr_protected(nil)
+            end
 
-          it "should undo last version when no parameter is specified on protected attributes" do
-            comment.undo! user
-            comment.title.should == "Test3"
-          end
+            it "should undo last version when no parameter is specified on protected attributes" do
+              comment.undo! user
+              comment.title.should == "Test3"
+            end
 
-          it "should recognize :last options on model with protected attributes" do
-            comment.undo! user, last: 2
-            comment.title.should == "Test2"
+            it "should recognize :last options on model with protected attributes" do
+              comment.undo! user, last: 2
+              comment.title.should == "Test2"
+            end
           end
         end
       end
@@ -693,23 +695,25 @@ describe Mongoid::History do
           comment.title.should == "Test5"
         end
 
-        context "protected attributes" do
-          before :each do
-            Comment.attr_accessible(nil)
-          end
+        if Mongoid::History.mongoid3?
+          context "protected attributes" do
+            before :each do
+              Comment.attr_accessible(nil)
+            end
 
-          after :each do
-            Comment.attr_protected(nil)
-          end
+            after :each do
+              Comment.attr_protected(nil)
+            end
 
-          it "should recognize parameter as version number" do
-            comment.redo! user, 2
-            comment.title.should == "Test2"
-          end
+            it "should recognize parameter as version number" do
+              comment.redo! user, 2
+              comment.title.should == "Test2"
+            end
 
-          it "should recognize :from, :to options" do
-            comment.redo! user,  from: 2, to: 4
-            comment.title.should == "Test4"
+            it "should recognize :from, :to options" do
+              comment.redo! user,  from: 2, to: 4
+              comment.title.should == "Test4"
+            end
           end
         end
 
@@ -788,16 +792,16 @@ describe Mongoid::History do
     describe "when default scope is present" do
       before do
         class Post
-          default_scope where(title: nil)
+          default_scope -> { where(title: nil) }
         end
         class Comment
-          default_scope where(title: nil)
+          default_scope -> { where(title: nil) }
         end
         class User
-          default_scope where(name: nil)
+          default_scope -> { where(name: nil) }
         end
         class Tag
-          default_scope where(title: nil)
+          default_scope -> { where(title: nil) }
         end
       end
 
