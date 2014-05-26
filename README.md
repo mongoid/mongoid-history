@@ -140,6 +140,9 @@ post.destroy
 # undelete post
 post.undo! user
 
+# post version at
+post.version_at(yyyy, mm, dd, hh, min, sec)
+
 # disable tracking for comments within a block
 Comment.disable_tracking do
   comment.update_attributes(:title => "Test 3")
