@@ -619,6 +619,29 @@ describe Mongoid::History do
       end
     end
 
+    describe "version_at" do
+      before :each do
+        [Time.new(2014,01,01), Time.new(2014,01,02), Time.new(2014,01,03), Time.new(2014,01,04) ].each_with_index do |time, index|
+          post.history_tracks.create(created_at: time,
+                                     association_chain: [{"name"=>"Post", "id"=> post.id}],
+                                     modified: {"title"=>"Test #{index + 1}"},
+                                     original: {"title"=>"Test #{index}"},
+                                     version: index+1,
+                                     action: "update",
+                                     scope: "post",
+                                     modifier_id: user.id)
+        end
+      end
+
+      it "should get version_at" do
+        post.version_at(2013,12,31).title.should == "Test 0"
+        post.version_at(2014,01,01,12).title.should == "Test 1"
+        post.version_at(2014,01,02).title.should == "Test 2"
+        post.version_at(2014,01,03,23,59,59).title.should == "Test 3"
+      end
+
+    end
+
     describe "trackables" do
       before :each do
         comment.update_attributes(title: "Test2") # version == 2

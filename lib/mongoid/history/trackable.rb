@@ -84,6 +84,16 @@ module Mongoid::History
         save!
       end
 
+      def version_at(year, month = nil, day = nil, hour = nil, minute = nil, second = nil)
+        at = Time.new(year, month, day, hour, minute, second)
+        duplicate = self.dup
+        history_tracks.where(:created_at.gt => at, action: "update").desc(:version).map do |h|
+          undo_attr = h.undo_attr(modifier)
+          duplicate.attributes.merge!(undo_attr)
+        end
+        duplicate
+      end
+
       def redo!(modifier = nil, options_or_version = nil)
         versions = get_versions_criteria(options_or_version).to_a
         versions.sort! { |v1, v2| v1.version <=> v2.version }
