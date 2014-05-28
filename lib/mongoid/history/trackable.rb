@@ -190,9 +190,15 @@ module Mongoid
         def history_tracker_attributes(action)
           return @history_tracker_attributes if @history_tracker_attributes
 
+          scope = history_trackable_options[:scope]
+          if scope.is_a? Array
+            parent = self._parent.collection_name.to_s.singularize.to_sym
+            scope = parent if history_trackable_options[:scope].include?(parent)
+          end
+
           @history_tracker_attributes = {
             association_chain: traverse_association_chain,
-            scope: history_trackable_options[:scope],
+            scope: scope,
             modifier: send(history_trackable_options[:modifier_field])
           }
 
