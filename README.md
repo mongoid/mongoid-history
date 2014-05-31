@@ -92,6 +92,11 @@ class Comment
   # track title and body for all comments, scope it to post (the parent)
   # also track creation and destruction
   track_history     :on => [:title, :body], :scope => :post, :track_create => true, :track_destroy => true
+  
+  # Another alternative for scope, is to specify an array of parents like, :scope => [:post, :image, :video] 
+  # This is useful for when you have: embedded_in :commentable, :polymorphic => true
+  
+  
 end
 
 # the modifier class
