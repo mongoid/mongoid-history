@@ -3,7 +3,8 @@ Next Release
 
 * Fixed compatibility with Mongoid 4.x, which removed `attr_accessible` in favor of protected attributes - [@dblock](https://github.com/dblock).
 * Fixed compatibility with models using `default_scope` - [@mrjlynch](https://github.com/mrjlynch).
-* Added the option to specify an array in `scope` for embedded documents -  [@adbeelitamar](https://github.com/adbeelitamar).
+* Enable specifying an array in `scope` for embedded documents -  [@adbeelitamar](https://github.com/adbeelitamar).
+* Your contribution here.
 
 0.4.1 (1/11/2014)
 -----------------
