@@ -141,9 +141,10 @@ module Mongoid
           if node._parent
             meta = node._parent.relations.values.select do |relation|
               if Mongoid::History.mongoid3?
-                relation.class_name == node.metadata.class_name.to_s
+                relation.class_name == node.metadata.class_name.to_s && relation.name == node.metadata.name
               else
-                relation.class_name == node.relation_metadata.class_name.to_s
+                relation.class_name == node.relation_metadata.class_name.to_s &&
+                relation.name == node.relation_metadata.name
               end
             end.first
           end
@@ -191,10 +192,7 @@ module Mongoid
           return @history_tracker_attributes if @history_tracker_attributes
 
           scope = history_trackable_options[:scope]
-          if scope.is_a? Array
-            parent = self._parent.collection_name.to_s.singularize.to_sym
-            scope = parent if history_trackable_options[:scope].include?(parent)
-          end
+          scope = _parent.collection_name.to_s.singularize.to_sym if scope.is_a?(Array)
 
           @history_tracker_attributes = {
             association_chain: traverse_association_chain,

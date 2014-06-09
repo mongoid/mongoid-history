@@ -25,6 +25,7 @@ describe Mongoid::History::Tracker do
       field :name
       belongs_to :user
       embeds_one :address, class_name: 'Contact', as: :contactable
+      embeds_one :second_address, class_name: 'Contact', as: :contactable
 
       track_history on: :all,       # track title and body fields only, default is :all
                     modifier_field: :modifier, # adds "referenced_in :modifier" to track who made the change, default is :modifier
@@ -59,7 +60,7 @@ describe Mongoid::History::Tracker do
     end
   end
 
-  it "should be able to track history for nested embedded documents with polymorphic true" do
+  it "tracks history for nested embedded documents with polymorphic relations" do
     user = User.new
     user.save!
 
@@ -82,5 +83,10 @@ describe Mongoid::History::Tracker do
     company.address.update_attribute(:address, 'Second Street')
     company.history_tracks.count.should eq(3)
     company.history_tracks.last.action.should == 'update'
+
+    company.build_second_address(address: "Main Street #789", city: "Highland Park", state: 'IL').save!
+    company.history_tracks.count.should eq(4)
+    company.history_tracks.last.action.should eq('create')
+    company.history_tracks.last.association_chain.last['name'].should eq('second_address')
   end
 end
