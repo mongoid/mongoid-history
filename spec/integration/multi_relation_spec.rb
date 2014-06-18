@@ -46,8 +46,8 @@ describe Mongoid::History::Tracker do
   end
 
   it "should track foreign key relations" do
-    Model.tracked_field?(:external_user_ids).should be_true
-    Model.tracked_field?(:user).should be_true
-    Model.tracked_field?(:user_id).should be_true
+    Model.tracked_field?(:external_user_ids).should be_truthy
+    Model.tracked_field?(:user).should be_truthy
+    Model.tracked_field?(:user_id).should be_truthy
   end
 end

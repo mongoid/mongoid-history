@@ -92,6 +92,11 @@ class Comment
   # track title and body for all comments, scope it to post (the parent)
   # also track creation and destruction
   track_history     :on => [:title, :body], :scope => :post, :track_create => true, :track_destroy => true
+
+  # For embedded polymorphic relations, specify an array of model names or its polymorphic name
+  # e.g. :scope => [:post, :image, :video]
+  #      :scope => :commentable
+
 end
 
 # the modifier class
@@ -313,4 +318,3 @@ See [LICENSE.txt](https://github.com/aq1018/mongoid-history/blob/master/LICENSE.
 
 
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/aq1018/mongoid-history/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-

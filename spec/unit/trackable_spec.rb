@@ -87,13 +87,13 @@ describe Mongoid::History::Trackable do
 
     describe "#tracked_field?" do
       it "should not include the reserved fields by default" do
-        MyModel.tracked_field?(:_id).should be_false
+        MyModel.tracked_field?(:_id).should be_falsey
       end
       it "should include the reserved fields for destroy" do
-        MyModel.tracked_field?(:_id, :destroy).should be_true
+        MyModel.tracked_field?(:_id, :destroy).should be_truthy
       end
       it "should allow field aliases" do
-        MyModel.tracked_field?(:id, :destroy).should be_true
+        MyModel.tracked_field?(:id, :destroy).should be_truthy
       end
     end
 
