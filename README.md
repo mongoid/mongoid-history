@@ -14,12 +14,12 @@ This gem also implements multi-user undo, which allows users to undo any history
 Stable Release
 --------------
 
-You're reading the documentation the 0.4.x release that supports Mongoid 3.x. For 2.x compatible mongoid-history, please use a 0.2.x version from the [2.x-stable branch](https://github.com/aq1018/mongoid-history/tree/2.4-stable).
+You're reading the documentation the 0.4.x release that supports Mongoid 3.x and 4.x. For 2.x compatible mongoid-history, please use a 0.2.x version from the [2.x-stable branch](https://github.com/aq1018/mongoid-history/tree/2.4-stable).
 
 Install
 -------
 
-This gem supports Mongoid 3.x on Ruby 1.9.3 only. Add it to your `Gemfile` or run `gem install mongoid-history`.
+This gem supports Mongoid 3.x and 4.x on Ruby 1.9.3 or newer. Add it to your `Gemfile` or run `gem install mongoid-history`.
 
 ```ruby
 gem 'mongoid-history'
