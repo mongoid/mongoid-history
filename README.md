@@ -298,15 +298,7 @@ For more examples, check out [spec/integration/integration_spec.rb](https://gith
 Contributing to mongoid-history
 -------------------------------
 
-* Check out the latest code to make sure the feature hasn't been implemented or the bug hasn't been fixed yet.
-* Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it.
-* Fork the project.
-* Create a feature/bugfix branch.
-* Commit and push until you are happy with your changes.
-* Make sure to add tests.
-* Update the CHANGELOG for the next release.
-* Try not to mess with the Rakefile or version.
-* Make a pull request.
+You're encouraged to contribute to this library. See [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 Copyright
 ---------
