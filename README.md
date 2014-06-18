@@ -93,8 +93,10 @@ class Comment
   # also track creation and destruction
   track_history     :on => [:title, :body], :scope => :post, :track_create => true, :track_destroy => true
 
-  # For embedded polymorphic relations, specify scope as: :scope => [:post, :image, :video]
-  
+  # For embedded polymorphic relations, specify an array of model names or its polymorphic name
+  # e.g. :scope => [:post, :image, :video]
+  #      :scope => :commentable
+
 end
 
 # the modifier class

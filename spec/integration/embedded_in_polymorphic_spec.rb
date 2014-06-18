@@ -9,6 +9,7 @@ describe Mongoid::History::Tracker do
       field :name, type: String
       belongs_to :user
       embeds_one :address, class_name: 'Contact', as: :contactable
+      embeds_one :embone,  as: :embedable
 
       track_history on: :all,       # track title and body fields only, default is :all
                     modifier_field: :modifier, # adds "referenced_in :modifier" to track who made the change, default is :modifier
@@ -26,6 +27,7 @@ describe Mongoid::History::Tracker do
       belongs_to :user
       embeds_one :address, class_name: 'Contact', as: :contactable
       embeds_one :second_address, class_name: 'Contact', as: :contactable
+      embeds_one :embone,  as: :embedable
 
       track_history on: :all,       # track title and body fields only, default is :all
                     modifier_field: :modifier, # adds "referenced_in :modifier" to track who made the change, default is :modifier
@@ -33,6 +35,22 @@ describe Mongoid::History::Tracker do
                     track_create: true,    # track document creation, default is false
                     track_update: true,     # track document updates, default is true
                     track_destroy: false   # track document destruction, default is false
+    end
+
+    class Embone
+      include Mongoid::Document
+      include Mongoid::History::Trackable
+
+      field :name
+      embedded_in :embedable, polymorphic: true
+
+      track_history on: :all,       # track title and body fields only, default is :all
+                    modifier_field: :modifier, # adds "referenced_in :modifier" to track who made the change, default is :modifier
+                    version_field: :version,   # adds "field :version, :type => Integer" to track current version, default is :version
+                    track_create: true,    # track document creation, default is false
+                    track_update: true,     # track document updates, default is true
+                    track_destroy: false,    # track document destruction, default is false
+                    scope: :embedable
     end
 
     class Contact
@@ -67,26 +85,36 @@ describe Mongoid::History::Tracker do
     real_state = user.real_states.build(name: 'rs_name')
     real_state.save!
     real_state.build_address(address: "Main Street #123", city: "Highland Park", state: 'IL').save!
-    real_state.history_tracks.count.should eq(2)
+    expect(real_state.history_tracks.count).to eq(2)
 
     real_state.reload
     real_state.address.update_attribute(:address, 'Second Street')
-    real_state.history_tracks.count.should eq(3)
-    real_state.history_tracks.last.action.should == 'update'
+    expect(real_state.history_tracks.count).to eq(3)
+    expect(real_state.history_tracks.last.action).to eq('update')
+
+    real_state.build_embone(name: 'Lorem ipsum').save!
+    expect(real_state.history_tracks.count).to eq(4)
+    expect(real_state.history_tracks.last.action).to eq('create')
+    expect(real_state.history_tracks.last.association_chain.last['name']).to eq('embone')
 
     company = user.companies.build(name: 'co_name')
     company.save!
     company.build_address(address: "Main Street #456", city: "Evanston", state: 'IL').save!
-    company.history_tracks.count.should eq(2)
+    expect(company.history_tracks.count).to eq(2)
 
     company.reload
     company.address.update_attribute(:address, 'Second Street')
-    company.history_tracks.count.should eq(3)
-    company.history_tracks.last.action.should == 'update'
+    expect(company.history_tracks.count).to eq(3)
+    expect(company.history_tracks.last.action).to eq('update')
 
     company.build_second_address(address: "Main Street #789", city: "Highland Park", state: 'IL').save!
-    company.history_tracks.count.should eq(4)
-    company.history_tracks.last.action.should eq('create')
-    company.history_tracks.last.association_chain.last['name'].should eq('second_address')
+    expect(company.history_tracks.count).to eq(4)
+    expect(company.history_tracks.last.action).to eq('create')
+    expect(company.history_tracks.last.association_chain.last['name']).to eq('second_address')
+
+    company.build_embone(name: 'Lorem ipsum').save!
+    expect(company.history_tracks.count).to eq(5)
+    expect(company.history_tracks.last.action).to eq('create')
+    expect(company.history_tracks.last.association_chain.last['name']).to eq('embone')
   end
 end

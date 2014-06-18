@@ -194,6 +194,12 @@ module Mongoid
           scope = history_trackable_options[:scope]
           scope = _parent.collection_name.to_s.singularize.to_sym if scope.is_a?(Array)
 
+          if Mongoid::History.mongoid3?
+            scope = metadata.inverse_class_name.tableize.singularize.to_sym if metadata.present? && scope == metadata.as
+          else
+            scope = relation_metadata.inverse_class_name.tableize.singularize.to_sym if relation_metadata.present? && scope == relation_metadata.as
+          end
+
           @history_tracker_attributes = {
             association_chain: traverse_association_chain,
             scope: scope,
