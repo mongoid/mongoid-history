@@ -1,8 +1,10 @@
 Next Release
 ------------
 
-* Fixed compatibility with Mongoid 4.x, which removed `attr_accessible` in favor of protected attributes - [@dblock](https://github.com/dblock).
-* Fixed compatibility with models using `default_scope` - [@mrjlynch](https://github.com/mrjlynch).
+* [#106](https://github.com/aq1018/mongoid-history/pull/106) - Added support for polymorphic relationship `scope` -  [@adbeelitamar](https://github.com/adbeelitamar).
+* [#106](https://github.com/aq1018/mongoid-history/pull/106) - Enabled specifying an array of relationships in `scope` -  [@adbeelitamar](https://github.com/adbeelitamar).
+* [#83](https://github.com/aq1018/mongoid-history/pull/83) - Fixed compatibility with Mongoid 4.x, which removed `attr_accessible` in favor of protected attributes - [@dblock](https://github.com/dblock).
+* [#103](https://github.com/aq1018/mongoid-history/pull/103) - Fixed compatibility with models using `default_scope` - [@mrjlynch](https://github.com/mrjlynch).
 * Your contribution here.
 
 0.4.1 (1/11/2014)
