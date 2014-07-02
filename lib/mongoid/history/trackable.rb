@@ -68,7 +68,7 @@ module Mongoid
 
       module MyInstanceMethods
         def history_tracks
-          @history_tracks ||= Mongoid::History.tracker_class.where(scope: history_trackable_options[:scope], association_chain: association_hash)
+          @history_tracks ||= Mongoid::History.tracker_class.where(scope: related_scope, association_chain: association_hash)
         end
 
         #  undo :from => 1, :to => 5
@@ -126,6 +126,18 @@ module Mongoid
             versions = history_tracks.where(:version.in => version)
           end
           versions.desc(:version)
+        end
+
+        def related_scope
+          scope = history_trackable_options[:scope]
+          scope = _parent.collection_name.to_s.singularize.to_sym if scope.is_a?(Array)
+
+          if Mongoid::History.mongoid3?
+            scope = metadata.inverse_class_name.tableize.singularize.to_sym if metadata.present? && scope == metadata.as
+          else
+            scope = relation_metadata.inverse_class_name.tableize.singularize.to_sym if relation_metadata.present? && scope == relation_metadata.as
+          end
+          scope
         end
 
         def traverse_association_chain(node = self)
@@ -191,18 +203,9 @@ module Mongoid
         def history_tracker_attributes(action)
           return @history_tracker_attributes if @history_tracker_attributes
 
-          scope = history_trackable_options[:scope]
-          scope = _parent.collection_name.to_s.singularize.to_sym if scope.is_a?(Array)
-
-          if Mongoid::History.mongoid3?
-            scope = metadata.inverse_class_name.tableize.singularize.to_sym if metadata.present? && scope == metadata.as
-          else
-            scope = relation_metadata.inverse_class_name.tableize.singularize.to_sym if relation_metadata.present? && scope == relation_metadata.as
-          end
-
           @history_tracker_attributes = {
             association_chain: traverse_association_chain,
-            scope: scope,
+            scope: related_scope,
             modifier: send(history_trackable_options[:modifier_field])
           }
 
