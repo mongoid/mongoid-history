@@ -1,6 +1,6 @@
 0.4.3 (Next)
 ------------
-
+* [#110](https://github.com/aq1018/mongoid-history/pull/110) - Fix scope reference on history tracks criteria -  [@adbeelitamar](https://github.com/adbeelitamar).
 * Your contribution here.
 
 0.4.2 (7/1/2014)
