@@ -792,23 +792,23 @@ describe Mongoid::History do
     describe "when default scope is present" do
       before do
         class Post
-          default_scope where(title: nil)
+          default_scope -> { where(title: nil) }
         end
         class Comment
-          default_scope where(title: nil)
+          default_scope -> { where(title: nil) }
         end
         class User
-          default_scope where(name: nil)
+          default_scope -> { where(name: nil) }
         end
         class Tag
-          default_scope where(title: nil)
+          default_scope -> { where(title: nil) }
         end
       end
 
       describe "post" do
 
         it "should correctly undo and redo" do
-          post.update_attributes(:title => 'a new title')
+          post.update_attributes(title: 'a new title')
           track = post.history_tracks.last
           track.undo! user
           post.reload.title.should == 'Test'
@@ -817,7 +817,7 @@ describe Mongoid::History do
         end
 
         it "should stay the same after undo and redo" do
-          post.update_attributes(:title => 'testing')
+          post.update_attributes(title: 'testing')
           track = post.history_tracks.last
           track.undo! user
           track.redo! user
@@ -826,7 +826,7 @@ describe Mongoid::History do
       end
       describe "comment" do
         it "should correctly undo and redo" do
-          comment.update_attributes(:title => 'a new title')
+          comment.update_attributes(title: 'a new title')
           track = comment.history_tracks.last
           track.undo! user
           comment.reload.title.should == 'test'
@@ -835,7 +835,7 @@ describe Mongoid::History do
         end
 
         it "should stay the same after undo and redo" do
-          comment.update_attributes(:title => 'testing')
+          comment.update_attributes(title: 'testing')
           track = comment.history_tracks.last
           track.undo! user
           track.redo! user
@@ -844,7 +844,7 @@ describe Mongoid::History do
       end
       describe "user" do
         it "should correctly undo and redo" do
-          user.update_attributes(:name => 'a new name')
+          user.update_attributes(name: 'a new name')
           track = user.history_tracks.last
           track.undo! user
           user.reload.name.should == 'Aaron'
@@ -853,7 +853,7 @@ describe Mongoid::History do
         end
 
         it "should stay the same after undo and redo" do
-          user.update_attributes(:name => 'testing')
+          user.update_attributes(name: 'testing')
           track = user.history_tracks.last
           track.undo! user
           track.redo! user
@@ -862,7 +862,7 @@ describe Mongoid::History do
       end
       describe "tag" do
         it "should correctly undo and redo" do
-          tag.update_attributes(:title => 'a new title')
+          tag.update_attributes(title: 'a new title')
           track = tag.history_tracks.last
           track.undo! user
           tag.reload.title.should == 'test'
@@ -871,7 +871,7 @@ describe Mongoid::History do
         end
 
         it "should stay the same after undo and redo" do
-          tag.update_attributes(:title => 'testing')
+          tag.update_attributes(title: 'testing')
           track = tag.history_tracks.last
           track.undo! user
           track.redo! user
