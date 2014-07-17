@@ -681,48 +681,58 @@ describe Mongoid::History do
       end
 
       describe "redo" do
-        before :each do
-          comment.update_attributes(title: "Test5")
-        end
-
-        it "should recognize :from, :to options" do
-          comment.redo! user,  from: 2, to: 4
-          comment.reload.title.should == "Test4"
-        end
-
-        it "should recognize parameter as version number" do
-          comment.redo! user, 2
-          comment.reload.title.should == "Test2"
-        end
-
-        it "should redo last version when no parameter is specified" do
-          comment.redo! user
-          comment.reload.title.should == "Test5"
-        end
-
-        it "should recognize :last options" do
-          comment.redo! user, last: 1
-          comment.reload.title.should == "Test5"
-        end
-
-        if Mongoid::History.mongoid3?
-          context "protected attributes" do
+        [ nil, :reload ].each do |method|
+          context "#{method || 'instance'}" do
             before :each do
-              Comment.attr_accessible(nil)
-            end
-
-            after :each do
-              Comment.attr_protected(nil)
-            end
-
-            it "should recognize parameter as version number" do
-              comment.redo! user, 2
-              comment.reload.title.should == "Test2"
+              comment.update_attributes(title: "Test5")
             end
 
             it "should recognize :from, :to options" do
               comment.redo! user,  from: 2, to: 4
-              comment.reload.title.should == "Test4"
+              comment.send(method) if method
+              comment.title.should == "Test4"
+            end
+
+            it "should recognize parameter as version number" do
+              comment.redo! user, 2
+              comment.send(method) if method
+              comment.title.should == "Test2"
+            end
+
+            it "should redo last version when no parameter is specified" do
+              comment.redo! user
+              comment.send(method) if method
+              comment.title.should == "Test5"
+            end
+
+            it "should recognize :last options" do
+              comment.redo! user, last: 1
+              comment.send(method) if method
+              comment.title.should == "Test5"
+            end
+
+            if Mongoid::History.mongoid3?
+              context "protected attributes" do
+                before :each do
+                  Comment.attr_accessible(nil)
+                end
+
+                after :each do
+                  Comment.attr_protected(nil)
+                end
+
+                it "should recognize parameter as version number" do
+                  comment.redo! user, 2
+                  comment.send(method) if method
+                  comment.title.should == "Test2"
+                end
+
+                it "should recognize :from, :to options" do
+                  comment.redo! user,  from: 2, to: 4
+                  comment.send(method) if method
+                  comment.title.should == "Test4"
+                end
+              end
             end
           end
         end
