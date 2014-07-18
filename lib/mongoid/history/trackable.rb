@@ -80,9 +80,8 @@ module Mongoid
 
           versions.each do |v|
             undo_attr = v.undo_attr(modifier)
-            attributes.merge!(undo_attr)
+            update_attributes!(undo_attr)
           end
-          save!
         end
 
         def redo!(modifier = nil, options_or_version = nil)
@@ -91,9 +90,8 @@ module Mongoid
 
           versions.each do |v|
             redo_attr = v.redo_attr(modifier)
-            attributes.merge!(redo_attr)
+            update_attributes!(redo_attr)
           end
-          save!
         end
 
         def get_embedded(name)

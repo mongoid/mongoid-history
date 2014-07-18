@@ -627,7 +627,7 @@ describe Mongoid::History do
       end
 
       describe "undo" do
-        [ nil, :reload ].each do |method|
+        [nil, :reload].each do |method|
           context "#{method || 'instance'}" do
             it "should recognize :from, :to options" do
                 comment.undo! user, from: 4, to: 2
@@ -681,7 +681,7 @@ describe Mongoid::History do
       end
 
       describe "redo" do
-        [ nil, :reload ].each do |method|
+        [nil, :reload].each do |method|
           context "#{method || 'instance'}" do
             before :each do
               comment.update_attributes(title: "Test5")
