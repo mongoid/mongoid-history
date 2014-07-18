@@ -630,9 +630,9 @@ describe Mongoid::History do
         [nil, :reload].each do |method|
           context "#{method || 'instance'}" do
             it "should recognize :from, :to options" do
-                comment.undo! user, from: 4, to: 2
-                comment.send(method) if method
-                comment.title.should == "test"
+              comment.undo! user, from: 4, to: 2
+              comment.send(method) if method
+              comment.title.should == "test"
             end
 
             it "should recognize parameter as version number" do
