@@ -80,10 +80,10 @@ module Mongoid
 
           versions.each do |v|
             undo_attr = v.undo_attr(modifier)
-            if Mongoid::History.mongoid3? #update_attributes! not bypassing rails 3 protected attributes
+            if Mongoid::History.mongoid3? # update_attributes! not bypassing rails 3 protected attributes
               assign_attributes(undo_attr, without_protection: true)
               save!
-            else #assign_attributes with 'without_protection' option does not work with rails 4/mongoid 4
+            else # assign_attributes with 'without_protection' option does not work with rails 4/mongoid 4
               update_attributes!(undo_attr)
             end
           end
