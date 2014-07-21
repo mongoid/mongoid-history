@@ -1,8 +1,7 @@
-0.4.4 (Next)
-------------
+0.4.4 (7/29/2014)
+-----------------
 
-* Your contribution here.
-* [#111](https://github.com/aq1018/mongoid-history/pull/111) - Fixed compatibility of `undo!` and `redo!` methods with Rails 3.x
+* [#111](https://github.com/aq1018/mongoid-history/pull/111) - Fixed compatibility of `undo!` and `redo!` methods with Rails 3.x - [@mrjlynch](https://github.com/mrjlynch).
 
 0.4.3 (7/10/2014)
 -----------------
