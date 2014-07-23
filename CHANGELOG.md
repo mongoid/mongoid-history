@@ -2,6 +2,7 @@
 ------------
 
 * Your contribution here.
+* [#144](https://github.com/aq1018/mongoid-history/pull/158): Can modify history tracker insertion on object creation - [@sivagollapalli](https://github.com/sivagollapalli).
 * [#155](https://github.com/aq1018/mongoid-history/pull/155): Add support to whitelist the attributes for tracked embeds_one and embeds_many relations - [@JagdeepSingh](https://github.com/JagdeepSingh).
 * [#154](https://github.com/aq1018/mongoid-history/pull/154): Prevent soft-deleted embedded documents from tracking - [@JagdeepSingh](https://github.com/JagdeepSingh).
 * [#151](https://github.com/aq1018/mongoid-history/pull/151): Added ability to customize tracker class for each trackable; multiple trackers across the app are now possible - [@JagdeepSingh](https://github.com/JagdeepSingh).

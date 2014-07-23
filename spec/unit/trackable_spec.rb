@@ -277,6 +277,18 @@ describe Mongoid::History::Trackable do
     end
 
     describe ':changes_method' do
+      let(:custom_tracker) do
+        CustomTracker = Class.new(MyModel) do
+          field :key
+
+          track_history on: :key, changes_method: :my_changes, track_create: true
+
+          def my_changes
+            changes.merge('key' => "Save history-#{key}")
+          end
+        end
+      end
+
       it 'should default to :changes' do
         m = MyModel.create
         expect(m).to receive(:changes).exactly(3).times.and_call_original
@@ -297,6 +309,12 @@ describe Mongoid::History::Trackable do
         expect(m).to receive(:changes).twice.and_call_original
         expect(m).to receive(:my_changes).once.and_call_original
         m.save
+      end
+
+      it 'should allow an alternate method to be specified on object creation' do
+        m = custom_tracker.create(key: 'on object creation')
+        history_track = m.history_tracks.last
+        expect(history_track.modified['key']).to eq('Save history-on object creation')
       end
     end
   end
