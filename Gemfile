@@ -10,3 +10,5 @@ when /3/
 else
   gem 'mongoid', version
 end
+
+gem 'versionomy', '~> 0.4.3', :require => false
