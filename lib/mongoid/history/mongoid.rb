@@ -1,7 +1,7 @@
 module Mongoid
   module History
     def self.mongoid3?
-      ::Mongoid.const_defined? :Observer # deprecated in Mongoid 4.x
+      ::Mongoid::VERSION > '2' && ::Mongoid::VERSION < '4'
     end
   end
 end
