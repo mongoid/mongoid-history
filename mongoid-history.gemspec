@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'easy_diff'
   s.add_runtime_dependency 'mongoid', '>= 3.0'
   s.add_runtime_dependency 'activesupport'
+  s.add_runtime_dependency 'versionomy', '~> 0.4.3'
 
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rspec', '>= 3.0'
