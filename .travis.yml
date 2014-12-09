@@ -1,5 +1,7 @@
 services: mongodb
 
+sudo: false
+
 language: ruby
 
 cache: bundler
@@ -8,7 +10,7 @@ rvm:
   - 2.1.1
   - 2.0.0
   - 1.9.3
-  - rbx-2
+  - rbx-2.2.10
   - jruby-19mode
 
 env:
