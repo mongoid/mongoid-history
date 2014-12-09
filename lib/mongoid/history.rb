@@ -1,6 +1,6 @@
 module Mongoid
   module History
-    GLOBAL_TRACK_HISTORY_FLAG = "mongoid_history_trackable_enabled"
+    GLOBAL_TRACK_HISTORY_FLAG = 'mongoid_history_trackable_enabled'
 
     mattr_accessor :tracker_class_name
     mattr_accessor :trackable_class_options

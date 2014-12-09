@@ -120,11 +120,11 @@ module Mongoid
             if options[:from] && options[:to]
               lower = options[:from] >= options[:to] ? options[:to] : options[:from]
               upper = options[:from] <  options[:to] ? options[:to] : options[:from]
-              versions = history_tracks.where(:version.in => (lower .. upper).to_a)
+              versions = history_tracks.where(:version.in => (lower..upper).to_a)
             elsif options[:last]
               versions = history_tracks.limit(options[:last])
             else
-              raise "Invalid options, please specify (:from / :to) keys or :last key."
+              fail 'Invalid options, please specify (:from / :to) keys or :last key.'
             end
           else
             options_or_version = options_or_version.to_a if options_or_version.is_a?(Range)
@@ -308,7 +308,7 @@ module Mongoid
         #
         # @return [ Array < String > ] the list of reserved database field names
         def reserved_tracked_fields
-          @reserved_tracked_fields ||= ["_id", history_trackable_options[:version_field].to_s, "#{history_trackable_options[:modifier_field]}_id"]
+          @reserved_tracked_fields ||= ['_id', history_trackable_options[:version_field].to_s, "#{history_trackable_options[:modifier_field]}_id"]
         end
 
         def history_trackable_options

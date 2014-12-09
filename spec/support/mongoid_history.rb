@@ -3,8 +3,8 @@ RSpec.configure do |config|
     class Tracker
       include Mongoid::History::Tracker
     end
-    Mongoid::History.tracker_class_name = "Tracker"
-    Mongoid::History.modifier_class_name = "User"
+    Mongoid::History.tracker_class_name = 'Tracker'
+    Mongoid::History.modifier_class_name = 'User'
   end
   config.after :each do
     Mongoid::History.tracker_class_name = nil
