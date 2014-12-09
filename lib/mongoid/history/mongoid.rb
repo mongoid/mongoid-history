@@ -1,7 +1,7 @@
 module Mongoid
   module History
     def self.mongoid3?
-      ::Mongoid.const_defined? :Observer # deprecated in Mongoid 4.x
+      Versionomy.parse(::Mongoid::VERSION).major == 3
     end
   end
 end

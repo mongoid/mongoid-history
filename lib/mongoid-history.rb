@@ -1,4 +1,5 @@
 require 'easy_diff'
+require 'versionomy'
 
 require 'mongoid/history'
 require 'mongoid/history/version'
