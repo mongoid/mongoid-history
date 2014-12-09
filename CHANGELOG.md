@@ -1,6 +1,7 @@
 0.4.5 (Next)
 ------------
 
+* [#123](https://github.com/aq1018/mongoid-history/pull/123): Use a method compatible with mongoid-observers to determinine the version of Mongoid - [@zeitnot](https://github.com/zeitnot).
 * Your contribution here.
 
 0.4.4 (7/29/2014)
