@@ -11,6 +11,7 @@ Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| require f }
 require 'mongoid-history'
 
 RSpec.configure do |config|
+  config.raise_errors_for_deprecations!
   config.expect_with :rspec do |expectations|
     expectations.syntax = [:should, :expect]
   end

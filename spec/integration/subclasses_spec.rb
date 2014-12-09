@@ -21,9 +21,9 @@ describe Mongoid::History::Tracker do
     expect { prompt.save! }.to change(Tracker, :count).by(1)
     expect { prompt.update_attributes!(body: 'one') }.to change(Tracker, :count).by(1)
     prompt.undo!
-    prompt.body.should be_blank
+    expect(prompt.body).to be_blank
     prompt.redo! nil, 2
-    prompt.body.should == 'one'
+    expect(prompt.body).to eq('one')
     expect { prompt.destroy }.to change(Tracker, :count).by(1)
   end
 end

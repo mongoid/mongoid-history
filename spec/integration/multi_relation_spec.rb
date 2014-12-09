@@ -39,15 +39,15 @@ describe Mongoid::History::Tracker do
     model.save!
 
     model.undo! user
-    model.name.should == 'Foo'
+    expect(model.name).to eq('Foo')
 
     model.redo! user, 1
-    model.name.should == 'Bar'
+    expect(model.name).to eq('Bar')
   end
 
   it 'should track foreign key relations' do
-    Model.tracked_field?(:external_user_ids).should be true
-    Model.tracked_field?(:user).should be true
-    Model.tracked_field?(:user_id).should be true
+    expect(Model.tracked_field?(:external_user_ids)).to be true
+    expect(Model.tracked_field?(:user)).to be true
+    expect(Model.tracked_field?(:user_id)).to be true
   end
 end

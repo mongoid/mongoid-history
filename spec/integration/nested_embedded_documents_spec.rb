@@ -71,7 +71,7 @@ describe Mongoid::History::Tracker do
     embedded2.save!
 
     model.history_tracks.first.undo! user
-    embedded1.reload.name.should == 'e1name'
-    embedded2.reload.name.should == 'e2name'
+    expect(embedded1.reload.name).to eq('e1name')
+    expect(embedded2.reload.name).to eq('e2name')
   end
 end

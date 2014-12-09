@@ -5,6 +5,6 @@ describe Mongoid::History::Tracker do
     class MyTracker
       include Mongoid::History::Tracker
     end
-    Mongoid::History.tracker_class_name.should == :my_tracker
+    expect(Mongoid::History.tracker_class_name).to eq(:my_tracker)
   end
 end
