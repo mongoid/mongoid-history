@@ -78,13 +78,13 @@ describe Mongoid::History::Tracker do
     end
   end
 
-  it "tracks history for nested embedded documents with polymorphic relations" do
+  it 'tracks history for nested embedded documents with polymorphic relations' do
     user = User.new
     user.save!
 
     real_state = user.real_states.build(name: 'rs_name')
     real_state.save!
-    real_state.build_address(address: "Main Street #123", city: "Highland Park", state: 'IL').save!
+    real_state.build_address(address: 'Main Street #123', city: 'Highland Park', state: 'IL').save!
     expect(real_state.history_tracks.count).to eq(2)
     expect(real_state.address.history_tracks.count).to eq(1)
 
@@ -102,7 +102,7 @@ describe Mongoid::History::Tracker do
 
     company = user.companies.build(name: 'co_name')
     company.save!
-    company.build_address(address: "Main Street #456", city: "Evanston", state: 'IL').save!
+    company.build_address(address: 'Main Street #456', city: 'Evanston', state: 'IL').save!
     expect(company.history_tracks.count).to eq(2)
     expect(company.address.history_tracks.count).to eq(1)
 
@@ -112,7 +112,7 @@ describe Mongoid::History::Tracker do
     expect(company.address.history_tracks.count).to eq(2)
     expect(company.history_tracks.last.action).to eq('update')
 
-    company.build_second_address(address: "Main Street #789", city: "Highland Park", state: 'IL').save!
+    company.build_second_address(address: 'Main Street #789', city: 'Highland Park', state: 'IL').save!
     expect(company.history_tracks.count).to eq(4)
     expect(company.second_address.history_tracks.count).to eq(1)
     expect(company.history_tracks.last.action).to eq('create')

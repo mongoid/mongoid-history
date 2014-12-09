@@ -57,21 +57,21 @@ describe Mongoid::History::Tracker do
     end
   end
 
-  it "should be able to track history for nested embedded documents" do
+  it 'should be able to track history for nested embedded documents' do
     user = User.new
     user.save!
 
-    model = Model.new(name: "m1name")
+    model = Model.new(name: 'm1name')
     model.user = user
     model.save!
-    embedded1 = model.embones.create(name: "e1name")
-    embedded2 = embedded1.embtwos.create(name: "e2name")
+    embedded1 = model.embones.create(name: 'e1name')
+    embedded2 = embedded1.embtwos.create(name: 'e2name')
 
-    embedded2.name = "a new name"
+    embedded2.name = 'a new name'
     embedded2.save!
 
     model.history_tracks.first.undo! user
-    embedded1.reload.name.should == "e1name"
-    embedded2.reload.name.should == "e2name"
+    expect(embedded1.reload.name).to eq('e1name')
+    expect(embedded2.reload.name).to eq('e2name')
   end
 end

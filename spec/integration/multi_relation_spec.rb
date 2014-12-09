@@ -8,7 +8,7 @@ describe Mongoid::History::Tracker do
 
       field :name, type: String
       belongs_to :user, inverse_of: :models
-      has_and_belongs_to_many :external_users, class_name: "User", inverse_of: :external_models
+      has_and_belongs_to_many :external_users, class_name: 'User', inverse_of: :external_models
 
       track_history on: [:name, :user, :external_user_ids], # track title and body fields only, default is :all
                     modifier_field: :modifier, # adds "referenced_in :modifier" to track who made the change, default is :modifier
@@ -22,32 +22,32 @@ describe Mongoid::History::Tracker do
     class User
       include Mongoid::Document
       has_many :models, dependent: :destroy, inverse_of: :user
-      has_and_belongs_to_many :external_model, class_name: "Model", inverse_of: :external_users
+      has_and_belongs_to_many :external_model, class_name: 'Model', inverse_of: :external_users
     end
   end
 
-  it "should be possible to undo when having multiple relations to modifier class" do
+  it 'should be possible to undo when having multiple relations to modifier class' do
     user = User.new
     user.save
 
     model = Model.new
-    model.name = "Foo"
+    model.name = 'Foo'
     model.user = user
     model.save!
 
-    model.name = "Bar"
+    model.name = 'Bar'
     model.save!
 
     model.undo! user
-    model.name.should == "Foo"
+    expect(model.name).to eq('Foo')
 
     model.redo! user, 1
-    model.name.should == "Bar"
+    expect(model.name).to eq('Bar')
   end
 
-  it "should track foreign key relations" do
-    Model.tracked_field?(:external_user_ids).should be true
-    Model.tracked_field?(:user).should be true
-    Model.tracked_field?(:user_id).should be true
+  it 'should track foreign key relations' do
+    expect(Model.tracked_field?(:external_user_ids)).to be true
+    expect(Model.tracked_field?(:user)).to be true
+    expect(Model.tracked_field?(:user_id)).to be true
   end
 end

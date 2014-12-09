@@ -140,10 +140,10 @@ module Mongoid
       #   { field_1: value, field_2: value }
       def affected
         target = action.to_sym == :destroy ? :from : :to
-        @affected ||= tracked_changes.inject(HashWithIndifferentAccess.new) { |h, (k, v)|
+        @affected ||= tracked_changes.inject(HashWithIndifferentAccess.new) do |h, (k, v)|
           h[k] = v[target]
           h
-        }
+        end
       end
 
       # Returns the class of the trackable, irrespective of whether the trackable object
@@ -151,7 +151,7 @@ module Mongoid
       #
       # @return [ Class ] the class of the trackable
       def trackable_parent_class
-        association_chain.first["name"].constantize
+        association_chain.first['name'].constantize
       end
 
       private
@@ -166,18 +166,18 @@ module Mongoid
 
       def create_standalone
         restored = trackable_parent_class.new(localize_keys(original))
-        restored.id = original["_id"]
+        restored.id = original['_id']
         restored.save!
       end
 
       def create_on_parent
-        name = association_chain.last["name"]
+        name = association_chain.last['name']
         if trackable_parent.class.embeds_one?(name)
           trackable_parent.create_embedded(name, localize_keys(original))
         elsif trackable_parent.class.embeds_many?(name)
           trackable_parent.get_embedded(name).create!(localize_keys(original))
         else
-          raise "This should never happen. Please report bug!"
+          fail 'This should never happen. Please report bug!'
         end
       end
 
@@ -202,7 +202,7 @@ module Mongoid
                 elsif doc.class.embeds_many?(name)
                   doc.get_embedded(name).unscoped.where(_id: node['id']).first
                 else
-                  raise "This should never happen. Please report bug."
+                  fail 'This should never happen. Please report bug.'
                 end
           documents << doc
           break if chain.empty?
@@ -211,7 +211,7 @@ module Mongoid
       end
 
       def localize_keys(hash)
-        klass = association_chain.first["name"].constantize
+        klass = association_chain.first['name'].constantize
         klass.localized_fields.keys.each do |name|
           hash["#{name}_translations"] = hash.delete(name) if hash[name].present?
         end if klass.respond_to?(:localized_fields)

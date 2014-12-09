@@ -23,9 +23,9 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'activesupport'
 
   s.add_development_dependency 'rake'
-  s.add_development_dependency 'rspec', '>= 3.0'
+  s.add_development_dependency 'rspec', '~> 3.1'
   s.add_development_dependency 'bundler'
-  s.add_development_dependency 'rubocop', '0.21.0'
+  s.add_development_dependency 'rubocop', '0.27.1'
   s.add_development_dependency 'yard'
   s.add_development_dependency 'gem-release'
   s.add_development_dependency 'coveralls'
