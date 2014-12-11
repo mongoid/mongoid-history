@@ -2,6 +2,7 @@
 ------------
 
 * Your contribution here.
+* [#127](https://github.com/aq1018/mongoid-history/pull/127) - Fix gem naming as [rubygems](http://guides.rubygems.org/name-your-gem/) specs. No changes in Gemfile or *.gemspec, only change explicit requires from 'mongoid_history' to `require 'mongoid/history'`.
 
 0.4.4 (7/29/2014)
 -----------------
