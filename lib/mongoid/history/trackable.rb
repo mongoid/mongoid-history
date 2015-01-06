@@ -138,13 +138,20 @@ module Mongoid
 
         def related_scope
           scope = history_trackable_options[:scope]
-          scope = _parent.collection_name.to_s.singularize.to_sym if scope.is_a?(Array)
 
-          if Mongoid::History.mongoid3?
-            scope = metadata.inverse_class_name.tableize.singularize.to_sym if metadata.present? && scope == metadata.as
+          # Use top level document if its name is specified in the scope
+          root_document_name = traverse_association_chain.first['name'].singularize.underscore.gsub('/', '_').to_sym
+          if scope.is_a?(Array) && scope.include?(root_document_name)
+            scope = root_document_name
           else
-            scope = relation_metadata.inverse_class_name.tableize.singularize.to_sym if relation_metadata.present? && scope == relation_metadata.as
+            scope = _parent.collection_name.to_s.singularize.to_sym if scope.is_a?(Array)
+            if Mongoid::History.mongoid3?
+              scope = metadata.inverse_class_name.tableize.singularize.to_sym if metadata.present? && scope == metadata.as
+            else
+              scope = relation_metadata.inverse_class_name.tableize.singularize.to_sym if relation_metadata.present? && scope == relation_metadata.as
+            end
           end
+
           scope
         end
 
