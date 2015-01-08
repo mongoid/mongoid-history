@@ -238,6 +238,27 @@ instructions above then run the following command:
 MyHistoryTracker.all.each{|ht| ht.rename(:modifier_id, :created_by)
 ```
 
+**Setting Modifier Class Name**
+
+If your app will track history changes to a user, Mongoid History looks for these modifiers in the ``User`` class by default.  If you have named your 'user' accounts differently, you will need to add that to your Mongoid History config:
+
+The following examples set the modifier class name using a Rails initializer:
+
+If your app uses a class ``Author``:
+
+```ruby
+# config/initializers/mongoid-history.rb
+# initializer for mongoid-history
+
+Mongoid::History.modifier_class_name = 'Author'
+```
+
+Or perhaps you are namespacing to a module:
+
+```ruby
+Mongoid::History.modifier_class_name = 'CMS::Author'
+```
+
 **Using an alternate changes method**
 
 Sometimes you may wish to provide an alternate method for determining which changes should be tracked.  For example, if you are using embedded documents
