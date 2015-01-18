@@ -627,52 +627,54 @@ describe Mongoid::History do
       end
 
       describe 'undo' do
-        [nil, :reload].each do |method|
-          context "#{method || 'instance'}" do
-            it 'should recognize :from, :to options' do
-              comment.undo! user, from: 4, to: 2
-              comment.send(method) if method
-              expect(comment.title).to eq('test')
-            end
+        { 'undo'  => [nil], 'undo!' => [nil, :reload] }.each do |test_method, methods|
+          methods.each do |method|
+            context "#{method || 'instance'}" do
+              it 'recognizes :from, :to options' do
+                comment.send test_method, user, from: 4, to: 2
+                comment.send(method) if method
+                expect(comment.title).to eq('test')
+              end
 
-            it 'should recognize parameter as version number' do
-              comment.undo! user, 3
-              comment.send(method) if method
-              expect(comment.title).to eq('Test2')
-            end
+              it 'recognizes parameter as version number' do
+                comment.send test_method, user, 3
+                comment.send(method) if method
+                expect(comment.title).to eq('Test2')
+              end
 
-            it 'should undo last version when no parameter is specified' do
-              comment.undo! user
-              comment.send(method) if method
-              expect(comment.title).to eq('Test3')
-            end
+              it 'should undo last version when no parameter is specified' do
+                comment.send test_method, user
+                comment.send(method) if method
+                expect(comment.title).to eq('Test3')
+              end
 
-            it 'should recognize :last options' do
-              comment.undo! user, last: 2
-              comment.send(method) if method
-              expect(comment.title).to eq('Test2')
-            end
+              it 'recognizes :last options' do
+                comment.send test_method, user, last: 2
+                comment.send(method) if method
+                expect(comment.title).to eq('Test2')
+              end
 
-            if Mongoid::History.mongoid3?
-              context 'protected attributes' do
-                before :each do
-                  Comment.attr_accessible(nil)
-                end
+              if Mongoid::History.mongoid3?
+                context 'protected attributes' do
+                  before :each do
+                    Comment.attr_accessible(nil)
+                  end
 
-                after :each do
-                  Comment.attr_protected(nil)
-                end
+                  after :each do
+                    Comment.attr_protected(nil)
+                  end
 
-                it 'should undo last version when no parameter is specified on protected attributes' do
-                  comment.undo! user
-                  comment.send(method) if method
-                  expect(comment.title).to eq('Test3')
-                end
+                  it 'should undo last version when no parameter is specified on protected attributes' do
+                    comment.send test_method, user
+                    comment.send(method) if method
+                    expect(comment.title).to eq('Test3')
+                  end
 
-                it 'should recognize :last options on model with protected attributes' do
-                  comment.undo! user, last: 2
-                  comment.send(method) if method
-                  expect(comment.title).to eq('Test2')
+                  it 'recognizes :last options on model with protected attributes' do
+                    comment.send test_method, user, last: 2
+                    comment.send(method) if method
+                    expect(comment.title).to eq('Test2')
+                  end
                 end
               end
             end

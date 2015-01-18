@@ -121,6 +121,9 @@ track.undo! user # comment title should be "Test"
 
 track.redo! user # comment title should be "Test 2"
 
+# undo comment to version 1 without save
+comment.undo nil, from: 1, to: comment.version
+
 # undo last change
 comment.undo! user
 
