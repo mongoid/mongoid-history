@@ -2,6 +2,7 @@
 ------------
 
 * [#127](https://github.com/aq1018/mongoid-history/pull/127) - Fix gem naming per [rubygems](http://guides.rubygems.org/name-your-gem/) specs, now you can `require 'mongoid/history'` - [@nofxx](https://github.com/nofxx).
+* [#129](https://github.com/aq1018/mongoid-history/pull/129) - Support multiple levels of embedded polimorphic documents - [@BrunoChauvet](https://github.com/BrunoChauvet).
 * Your contribution here.
 
 0.4.4 (7/29/2014)
