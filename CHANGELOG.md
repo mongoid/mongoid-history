@@ -1,11 +1,10 @@
-0.4.5 (Next)
-------------
+0.4.5 (2/9/2015)
+----------------
 
 * [#131](https://github.com/aq1018/mongoid-history/pull/131) - Add `undo` method, that helps to get specific version of an object without saving changes - [@alexkravets](https://github.com/alexkravets).
 * [#127](https://github.com/aq1018/mongoid-history/pull/127) - Fix gem naming per [rubygems](http://guides.rubygems.org/name-your-gem/) specs, now you can `require 'mongoid/history'` - [@nofxx](https://github.com/nofxx).
 * [#129](https://github.com/aq1018/mongoid-history/pull/129) - Support multiple levels of embedded polimorphic documents - [@BrunoChauvet](https://github.com/BrunoChauvet).
 * [#123](https://github.com/aq1018/mongoid-history/pull/123): Use a method compatible with mongoid-observers to determinine the version of Mongoid - [@zeitnot](https://github.com/zeitnot).
-* Your contribution here.
 
 0.4.4 (7/29/2014)
 -----------------
