@@ -74,7 +74,7 @@ module Mongoid
         #  undo :from => 1, :to => 5
         #  undo 4
         #  undo :last => 10
-        def undo!(modifier = nil, options_or_version = nil)
+        def undo(modifier = nil, options_or_version = nil)
           versions = get_versions_criteria(options_or_version).to_a
           versions.sort! { |v1, v2| v2.version <=> v1.version }
 
@@ -82,11 +82,18 @@ module Mongoid
             undo_attr = v.undo_attr(modifier)
             if Mongoid::History.mongoid3? # update_attributes! not bypassing rails 3 protected attributes
               assign_attributes(undo_attr, without_protection: true)
-              save!
             else # assign_attributes with 'without_protection' option does not work with rails 4/mongoid 4
-              update_attributes!(undo_attr)
+              self.attributes = undo_attr
             end
           end
+        end
+
+        #  undo! :from => 1, :to => 5
+        #  undo! 4
+        #  undo! :last => 10
+        def undo!(modifier = nil, options_or_version = nil)
+          undo(modifier, options_or_version)
+          save!
         end
 
         def redo!(modifier = nil, options_or_version = nil)
