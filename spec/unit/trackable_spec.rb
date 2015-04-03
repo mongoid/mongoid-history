@@ -6,6 +6,12 @@ class MyModel
   field :foo
 end
 
+class MyDynamicModel
+  include Mongoid::Document
+  include Mongoid::History::Trackable
+  include Mongoid::Attributes::Dynamic unless Mongoid::History.mongoid3?
+end
+
 class HistoryTracker
   include Mongoid::History::Tracker
 end
@@ -94,6 +100,40 @@ describe Mongoid::History::Trackable do
       end
       it 'should allow field aliases' do
         expect(MyModel.tracked_field?(:id, :destroy)).to be true
+      end
+
+      context 'when model is dynamic' do
+        it 'should allow dynamic fields tracking' do
+          MyDynamicModel.track_history
+          expect(MyDynamicModel.tracked_field?(:dynamic_field, :destroy)).to be true
+        end
+      end
+
+      unless Mongoid::History.mongoid3?
+        context 'when model is not dynamic' do
+          it 'should not allow dynamic fields tracking' do
+            MyModel.track_history
+            expect(MyModel.tracked_field?(:dynamic_field, :destroy)).to be false
+          end
+        end
+      end
+    end
+
+    context '#dynamic_field?' do
+      context 'when model is dynamic' do
+        it 'should return true' do
+          MyDynamicModel.track_history
+          expect(MyDynamicModel.dynamic_field?(:dynamic_field)).to be true
+        end
+      end
+
+      unless Mongoid::History.mongoid3?
+        context 'when model is not dynamic' do
+          it 'should return false' do
+            MyModel.track_history
+            expect(MyModel.dynamic_field?(:dynamic_field)).to be false
+          end
+        end
       end
     end
 
