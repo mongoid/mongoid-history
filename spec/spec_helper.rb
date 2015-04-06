@@ -8,7 +8,7 @@ require 'mongoid'
 
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| require f }
 
-require 'mongoid/history'
+require 'mongoid-history'
 
 RSpec.configure do |config|
   config.raise_errors_for_deprecations!
