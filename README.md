@@ -69,6 +69,7 @@ class Post
   embeds_many     :comments
 
   # telling Mongoid::History how you want to track changes
+  # dynamic fields will be tracked automatically (for MongoId 4.0+ you should include Mongoid::Attributes::Dynamic to your model)
   track_history   :on => [:title, :body],       # track title and body fields only, default is :all
                   :modifier_field => :modifier, # adds "belongs_to :modifier" to track who made the change, default is :modifier
                   :modifier_field_inverse_of => :nil, # adds an ":inverse_of" option to the "belongs_to :modifier" relation, default is not set

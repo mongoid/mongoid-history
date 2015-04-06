@@ -54,6 +54,10 @@ module Mongoid
           Mongoid::History.enabled? && Thread.current[track_history_flag] != false
         end
 
+        def dynamic_enabled?
+          Mongoid::History.mongoid3? || (self < Mongoid::Attributes::Dynamic).present?
+        end
+
         def disable_tracking(&_block)
           Thread.current[track_history_flag] = false
           yield
@@ -293,7 +297,16 @@ module Mongoid
         #
         # @return [ Boolean ] whether or not the field is tracked for the given action
         def tracked_field?(field, action = :update)
-          tracked_fields_for_action(action).include? database_field_name(field)
+          dynamic_field?(field) || tracked_fields_for_action(action).include?(database_field_name(field))
+        end
+
+        # Checks if field is dynamic.
+        #
+        # @param [ String | Symbol ] field The name of the dynamic field
+        #
+        # @return [ Boolean ] whether or not the field is dynamic
+        def dynamic_field?(field)
+          dynamic_enabled? && !fields.keys.include?(database_field_name(field))
         end
 
         # Retrieves the list of tracked fields for a given action.
