@@ -1,7 +1,7 @@
-Next
-----
+0.4.6 (3/6/2015)
+----------------
 
-* Your contribution here.
+* Reverted [#127](https://github.com/aq1018/mongoid-history/pull/127) - Fix gem naming per [rubygems](http://guides.rubygems.org/name-your-gem/) specs, now you can `require 'mongoid/history'` - [@nofxx](https://github.com/nofxx).
 
 0.4.5 (2/9/2015)
 ----------------
