@@ -1,9 +1,13 @@
-Next
-----
+0.5.0 (Next)
+------------
 
 * [#133](https://github.com/aq1018/mongoid-history/pull/133) - Add dynamic attributes tracking (Mongoid::Attributes::Dynamic) - [@minisai](https://github.com/minisai).
-* [#124](https://github.com/aq1018/mongoid-history/pull/124) - You can require both `mongoid-history` and `mongoid/history` - [@dblock](https://github.com/dblock).
 * Your contribution here.
+
+0.4.7 (4/6/2015)
+----------------
+
+* [#124](https://github.com/aq1018/mongoid-history/pull/124) - You can require both `mongoid-history` and `mongoid/history` - [@dblock](https://github.com/dblock).
 
 0.4.5 (2/9/2015)
 ----------------
