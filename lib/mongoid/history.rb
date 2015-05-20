@@ -13,6 +13,7 @@ module Mongoid
     mattr_accessor :trackable_class_options
     mattr_accessor :modifier_class_name
     mattr_accessor :current_user_method
+    mattr_accessor :track_without_modifier
 
     def self.tracker_class
       @tracker_class ||= tracker_class_name.to_s.classify.constantize
@@ -34,3 +35,5 @@ end
 Mongoid::History.modifier_class_name = 'User'
 Mongoid::History.trackable_class_options = {}
 Mongoid::History.current_user_method ||= :current_user
+Mongoid::History.track_without_modifier = true
+
