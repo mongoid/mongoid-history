@@ -74,6 +74,7 @@ class Post
                   :modifier_field => :modifier, # adds "belongs_to :modifier" to track who made the change, default is :modifier
                   :modifier_field_inverse_of => :nil, # adds an ":inverse_of" option to the "belongs_to :modifier" relation, default is not set
                   :version_field => :version,   # adds "field :version, :type => Integer" to track current version, default is :version
+                  :track_without_modifier => false # do not save tracks when modifier is not set
                   :track_create   =>  false,    # track document creation, default is false
                   :track_update   =>  true,     # track document updates, default is true
                   :track_destroy  =>  false     # track document destruction, default is false
@@ -261,6 +262,27 @@ Or perhaps you are namespacing to a module:
 
 ```ruby
 Mongoid::History.modifier_class_name = 'CMS::Author'
+```
+
+**Skipping tracks without modifier set**
+
+If you don't want to save tracks when modifier for a model is not set, you can set `track_without_modifier` option to `false` either globally:
+
+```ruby
+  Mongoid::History.track_without_modifier = false
+```
+
+or per-model:
+
+```ruby
+class Post
+  include Mongoid::Document
+  include Mongoid::History::Trackable
+  field           :title
+  field           :body
+
+  track_history   :on => [:title, :body], :track_without_modifier => false
+end
 ```
 
 **Using an alternate changes method**
