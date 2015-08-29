@@ -270,7 +270,30 @@ and nested attributes, you may wish to write your own changes method that includ
 
 Mongoid::History provides an option named `:changes_method` which allows you to do this.  It defaults to `:changes`, which is the standard changes method.
 
+Note: Specify additional fields that are provided with a custom `changes_method` with the `:on` option.. To specify current fields and additional fields, use `fields.keys + [:custom]`
+
 Example:
+
+```ruby
+class Foo
+  include Mongoid::Document
+  include Mongoid::History::Trackable
+
+  attr_accessor :ip
+
+  track_history on: [:ip], changes_method: :my_changes
+
+  def my_changes
+    unless ip.nil?
+      changes.merge(ip: [nil, ip])
+    else
+      changes
+    end
+  end
+end
+```
+
+Example with embedded & nested attributes:
 
 ```ruby
 class Foo
@@ -284,11 +307,11 @@ class Foo
 
   # use changes_with_baz to include baz's changes in this document's
   # history.
-  track_history     :changes_method => :changes_with_baz
+  track_history   on: fields.keys + [:baz], changes_method: :changes_with_baz
 
   def changes_with_baz
     if baz.changed?
-      changes.merge( :baz => summarized_changes(baz) )
+      changes.merge(baz: summarized_changes(baz))
     else
       changes
     end
