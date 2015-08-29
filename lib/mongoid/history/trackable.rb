@@ -325,10 +325,10 @@ module Mongoid
         #
         # @return [ Array < String > ] the base list of tracked database field names
         def tracked_fields
-          @tracked_fields ||= fields.keys.select do |field|
+          @tracked_fields ||= begin
             h = history_trackable_options
-            (h[:on] == :all || h[:on].include?(field)) && !h[:except].include?(field)
-          end - reserved_tracked_fields
+            (h[:on] == :all ? fields.keys : h[:on]) - h[:except] - reserved_tracked_fields
+          end
         end
 
         # Retrieves the memoized list of reserved tracked fields, which are only included for certain actions.

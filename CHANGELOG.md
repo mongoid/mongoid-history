@@ -2,6 +2,7 @@
 ------------
 
 * [#133](https://github.com/aq1018/mongoid-history/pull/133) - Add dynamic attributes tracking (Mongoid::Attributes::Dynamic) - [@minisai](https://github.com/minisai).
+* [#142](https://github.com/aq1018/mongoid-history/pull/142) - Allow non-database fields to be specified in conjunction with a custom changes method - [@kayakyakr](https://github.com/kayakyakr).
 * Your contribution here.
 
 0.4.7 (4/6/2015)

@@ -117,6 +117,16 @@ describe Mongoid::History::Trackable do
           end
         end
       end
+
+      it 'allows a non-database field to be specified' do
+        class MyNonDatabaseModel
+          include Mongoid::Document
+          include Mongoid::History::Trackable
+          track_history on: ['baz']
+        end
+
+        expect(MyNonDatabaseModel.tracked_field?(:baz)).to be true
+      end
     end
 
     context '#dynamic_field?' do

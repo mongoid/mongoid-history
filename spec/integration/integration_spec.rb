@@ -901,5 +901,28 @@ describe Mongoid::History do
         end
       end
     end
+
+    describe 'overriden changes_method with additional fields' do
+      before :each do
+        class OverriddenChangesMethod
+          include Mongoid::Document
+          include Mongoid::History::Trackable
+
+          track_history on: [:foo], changes_method: :my_changes
+
+          def my_changes
+            { foo: %w(bar baz) }
+          end
+        end
+      end
+
+      it 'should add foo to the changes history' do
+        o = OverriddenChangesMethod.create
+        o.save
+        track = o.history_tracks.last
+        expect(track.modified).to eq('foo' => 'baz')
+        expect(track.original).to eq('foo' => 'bar')
+      end
+    end
   end
 end
