@@ -1,6 +1,7 @@
 Gemfile.lock
 
 .rvmrc
+.idea
 
 # rcov generated
 coverage

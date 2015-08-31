@@ -13,6 +13,7 @@ module Mongoid
             version_field: :version,
             changes_method: :changes,
             scope: scope_name,
+            track_without_modifier: Mongoid::History.track_without_modifier,
             track_create: false,
             track_update: true,
             track_destroy: false
@@ -276,7 +277,9 @@ module Mongoid
         protected
 
         def track_history_for_action?(action)
-          track_history? && !(action.to_sym == :update && modified_attributes_for_update.blank?)
+          track_history? &&
+            !(action.to_sym == :update && modified_attributes_for_update.blank?) &&
+            (history_trackable_options[:track_without_modifier] || !!send(history_trackable_options[:modifier_field]))
         end
 
         def track_history_for_action(action)

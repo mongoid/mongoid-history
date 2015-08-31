@@ -14,7 +14,7 @@ module Mongoid
         field :version,                 type: Integer
         field :action,                  type: String
         field :scope,                   type: String
-        belongs_to :modifier,                class_name: Mongoid::History.modifier_class_name
+        belongs_to :modifier,           class_name: Mongoid::History.modifier_class_name
 
         index(scope: 1)
         index(association_chain: 1)
