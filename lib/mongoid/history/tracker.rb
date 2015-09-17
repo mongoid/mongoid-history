@@ -27,7 +27,7 @@ module Mongoid
           re_create
         elsif action.to_sym == :create
           re_destroy
-        elsif Mongoid::History.mongoid3?
+        elsif Mongoid::Compatibility::Version.mongoid3?
           trackable.update_attributes!(undo_attr(modifier), without_protection: true)
         else
           trackable.update_attributes!(undo_attr(modifier))
@@ -39,7 +39,7 @@ module Mongoid
           re_destroy
         elsif action.to_sym == :create
           re_create
-        elsif Mongoid::History.mongoid3?
+        elsif Mongoid::Compatibility::Version.mongoid3?
           trackable.update_attributes!(redo_attr(modifier), without_protection: true)
         else
           trackable.update_attributes!(redo_attr(modifier))

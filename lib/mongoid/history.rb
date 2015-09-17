@@ -1,7 +1,6 @@
 require 'easy_diff'
-
+require 'mongoid-compatibility'
 require 'mongoid/history/version'
-require 'mongoid/history/mongoid'
 require 'mongoid/history/tracker'
 require 'mongoid/history/trackable'
 

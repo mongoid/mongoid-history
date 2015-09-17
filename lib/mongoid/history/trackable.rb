@@ -55,7 +55,7 @@ module Mongoid
         end
 
         def dynamic_enabled?
-          Mongoid::History.mongoid3? || (self < Mongoid::Attributes::Dynamic).present?
+          Mongoid::Compatibility::Version.mongoid3? || (self < Mongoid::Attributes::Dynamic).present?
         end
 
         def disable_tracking(&_block)
@@ -72,7 +72,10 @@ module Mongoid
 
       module MyInstanceMethods
         def history_tracks
-          @history_tracks ||= Mongoid::History.tracker_class.where(scope: related_scope, association_chain: association_hash)
+          @history_tracks ||= Mongoid::History.tracker_class.where(
+            scope: related_scope,
+            association_chain: association_hash
+          ).asc(:version)
         end
 
         #  undo :from => 1, :to => 5
@@ -84,7 +87,7 @@ module Mongoid
 
           versions.each do |v|
             undo_attr = v.undo_attr(modifier)
-            if Mongoid::History.mongoid3? # update_attributes! not bypassing rails 3 protected attributes
+            if Mongoid::Compatibility::Version.mongoid3? # update_attributes! not bypassing rails 3 protected attributes
               assign_attributes(undo_attr, without_protection: true)
             else # assign_attributes with 'without_protection' option does not work with rails 4/mongoid 4
               self.attributes = undo_attr
@@ -106,7 +109,7 @@ module Mongoid
 
           versions.each do |v|
             redo_attr = v.redo_attr(modifier)
-            if Mongoid::History.mongoid3?
+            if Mongoid::Compatibility::Version.mongoid3?
               assign_attributes(redo_attr, without_protection: true)
               save!
             else
@@ -156,7 +159,7 @@ module Mongoid
             scope = root_document_name
           else
             scope = _parent.collection_name.to_s.singularize.to_sym if scope.is_a?(Array)
-            if Mongoid::History.mongoid3?
+            if Mongoid::Compatibility::Version.mongoid3?
               scope = metadata.inverse_class_name.tableize.singularize.to_sym if metadata.present? && scope == metadata.as
             else
               scope = relation_metadata.inverse_class_name.tableize.singularize.to_sym if relation_metadata.present? && scope == relation_metadata.as
@@ -178,7 +181,7 @@ module Mongoid
           # the child to parent (embedded_in, belongs_to) relation will be defined
           if node._parent
             meta = node._parent.relations.values.select do |relation|
-              if Mongoid::History.mongoid3?
+              if Mongoid::Compatibility::Version.mongoid3?
                 relation.class_name == node.metadata.class_name.to_s && relation.name == node.metadata.name
               else
                 relation.class_name == node.relation_metadata.class_name.to_s &&

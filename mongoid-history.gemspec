@@ -20,6 +20,7 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'easy_diff'
   s.add_runtime_dependency 'mongoid', '>= 3.0'
+  s.add_runtime_dependency 'mongoid-compatibility'
   s.add_runtime_dependency 'activesupport'
 
   s.add_development_dependency 'rake'

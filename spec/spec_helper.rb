@@ -18,4 +18,8 @@ RSpec.configure do |config|
   config.mock_with :rspec do |mocks|
     mocks.syntax = [:should, :expect]
   end
+  config.before :all do
+    Mongoid.logger.level = Logger::INFO
+    Mongo::Logger.logger.level = Logger::INFO if Mongoid::Compatibility::Version.mongoid5?
+  end
 end

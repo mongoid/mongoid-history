@@ -9,7 +9,7 @@ end
 class MyDynamicModel
   include Mongoid::Document
   include Mongoid::History::Trackable
-  include Mongoid::Attributes::Dynamic unless Mongoid::History.mongoid3?
+  include Mongoid::Attributes::Dynamic unless Mongoid::Compatibility::Version.mongoid3?
 end
 
 class HistoryTracker
@@ -109,7 +109,7 @@ describe Mongoid::History::Trackable do
         end
       end
 
-      unless Mongoid::History.mongoid3?
+      unless Mongoid::Compatibility::Version.mongoid3?
         context 'when model is not dynamic' do
           it 'should not allow dynamic fields tracking' do
             MyModel.track_history
@@ -137,7 +137,7 @@ describe Mongoid::History::Trackable do
         end
       end
 
-      unless Mongoid::History.mongoid3?
+      unless Mongoid::Compatibility::Version.mongoid3?
         context 'when model is not dynamic' do
           it 'should return false' do
             MyModel.track_history

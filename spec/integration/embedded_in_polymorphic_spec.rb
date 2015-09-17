@@ -97,8 +97,8 @@ describe Mongoid::History::Tracker do
     real_state.build_embone(name: 'Lorem ipsum').save!
     expect(real_state.history_tracks.count).to eq(4)
     expect(real_state.embone.history_tracks.count).to eq(1)
-    expect(real_state.history_tracks.last.action).to eq('create')
-    expect(real_state.history_tracks.last.association_chain.last['name']).to eq('embone')
+    expect(real_state.embone.history_tracks.last.action).to eq('create')
+    expect(real_state.embone.history_tracks.last.association_chain.last['name']).to eq('embone')
 
     company = user.companies.build(name: 'co_name')
     company.save!
@@ -115,13 +115,13 @@ describe Mongoid::History::Tracker do
     company.build_second_address(address: 'Main Street #789', city: 'Highland Park', state: 'IL').save!
     expect(company.history_tracks.count).to eq(4)
     expect(company.second_address.history_tracks.count).to eq(1)
-    expect(company.history_tracks.last.action).to eq('create')
-    expect(company.history_tracks.last.association_chain.last['name']).to eq('second_address')
+    expect(company.second_address.history_tracks.last.action).to eq('create')
+    expect(company.second_address.history_tracks.last.association_chain.last['name']).to eq('second_address')
 
     company.build_embone(name: 'Lorem ipsum').save!
     expect(company.history_tracks.count).to eq(5)
     expect(company.embone.history_tracks.count).to eq(1)
-    expect(company.history_tracks.last.action).to eq('create')
-    expect(company.history_tracks.last.association_chain.last['name']).to eq('embone')
+    expect(company.embone.history_tracks.last.action).to eq('create')
+    expect(company.embone.history_tracks.last.association_chain.last['name']).to eq('embone')
   end
 end

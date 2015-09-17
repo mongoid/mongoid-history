@@ -75,11 +75,11 @@ describe Mongoid::History do
   end
 
   before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
-  let(:user) { User.create(name: 'Aaron', email: 'aaron@randomemail.com', aliases: ['bob'], country: 'Canada', city: 'Toronto', address: '21 Jump Street') }
-  let(:another_user) { User.create(name: 'Another Guy', email: 'anotherguy@randomemail.com') }
-  let(:post) { Post.create(title: 'Test', body: 'Post', modifier: user, views: 100) }
-  let(:comment) { post.comments.create(title: 'test', body: 'comment', modifier: user) }
-  let(:tag) { Tag.create(title: 'test') }
+  let(:user) { User.create!(name: 'Aaron', email: 'aaron@randomemail.com', aliases: ['bob'], country: 'Canada', city: 'Toronto', address: '21 Jump Street') }
+  let(:another_user) { User.create!(name: 'Another Guy', email: 'anotherguy@randomemail.com') }
+  let(:post) { Post.create!(title: 'Test', body: 'Post', modifier: user, views: 100) }
+  let(:comment) { post.comments.create!(title: 'test', body: 'comment', modifier: user) }
+  let(:tag) { Tag.create!(title: 'test') }
 
   describe 'track' do
     describe 'on creation' do
@@ -212,7 +212,7 @@ describe Mongoid::History do
       end
 
       it 'should undo non-existing field changes' do
-        post = Post.create(modifier: user, views: 100)
+        post = Post.create!(modifier: user, views: 100)
         expect(post.reload.title).to be_nil
         post.update_attributes(title: 'Aaron2')
         expect(post.reload.title).to eq('Aaron2')
@@ -503,8 +503,8 @@ describe Mongoid::History do
 
     describe 'embedded with cascading callbacks' do
 
-      let(:tag_foo) { post.tags.create(title: 'foo', updated_by: user) }
-      let(:tag_bar) { post.tags.create(title: 'bar') }
+      let(:tag_foo) { post.tags.create!(title: 'foo', updated_by: user) }
+      let(:tag_bar) { post.tags.create!(title: 'bar') }
 
       # it "should have cascaded the creation callbacks and set timestamps" do
       #   tag_foo; tag_bar # initialize
@@ -654,7 +654,7 @@ describe Mongoid::History do
                 expect(comment.title).to eq('Test2')
               end
 
-              if Mongoid::History.mongoid3?
+              if Mongoid::Compatibility::Version.mongoid3?
                 context 'protected attributes' do
                   before :each do
                     Comment.attr_accessible(nil)
@@ -713,7 +713,7 @@ describe Mongoid::History do
               expect(comment.title).to eq('Test5')
             end
 
-            if Mongoid::History.mongoid3?
+            if Mongoid::Compatibility::Version.mongoid3?
               context 'protected attributes' do
                 before :each do
                   Comment.attr_accessible(nil)
@@ -754,7 +754,7 @@ describe Mongoid::History do
       end
       it 'should correctly undo and redo' do
         if Sausage.respond_to?(:localized_fields)
-          sausage = Sausage.create(flavour_translations: { 'en' => 'Apple', 'nl' => 'Appel' })
+          sausage = Sausage.create!(flavour_translations: { 'en' => 'Apple', 'nl' => 'Appel' })
           sausage.update_attributes(flavour: 'Guinness')
 
           track = sausage.history_tracks.last
@@ -777,7 +777,7 @@ describe Mongoid::History do
       let(:foo) { Foo.new(title: 'a title', body: 'a body') }
       before :each do
         post.comments << foo
-        post.save
+        post.save!
       end
       it 'should assign interface name in association chain' do
         foo.update_attribute(:body, 'a changed body')
@@ -918,7 +918,7 @@ describe Mongoid::History do
 
       it 'should add foo to the changes history' do
         o = OverriddenChangesMethod.create
-        o.save
+        o.save!
         track = o.history_tracks.last
         expect(track.modified).to eq('foo' => 'baz')
         expect(track.original).to eq('foo' => 'bar')
