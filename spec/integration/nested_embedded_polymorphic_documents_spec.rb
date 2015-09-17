@@ -8,7 +8,7 @@ describe Mongoid::History::Tracker do
 
       field :name, type: String
       belongs_to :user
-      embeds_one :embedded_one,  as: :embedable
+      embeds_one :embedded_one, as: :embedable
 
       track_history on: :all,
                     modifier_field: :modifier,
@@ -24,7 +24,7 @@ describe Mongoid::History::Tracker do
 
       field :name, type: String
       belongs_to :user
-      embeds_one :embedded_one,  as: :embedable
+      embeds_one :embedded_one, as: :embedable
 
       track_history on: :all,
                     modifier_field: :modifier,

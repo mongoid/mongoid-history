@@ -133,7 +133,7 @@ module Mongoid
             options = options_or_version
             if options[:from] && options[:to]
               lower = options[:from] >= options[:to] ? options[:to] : options[:from]
-              upper = options[:from] <  options[:to] ? options[:to] : options[:from]
+              upper = options[:from] < options[:to] ? options[:to] : options[:from]
               versions = history_tracks.where(:version.in => (lower..upper).to_a)
             elsif options[:last]
               versions = history_tracks.limit(options[:last])
@@ -154,7 +154,7 @@ module Mongoid
           scope = history_trackable_options[:scope]
 
           # Use top level document if its name is specified in the scope
-          root_document_name = traverse_association_chain.first['name'].singularize.underscore.gsub('/', '_').to_sym
+          root_document_name = traverse_association_chain.first['name'].singularize.underscore.tr('/', '_').to_sym
           if scope.is_a?(Array) && scope.include?(root_document_name)
             scope = root_document_name
           else
@@ -180,14 +180,14 @@ module Mongoid
           # we're assured, through the object creation, it'll exist. Whereas we're not guarenteed
           # the child to parent (embedded_in, belongs_to) relation will be defined
           if node._parent
-            meta = node._parent.relations.values.select do |relation|
+            meta = node._parent.relations.values.find do |relation|
               if Mongoid::Compatibility::Version.mongoid3?
                 relation.class_name == node.metadata.class_name.to_s && relation.name == node.metadata.name
               else
                 relation.class_name == node.relation_metadata.class_name.to_s &&
                 relation.name == node.relation_metadata.name
               end
-            end.first
+            end
           end
 
           # if root node has no meta, and should use class name instead
@@ -258,7 +258,7 @@ module Mongoid
         end
 
         def clear_trackable_memoization
-          @history_tracker_attributes =  nil
+          @history_tracker_attributes = nil
           @modified_attributes_for_create = nil
           @modified_attributes_for_update = nil
           @history_tracks = nil

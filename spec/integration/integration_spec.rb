@@ -88,7 +88,7 @@ describe Mongoid::History do
       end
 
       it 'should assign title and body on modified' do
-        expect(comment.history_tracks.first.modified).to eq('t' => 'test', 'body' =>  'comment')
+        expect(comment.history_tracks.first.modified).to eq('t' => 'test', 'body' => 'comment')
       end
 
       it 'should not assign title and body on original' do
@@ -502,7 +502,6 @@ describe Mongoid::History do
     end
 
     describe 'embedded with cascading callbacks' do
-
       let(:tag_foo) { post.tags.create!(title: 'foo', updated_by: user) }
       let(:tag_bar) { post.tags.create!(title: 'bar') }
 
@@ -627,7 +626,7 @@ describe Mongoid::History do
       end
 
       describe 'undo' do
-        { 'undo'  => [nil], 'undo!' => [nil, :reload] }.each do |test_method, methods|
+        { 'undo' => [nil], 'undo!' => [nil, :reload] }.each do |test_method, methods|
           methods.each do |method|
             context "#{method || 'instance'}" do
               it 'recognizes :from, :to options' do
@@ -738,7 +737,6 @@ describe Mongoid::History do
             end
           end
         end
-
       end
     end
 
@@ -828,7 +826,6 @@ describe Mongoid::History do
       end
 
       describe 'post' do
-
         it 'should correctly undo and redo' do
           post.update_attributes(title: 'a new title')
           track = post.history_tracks.last

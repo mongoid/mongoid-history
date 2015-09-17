@@ -8,13 +8,13 @@ module Mongoid
         include Mongoid::Timestamps
         attr_writer :trackable
 
-        field :association_chain,       type: Array,     default: []
+        field :association_chain,       type: Array, default: []
         field :modified,                type: Hash
         field :original,                type: Hash
         field :version,                 type: Integer
         field :action,                  type: String
         field :scope,                   type: String
-        belongs_to :modifier,                class_name: Mongoid::History.modifier_class_name
+        belongs_to :modifier, class_name: Mongoid::History.modifier_class_name
 
         index(scope: 1)
         index(association_chain: 1)
