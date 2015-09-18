@@ -8,13 +8,13 @@ module Mongoid
         include Mongoid::Timestamps
         attr_writer :trackable
 
-        field :association_chain,       type: Array,     default: []
+        field :association_chain,       type: Array, default: []
         field :modified,                type: Hash
         field :original,                type: Hash
         field :version,                 type: Integer
         field :action,                  type: String
         field :scope,                   type: String
-        belongs_to :modifier,                class_name: Mongoid::History.modifier_class_name
+        belongs_to :modifier, class_name: Mongoid::History.modifier_class_name
 
         index(scope: 1)
         index(association_chain: 1)
@@ -27,7 +27,7 @@ module Mongoid
           re_create
         elsif action.to_sym == :create
           re_destroy
-        elsif Mongoid::History.mongoid3?
+        elsif Mongoid::Compatibility::Version.mongoid3?
           trackable.update_attributes!(undo_attr(modifier), without_protection: true)
         else
           trackable.update_attributes!(undo_attr(modifier))
@@ -39,7 +39,7 @@ module Mongoid
           re_destroy
         elsif action.to_sym == :create
           re_create
-        elsif Mongoid::History.mongoid3?
+        elsif Mongoid::Compatibility::Version.mongoid3?
           trackable.update_attributes!(redo_attr(modifier), without_protection: true)
         else
           trackable.update_attributes!(redo_attr(modifier))

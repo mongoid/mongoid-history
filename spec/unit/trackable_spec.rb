@@ -9,7 +9,7 @@ end
 class MyDynamicModel
   include Mongoid::Document
   include Mongoid::History::Trackable
-  include Mongoid::Attributes::Dynamic unless Mongoid::History.mongoid3?
+  include Mongoid::Attributes::Dynamic unless Mongoid::Compatibility::Version.mongoid3?
 end
 
 class HistoryTracker
@@ -109,7 +109,7 @@ describe Mongoid::History::Trackable do
         end
       end
 
-      unless Mongoid::History.mongoid3?
+      unless Mongoid::Compatibility::Version.mongoid3?
         context 'when model is not dynamic' do
           it 'should not allow dynamic fields tracking' do
             MyModel.track_history
@@ -137,7 +137,7 @@ describe Mongoid::History::Trackable do
         end
       end
 
-      unless Mongoid::History.mongoid3?
+      unless Mongoid::Compatibility::Version.mongoid3?
         context 'when model is not dynamic' do
           it 'should return false' do
             MyModel.track_history
@@ -163,9 +163,7 @@ describe Mongoid::History::Trackable do
     end
 
     describe '#track_history?' do
-
       context 'when tracking is globally enabled' do
-
         it 'should be enabled on the current thread' do
           expect(Mongoid::History.enabled?).to eq(true)
           expect(MyModel.new.track_history?).to eq(true)
@@ -204,7 +202,6 @@ describe Mongoid::History::Trackable do
       end
 
       context 'when tracking is globally disabled' do
-
         around(:each) do |example|
           Mongoid::History.disable do
             example.run
@@ -263,7 +260,6 @@ describe Mongoid::History::Trackable do
     end
 
     describe ':changes_method' do
-
       it 'should default to :changes' do
         m = MyModel.create
         expect(m).to receive(:changes).exactly(3).times.and_call_original

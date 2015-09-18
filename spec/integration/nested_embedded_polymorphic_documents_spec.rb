@@ -8,7 +8,7 @@ describe Mongoid::History::Tracker do
 
       field :name, type: String
       belongs_to :user
-      embeds_one :embedded_one,  as: :embedable
+      embeds_one :embedded_one, as: :embedable
 
       track_history on: :all,
                     modifier_field: :modifier,
@@ -24,7 +24,7 @@ describe Mongoid::History::Tracker do
 
       field :name, type: String
       belongs_to :user
-      embeds_one :embedded_one,  as: :embedable
+      embeds_one :embedded_one, as: :embedable
 
       track_history on: :all,
                     modifier_field: :modifier,
@@ -93,8 +93,8 @@ describe Mongoid::History::Tracker do
     modelone.build_embedded_one(name: 'Lorem ipsum').save!
     expect(modelone.history_tracks.count).to eq(4)
     expect(modelone.embedded_one.history_tracks.count).to eq(1)
-    expect(modelone.history_tracks.last.action).to eq('create')
-    expect(modelone.history_tracks.last.association_chain.last['name']).to eq('embedded_one')
+    expect(modelone.embedded_one.history_tracks.last.action).to eq('create')
+    expect(modelone.embedded_one.history_tracks.last.association_chain.last['name']).to eq('embedded_one')
 
     embedded_one1 = modelone.embedded_one.embedded_twos.create(name: 'modelone_embedded_one_1')
     expect(modelone.history_tracks.count).to eq(5)
@@ -116,8 +116,8 @@ describe Mongoid::History::Tracker do
     modeltwo.build_embedded_one(name: 'Lorem ipsum').save!
     expect(modeltwo.history_tracks.count).to eq(4)
     expect(modeltwo.embedded_one.history_tracks.count).to eq(1)
-    expect(modeltwo.history_tracks.last.action).to eq('create')
-    expect(modeltwo.history_tracks.last.association_chain.last['name']).to eq('embedded_one')
+    expect(modeltwo.embedded_one.history_tracks.last.action).to eq('create')
+    expect(modeltwo.embedded_one.history_tracks.last.association_chain.last['name']).to eq('embedded_one')
 
     embedded_one2 = modeltwo.embedded_one.embedded_twos.create(name: 'modeltwo_embedded_one_1')
     expect(modeltwo.history_tracks.count).to eq(5)

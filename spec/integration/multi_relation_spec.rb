@@ -13,7 +13,7 @@ describe Mongoid::History::Tracker do
       track_history on: [:name, :user, :external_user_ids], # track title and body fields only, default is :all
                     modifier_field: :modifier, # adds "referenced_in :modifier" to track who made the change, default is :modifier
                     modifier_field_inverse_of: nil, # no inverse modifier relationship
-                    version_field: :version,   # adds "field :version, :type => Integer" to track current version, default is :version
+                    version_field: :version, # adds "field :version, :type => Integer" to track current version, default is :version
                     track_create: false,    # track document creation, default is false
                     track_update: true,     # track document updates, default is true
                     track_destroy: false    # track document destruction, default is false

@@ -12,10 +12,8 @@ require 'mongoid/history'
 
 RSpec.configure do |config|
   config.raise_errors_for_deprecations!
-  config.expect_with :rspec do |expectations|
-    expectations.syntax = [:should, :expect]
-  end
-  config.mock_with :rspec do |mocks|
-    mocks.syntax = [:should, :expect]
+  config.before :all do
+    Mongoid.logger.level = Logger::INFO
+    Mongo::Logger.logger.level = Logger::INFO if Mongoid::Compatibility::Version.mongoid5?
   end
 end

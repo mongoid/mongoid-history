@@ -55,7 +55,7 @@ module Mongoid
         end
 
         def dynamic_enabled?
-          Mongoid::History.mongoid3? || (self < Mongoid::Attributes::Dynamic).present?
+          Mongoid::Compatibility::Version.mongoid3? || (self < Mongoid::Attributes::Dynamic).present?
         end
 
         def disable_tracking(&_block)
@@ -72,7 +72,10 @@ module Mongoid
 
       module MyInstanceMethods
         def history_tracks
-          @history_tracks ||= Mongoid::History.tracker_class.where(scope: related_scope, association_chain: association_hash)
+          @history_tracks ||= Mongoid::History.tracker_class.where(
+            scope: related_scope,
+            association_chain: association_hash
+          ).asc(:version)
         end
 
         #  undo :from => 1, :to => 5
@@ -84,7 +87,7 @@ module Mongoid
 
           versions.each do |v|
             undo_attr = v.undo_attr(modifier)
-            if Mongoid::History.mongoid3? # update_attributes! not bypassing rails 3 protected attributes
+            if Mongoid::Compatibility::Version.mongoid3? # update_attributes! not bypassing rails 3 protected attributes
               assign_attributes(undo_attr, without_protection: true)
             else # assign_attributes with 'without_protection' option does not work with rails 4/mongoid 4
               self.attributes = undo_attr
@@ -106,7 +109,7 @@ module Mongoid
 
           versions.each do |v|
             redo_attr = v.redo_attr(modifier)
-            if Mongoid::History.mongoid3?
+            if Mongoid::Compatibility::Version.mongoid3?
               assign_attributes(redo_attr, without_protection: true)
               save!
             else
@@ -130,7 +133,7 @@ module Mongoid
             options = options_or_version
             if options[:from] && options[:to]
               lower = options[:from] >= options[:to] ? options[:to] : options[:from]
-              upper = options[:from] <  options[:to] ? options[:to] : options[:from]
+              upper = options[:from] < options[:to] ? options[:to] : options[:from]
               versions = history_tracks.where(:version.in => (lower..upper).to_a)
             elsif options[:last]
               versions = history_tracks.limit(options[:last])
@@ -151,12 +154,12 @@ module Mongoid
           scope = history_trackable_options[:scope]
 
           # Use top level document if its name is specified in the scope
-          root_document_name = traverse_association_chain.first['name'].singularize.underscore.gsub('/', '_').to_sym
+          root_document_name = traverse_association_chain.first['name'].singularize.underscore.tr('/', '_').to_sym
           if scope.is_a?(Array) && scope.include?(root_document_name)
             scope = root_document_name
           else
             scope = _parent.collection_name.to_s.singularize.to_sym if scope.is_a?(Array)
-            if Mongoid::History.mongoid3?
+            if Mongoid::Compatibility::Version.mongoid3?
               scope = metadata.inverse_class_name.tableize.singularize.to_sym if metadata.present? && scope == metadata.as
             else
               scope = relation_metadata.inverse_class_name.tableize.singularize.to_sym if relation_metadata.present? && scope == relation_metadata.as
@@ -177,14 +180,14 @@ module Mongoid
           # we're assured, through the object creation, it'll exist. Whereas we're not guarenteed
           # the child to parent (embedded_in, belongs_to) relation will be defined
           if node._parent
-            meta = node._parent.relations.values.select do |relation|
-              if Mongoid::History.mongoid3?
+            meta = node._parent.relations.values.find do |relation|
+              if Mongoid::Compatibility::Version.mongoid3?
                 relation.class_name == node.metadata.class_name.to_s && relation.name == node.metadata.name
               else
                 relation.class_name == node.relation_metadata.class_name.to_s &&
                 relation.name == node.relation_metadata.name
               end
-            end.first
+            end
           end
 
           # if root node has no meta, and should use class name instead
@@ -255,7 +258,7 @@ module Mongoid
         end
 
         def clear_trackable_memoization
-          @history_tracker_attributes =  nil
+          @history_tracker_attributes = nil
           @modified_attributes_for_create = nil
           @modified_attributes_for_update = nil
           @history_tracks = nil
