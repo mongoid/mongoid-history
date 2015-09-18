@@ -1,11 +1,11 @@
 mongoid-history
 ===============
 
-[![Gem Version](https://badge.fury.io/rb/mongoid-history.png)](http://badge.fury.io/rb/mongoid-history)
-[![Build Status](https://secure.travis-ci.org/aq1018/mongoid-history.png?branch=master)](http://travis-ci.org/aq1018/mongoid-history)
-[![Dependency Status](https://gemnasium.com/aq1018/mongoid-history.png)](https://gemnasium.com/aq1018/mongoid-history)
-[![Code Climate](https://codeclimate.com/github/aq1018/mongoid-history.png)](https://codeclimate.com/github/aq1018/mongoid-history)
-[![Coverage Status](https://coveralls.io/repos/aq1018/mongoid-history/badge.png?branch=coveralls)](https://coveralls.io/r/aq1018/mongoid-history?branch=coveralls)
+[![Gem Version](https://badge.fury.io/rb/mongoid-history.svg)](http://badge.fury.io/rb/mongoid-history)
+[![Build Status](https://secure.travis-ci.org/aq1018/mongoid-history.svg?branch=master)](http://travis-ci.org/aq1018/mongoid-history)
+[![Dependency Status](https://gemnasium.com/aq1018/mongoid-history.svg)](https://gemnasium.com/aq1018/mongoid-history)
+[![Code Climate](https://codeclimate.com/github/aq1018/mongoid-history.svg)](https://codeclimate.com/github/aq1018/mongoid-history)
+[![Coverage Status](https://coveralls.io/repos/aq1018/mongoid-history/badge.svg?branch=coveralls)](https://coveralls.io/r/aq1018/mongoid-history?branch=coveralls)
 
 Mongoid-history tracks historical changes for any document, including embedded ones. It achieves this by storing all history tracks in a single collection that you define. Embedded documents are referenced by storing an association path, which is an array of `document_name` and `document_id` fields starting from the top most parent document and down to the embedded document that should track history.
 
