@@ -34,7 +34,12 @@ module Mongoid
 
           belongs_to_modifier_options = { class_name: Mongoid::History.modifier_class_name }
           belongs_to_modifier_options[:inverse_of] = options[:modifier_field_inverse_of] if options.key?(:modifier_field_inverse_of)
-          belongs_to options[:modifier_field].to_sym, belongs_to_modifier_options
+          if respond_to? :t_belongs_to
+            # Tenacity support https://github.com/jwood/tenacity
+            t_belongs_to options[:modifier_field].to_sym, belongs_to_modifier_options
+          else
+            belongs_to options[:modifier_field].to_sym, belongs_to_modifier_options
+          end
 
           include MyInstanceMethods
           extend SingletonMethods
@@ -237,6 +242,13 @@ module Mongoid
             scope: related_scope,
             modifier: send(history_trackable_options[:modifier_field])
           }
+
+          unless @history_tracker_attributes[:modifier]
+            controller = Thread.current[:mongoid_history_controller]
+            if controller && controller.respond_to?(Mongoid::History.current_user_method, true)
+              @history_tracker_attributes[:modifier] = controller.send(Mongoid::History.current_user_method)
+            end
+          end
 
           original, modified = transform_changes(modified_attributes_for_action(action))
 

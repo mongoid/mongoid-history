@@ -71,6 +71,9 @@ describe Mongoid::History do
     class Foo < Comment
     end
 
+    class Controller
+    end
+
     @persisted_history_options = Mongoid::History.trackable_class_options
   end
 
@@ -535,6 +538,14 @@ describe Mongoid::History do
         # on any call that walked up the association_chain, e.g. 'trackable'
         expect(tag_foo.history_tracks.last.association_chain.last['name']).to eq('tags')
         expect { tag_foo.history_tracks.last.trackable }.not_to raise_error
+      end
+
+      it 'should save modifier' do
+        Thread.current[:mongoid_history_controller] = Controller.new
+        allow_any_instance_of(Controller).to receive(:current_user).and_return(user)
+        expect(Thread.current[:mongoid_history_controller].current_user).to eq user
+        expect(tag_foo.history_tracks.last.modifier).to eq user
+        expect(tag_bar.history_tracks.last.modifier).to eq user
       end
     end
 

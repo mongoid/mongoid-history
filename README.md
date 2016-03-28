@@ -47,6 +47,40 @@ The following example sets the tracker class name using a Rails initializer.
 Mongoid::History.tracker_class_name = :history_tracker
 ```
 
+**Set controller**
+
+Add hooks to ApplicationController to fetch modifier automatically.
+
+```ruby
+# app/controllers/application_controller.rb
+class ApplicationController
+  include Mongoid::History::Hooks
+end
+```
+
+**Set `#current_user` method name**
+
+You can set the name of the method that returns currently logged in user if you don't want to set `modifier` explicitly on every update.
+
+The following example sets the `current_user_method` using a Rails initializer
+
+```ruby
+# config/initializers/mongoid-history.rb
+# initializer for mongoid-history
+# assuming you're using devise/authlogic
+Mongoid::History.current_user_method = :current_user
+```
+
+When `current_user_method` is set, mongoid-history will invoke this method on each update and set its result as the instance modifier.
+
+```ruby
+# assume that current_user return #<User _id: 1>
+post = Post.first
+post.update_attributes(:title => 'New title')
+
+post.history_tracks.last.modifier #=> #<User _id: 1>
+```
+
 **Create trackable classes and objects**
 
 ```ruby
