@@ -9,5 +9,6 @@ RSpec.configure do |config|
   config.after :each do
     Mongoid::History.tracker_class_name = nil
     Mongoid::History.trackable_class_options = nil
+    Thread.current[:mongoid_history_controller] = nil
   end
 end

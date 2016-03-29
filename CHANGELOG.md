@@ -1,6 +1,7 @@
 0.5.1 (Next)
 ------------
 
+* [#149](https://github.com/aq1018/mongoid-history/pull/149): Back fetching modifier from controller - [@melnikaite](https://github.com/melnikaite).
 * Your contribution here.
 
 0.5.0 (2015/09/18)

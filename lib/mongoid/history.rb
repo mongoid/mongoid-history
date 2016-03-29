@@ -3,6 +3,7 @@ require 'mongoid/compatibility'
 require 'mongoid/history/version'
 require 'mongoid/history/tracker'
 require 'mongoid/history/trackable'
+require 'mongoid/history/hooks'
 
 module Mongoid
   module History
