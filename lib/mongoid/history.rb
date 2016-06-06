@@ -1,5 +1,6 @@
 require 'easy_diff'
 require 'mongoid/compatibility'
+require 'mongoid/history/services/options_cleaner'
 require 'mongoid/history/version'
 require 'mongoid/history/tracker'
 require 'mongoid/history/trackable'
