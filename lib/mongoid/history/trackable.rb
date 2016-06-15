@@ -72,7 +72,7 @@ module Mongoid
 
         def tracker_class
           klass = history_trackable_options[:tracker_class_name] || Mongoid::History.tracker_class_name
-          klass.is_a?(Class) ? klass : klass.to_s.classify.constantize
+          klass.is_a?(Class) ? klass : klass.to_s.camelize.constantize
         end
       end
 
