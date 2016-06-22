@@ -52,16 +52,18 @@ describe Mongoid::History::Trackable do
     end
     before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
     let(:expected_option) do
-      { on: :all,
-        embeds_many: [],
+      { on: ['fields'],
+        except: %w(created_at updated_at),
         modifier_field: :modifier,
         version_field: :version,
         changes_method: :changes,
         scope: :my_model,
-        except: %w(created_at updated_at),
         track_create: false,
         track_update: true,
-        track_destroy: false }
+        track_destroy: false,
+        tracked_fields: %w(foo),
+        tracked_relations: [],
+        tracked_dynamic: [] }
     end
     let(:regular_fields) { ['foo'] }
     let(:reserved_fields) { %w(_id version modifier_id) }
@@ -305,18 +307,14 @@ describe Mongoid::History::Trackable do
 
   describe 'MyInstanceMethods' do
     before :all do
-      MyModel.instance_variable_set(:@history_trackable_options, nil)
-      MyModel.track_history(embeds_many: [:my_embedded_models])
+      MyModel.clear_trackable_memoization
+      MyModel.track_history(on: [:fields, :my_embedded_models])
       @persisted_history_options = Mongoid::History.trackable_class_options
     end
     before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
     let(:my_embedded_models) { [MyEmbeddedModel.new(foo: 'embedded-foo-value', bar: 'embedded-bar-value')] }
     let(:my_untracked_embedded_models) { [MyUntrackedEmbeddedModel.new(baz: 'untracked-embedded-baz-value')] }
     let(:my_model) { MyModel.new(foo: 'foo-value', my_embedded_models: my_embedded_models, my_untracked_embedded_models: my_untracked_embedded_models) }
-
-    it 'should have embeds_many option' do
-      expect(Mongoid::History.trackable_class_options[:my_model][:embeds_many]).to eq([:my_embedded_models])
-    end
 
     describe '#modified_attributes_for_create' do
       subject { my_model.send(:modified_attributes_for_create) }
@@ -398,18 +396,18 @@ describe Mongoid::History::Trackable do
       end
     end
 
-    describe '#tracked_embeds_many?' do
+    describe '#tracked_embedded_many?' do
       context 'when included in options' do
-        it { expect(MyModel.tracked_embeds_many?(:my_embedded_models)).to be true }
+        it { expect(MyModel.tracked_embedded_many?(:my_embedded_models)).to be true }
       end
 
       context 'when not included in options' do
-        it { expect(MyModel.tracked_embeds_many?(:my_untracked_embedded_models)).to be false }
+        it { expect(MyModel.tracked_embedded_many?(:my_untracked_embedded_models)).to be false }
       end
     end
 
-    describe '#tracked_embeds_many' do
-      it { expect(MyModel.tracked_embeds_many).to eq(['my_embedded_models']) }
+    describe '#tracked_embedded_many' do
+      it { expect(MyModel.tracked_embedded_many).to eq(['my_embedded_models']) }
     end
   end
 end

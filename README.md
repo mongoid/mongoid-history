@@ -171,8 +171,7 @@ class Post
   field           :rating
   embeds_many     :comments
 
-  track_history   :on => [:title, :body],
-                  :embeds_many => [:comments],  # track comments as embedded attributes, default is []
+  track_history   :on => [:title, :body, :comments],
                   :modifier_field => :modifier,
                   :modifier_field_inverse_of => :nil,
                   :version_field => :version,
@@ -219,16 +218,17 @@ Book.tracked_field?(:title)   #=> true
 Book.tracked_field?(:author)  #=> false
 ```
 
-**Retrieving the list of tracked embedded relations**
+**Retrieving the list of tracked relations**
 
 ```ruby
 class Book
   ...
-  track_history :embeds_many => [:pages]
+  track_history :on => [:pages]
 end
 
-Book.tracked_embeds_many          #=> ["pages"]
-Book.tracked_embeds_many?(:pages) #=> true
+Book.tracked_relation?(:pages)      #=> true
+Book.tracked_embedded_many          #=> ["pages"]
+Book.tracked_embedded_many?(:pages) #=> true
 ```
 
 **Displaying history trackers as an audit trail**

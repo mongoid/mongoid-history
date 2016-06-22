@@ -3,21 +3,14 @@ module Mongoid
     class OptionsCleaner
       attr_reader :trackable, :options
 
-      def initialize(trackable, options = {})
+      def initialize(trackable)
         @trackable = trackable
-        @options = default_options.merge(options)
       end
 
       def scope
         trackable.collection_name.to_s.singularize.to_sym
       end
 
-      # Options
-      #   :on
-      #     - :all OR [:all] OR :fields OR [:fields] - track all fields for now
-      #     - :foo OR [:foo, ...] - track specified fields
-      #     - [:<association_name>, ...] - track only specified associations
-      #     - [:all, :<association_name>, ...] OR [:foo, ..., :<association_name>, ...] - combination of above
       def default_options
         { on: :all,
           except: [:created_at, :updated_at],
@@ -30,11 +23,15 @@ module Mongoid
           track_destroy: false }
       end
 
-      def clean
+      def clean(options = {})
+        @options = default_options.merge(options)
         prepare_skipped_fields
         prepare_tracked_fields_and_relations
-        options
+        remove_reserved_fields
+        @options
       end
+
+      private
 
       def prepare_skipped_fields
         # normalize :except fields to an array of database field strings
@@ -50,21 +47,26 @@ module Mongoid
         @options[:on] = options[:on].map { |opt| (opt == :all) ? :fields : opt }
         @options[:on] = options[:on].map { |opt| trackable.database_field_name(opt) }.compact.uniq
 
-        if @options[:on].include?('fields')
+        if options[:on].include?('fields')
           @options[:tracked_fields] = trackable.fields.keys
           @options[:tracked_relations] = options[:on].reject { |opt| opt == 'fields' }
         else
-          tracked_fields_and_relations = options[:on] - options[:except]
-          @options[:tracked_fields] = trackable.fields.keys.select { |field| tracked_fields_and_relations.include?(field) }
-          @options[:tracked_relations] = tracked_fields_and_relations - options[:tracked_fields]
+          @options[:tracked_fields] = trackable.fields.keys.select { |field| options[:on].include?(field) }
+          @options[:tracked_relations] = options[:on] - options[:tracked_fields]
         end
 
         @options[:tracked_fields] = options[:tracked_fields] - options[:except]
         @options[:tracked_relations] = options[:tracked_relations] - options[:except]
+        @options[:tracked_dynamic] = options[:tracked_relations].dup
       end
 
-      def self.clean(trackable, options = {})
-        new(trackable, options).clean
+      def remove_reserved_fields
+        @options[:tracked_fields] = options[:tracked_fields] - reserved_fields
+        @options[:tracked_dynamic] = options[:tracked_dynamic] - reserved_fields
+      end
+
+      def reserved_fields
+        ['_id', '_type', options[:version_field].to_s, "#{options[:modifier_field]}_id"]
       end
     end
   end

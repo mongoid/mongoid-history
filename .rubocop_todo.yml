@@ -13,7 +13,7 @@ Lint/HandleExceptions:
 
 # Offense count: 12
 Metrics/AbcSize:
-  Max: 51
+  Max: 60
 
 # Offense count: 4
 Metrics/CyclomaticComplexity:
@@ -27,7 +27,7 @@ Metrics/LineLength:
 # Offense count: 7
 # Configuration parameters: CountComments.
 Metrics/MethodLength:
-  Max: 33
+  Max: 32
 
 # Offense count: 2
 # Configuration parameters: CountComments.
@@ -41,6 +41,7 @@ Metrics/PerceivedComplexity:
 # Offense count: 44
 Style/Documentation:
   Exclude:
+    - 'lib/mongoid/history/services/options_cleaner.rb'
     - 'lib/mongoid/history.rb'
     - 'lib/mongoid/history/trackable.rb'
     - 'lib/mongoid/history/tracker.rb'

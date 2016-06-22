@@ -5,7 +5,8 @@ module Mongoid
 
       module ClassMethods
         def track_history(options = {})
-          options = Mongoid::History::OptionsCleaner.clean(self, options)
+          options_cleaner = Mongoid::History::OptionsCleaner.new(self)
+          options = options_cleaner.clean(options)
 
           field options[:version_field].to_sym, type: Integer
 
@@ -24,7 +25,7 @@ module Mongoid
           before_destroy :track_destroy if options[:track_destroy]
 
           Mongoid::History.trackable_class_options ||= {}
-          Mongoid::History.trackable_class_options[options[:scope]] = options
+          Mongoid::History.trackable_class_options[options_cleaner.scope] = options
         end
 
         def track_history?
@@ -196,7 +197,7 @@ module Mongoid
           return @modified_attributes_for_create if @modified_attributes_for_create
           aliased_fields = self.class.aliased_fields
           attrs = {}
-          self.class.tracked_fields_for_action(:create).each { |field| attrs[field] = [nil, send(field)] }
+          attributes.each { |k, v| attrs[k] = [nil, v] if self.class.tracked_field?(k, :create) }
           self.class.tracked_embedded_one.map { |rel| aliased_fields.key(rel) || rel }.each { |rel| attrs[rel] = [nil, send(rel).attributes] }
           self.class.tracked_embedded_many.map { |rel| aliased_fields.key(rel) || rel }.each { |rel| attrs[rel] = [nil, send(rel).map(&:attributes)] }
           @modified_attributes_for_create = attrs
@@ -206,7 +207,7 @@ module Mongoid
           return @modified_attributes_for_destroy if @modified_attributes_for_destroy
           aliased_fields = self.class.aliased_fields
           attrs = {}
-          self.class.tracked_fields_for_action(:destroy).each { |field| attrs[field] = [send(field), nil] }
+          attributes.each { |k, v| attrs[k] = [v, nil] if self.class.tracked_field?(k, :destroy) }
           self.class.tracked_embedded_one.map { |rel| aliased_fields.key(rel) || rel }.each { |rel| attrs[rel] = [send(rel).attributes, nil] }
           self.class.tracked_embedded_many.map { |rel| aliased_fields.key(rel) || rel }.each { |rel| attrs[rel] = [send(rel).map(&:attributes), nil] }
           @modified_attributes_for_destroy = attrs
@@ -321,7 +322,11 @@ module Mongoid
         #
         # @return [ Array < String > ] the base list of tracked database field names
         def tracked_fields
-          @tracked_fields ||= history_trackable_options[:tracked_fields] - reserved_tracked_fields
+          @tracked_fields ||= begin
+            fields = history_trackable_options[:tracked_fields] + history_trackable_options[:tracked_dynamic]
+            fields = fields - tracked_embedded_one - tracked_embedded_many
+            fields
+          end
         end
 
         # Retrieves the memoized list of reserved tracked fields, which are only included for certain actions.
@@ -347,8 +352,8 @@ module Mongoid
         def tracked_embedded_one
           @tracked_embedded_one ||= begin
             reflect_on_all_associations(:embeds_one)
-              .map(&:key)
-              .select { |rel| history_trackable_options[:tracked_relations].include? rel }
+            .map(&:key)
+            .select { |rel| history_trackable_options[:tracked_relations].include? rel }
           end
         end
 
@@ -359,8 +364,8 @@ module Mongoid
         def tracked_embedded_many
           @tracked_embedded_many ||= begin
             reflect_on_all_associations(:embeds_many)
-              .map(&:key)
-              .select { |rel| history_trackable_options[:tracked_relations].include? rel }
+            .map(&:key)
+            .select { |rel| history_trackable_options[:tracked_relations].include? rel }
           end
         end
 
@@ -393,6 +398,14 @@ module Mongoid
         # @return [ String ] the database name of the embedded field
         def embedded_alias(embed)
           embedded_aliases[embed]
+        end
+
+        def clear_trackable_memoization
+          @reserved_tracked_fields = nil
+          @history_trackable_options = nil
+          @tracked_fields = nil
+          @tracked_embedded_one = nil
+          @tracked_embedded_many = nil
         end
 
         protected
