@@ -53,6 +53,7 @@ Style/Documentation:
     - 'spec/integration/nested_embedded_polymorphic_documents_spec.rb'
     - 'spec/integration/subclasses_spec.rb'
     - 'spec/support/mongoid_history.rb'
+    - 'spec/unit/services/options_cleaner_spec.rb'
     - 'spec/unit/trackable_spec.rb'
     - 'spec/unit/tracker_spec.rb'
 

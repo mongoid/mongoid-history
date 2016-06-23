@@ -57,12 +57,12 @@ module Mongoid
 
         @options[:tracked_fields] = options[:tracked_fields] - options[:except]
         @options[:tracked_relations] = options[:tracked_relations] - options[:except]
-        @options[:tracked_dynamic] = options[:tracked_relations].dup
       end
 
       def remove_reserved_fields
         @options[:tracked_fields] = options[:tracked_fields] - reserved_fields
-        @options[:tracked_dynamic] = options[:tracked_dynamic] - reserved_fields
+        @options[:tracked_relations] = options[:tracked_relations] - reserved_fields
+        @options[:tracked_dynamic] = options[:tracked_relations].dup
       end
 
       def reserved_fields
