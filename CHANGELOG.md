@@ -3,6 +3,8 @@
 
 * Your contribution here.
 
+* [#150](https://github.com/aq1018/mongoid-history/pull/150): Added support for keeping embedded objects audit history in parent itself - [@JagdeepSingh](https://github.com/JagdeepSingh).
+
 0.5.0 (2015/09/18)
 ------------------
 

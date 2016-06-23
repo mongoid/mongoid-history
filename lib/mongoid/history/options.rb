@@ -1,6 +1,6 @@
 module Mongoid
   module History
-    class OptionsCleaner
+    class Options
       attr_reader :trackable, :options
 
       def initialize(trackable)
@@ -23,7 +23,7 @@ module Mongoid
           track_destroy: false }
       end
 
-      def clean(options = {})
+      def parse(options = {})
         @options = default_options.merge(options)
         prepare_skipped_fields
         prepare_tracked_fields_and_relations

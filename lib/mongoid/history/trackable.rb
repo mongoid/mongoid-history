@@ -5,8 +5,8 @@ module Mongoid
 
       module ClassMethods
         def track_history(options = {})
-          options_cleaner = Mongoid::History::OptionsCleaner.new(self)
-          options = options_cleaner.clean(options)
+          options_parser = Mongoid::History::Options.new(self)
+          options = options_parser.parse(options)
 
           field options[:version_field].to_sym, type: Integer
 
@@ -25,7 +25,7 @@ module Mongoid
           before_destroy :track_destroy if options[:track_destroy]
 
           Mongoid::History.trackable_class_options ||= {}
-          Mongoid::History.trackable_class_options[options_cleaner.scope] = options
+          Mongoid::History.trackable_class_options[options_parser.scope] = options
         end
 
         def track_history?

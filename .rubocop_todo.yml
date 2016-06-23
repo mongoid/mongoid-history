@@ -41,8 +41,8 @@ Metrics/PerceivedComplexity:
 # Offense count: 44
 Style/Documentation:
   Exclude:
-    - 'lib/mongoid/history/services/options_cleaner.rb'
     - 'lib/mongoid/history.rb'
+    - 'lib/mongoid/history/options.rb'
     - 'lib/mongoid/history/trackable.rb'
     - 'lib/mongoid/history/tracker.rb'
     - 'lib/mongoid/history/version.rb'
@@ -53,7 +53,7 @@ Style/Documentation:
     - 'spec/integration/nested_embedded_polymorphic_documents_spec.rb'
     - 'spec/integration/subclasses_spec.rb'
     - 'spec/support/mongoid_history.rb'
-    - 'spec/unit/services/options_cleaner_spec.rb'
+    - 'spec/unit/options_spec.rb'
     - 'spec/unit/trackable_spec.rb'
     - 'spec/unit/tracker_spec.rb'
 
