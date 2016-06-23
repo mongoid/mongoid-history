@@ -4,24 +4,6 @@ class MyModel
   include Mongoid::Document
   include Mongoid::History::Trackable
   field :foo
-
-  embeds_many :my_embedded_models
-  embeds_many :my_untracked_embedded_models
-end
-
-class MyEmbeddedModel
-  include Mongoid::Document
-  field :foo
-  field :bar
-
-  embedded_in :my_model
-end
-
-class MyUntrackedEmbeddedModel
-  include Mongoid::Document
-  field :baz
-
-  embedded_in :my_model
 end
 
 class MyDynamicModel
@@ -307,107 +289,195 @@ describe Mongoid::History::Trackable do
 
   describe 'MyInstanceMethods' do
     before :all do
-      MyModel.clear_trackable_memoization
-      MyModel.track_history(on: [:fields, :my_embedded_models])
+      MyTrackableModel = Class.new do
+        include Mongoid::Document
+        include Mongoid::History::Trackable
+        field :foo
+        field :b, as: :bar
+        embeds_one :my_embed_one_model, inverse_class_name: 'MyEmbedOneModel'
+        embeds_many :my_embed_many_models, inverse_class_name: 'MyEmbedManyModel'
+      end
+
+      MyEmbedOneModel = Class.new do
+        include Mongoid::Document
+        field :baz
+        embedded_in :my_trackable_model
+      end
+
+      MyEmbedManyModel = Class.new do
+        include Mongoid::Document
+        field :bla
+        embedded_in :my_trackable_model
+      end
+
+      MyTrackableModel.track_history(on: [:foo, :my_embed_one_model, :my_embed_many_models])
       @persisted_history_options = Mongoid::History.trackable_class_options
     end
     before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
-    let(:my_embedded_models) { [MyEmbeddedModel.new(foo: 'embedded-foo-value', bar: 'embedded-bar-value')] }
-    let(:my_untracked_embedded_models) { [MyUntrackedEmbeddedModel.new(baz: 'untracked-embedded-baz-value')] }
-    let(:my_model) { MyModel.new(foo: 'foo-value', my_embedded_models: my_embedded_models, my_untracked_embedded_models: my_untracked_embedded_models) }
+
+    let(:my_embed_one_model) { MyEmbedOneModel.new(baz: 'Baz') }
+    let(:my_embed_many_models) { [MyEmbedManyModel.new(bla: 'Bla')] }
+    let(:my_trackable_model) do
+      MyTrackableModel.new(foo: 'Foo',
+                           bar: 'Bar',
+                           my_embed_one_model: my_embed_one_model,
+                           my_embed_many_models: my_embed_many_models)
+    end
 
     describe '#modified_attributes_for_create' do
-      subject { my_model.send(:modified_attributes_for_create) }
+      subject { my_trackable_model.send(:modified_attributes_for_create) }
 
-      it 'should include tracked embedded objects attributes' do
-        keys = subject.keys
-        expect(keys.size).to eq 2
-        expect(keys).to include 'foo'
-        expect(keys).to include 'my_embedded_models'
+      it 'should include tracked fields' do
+        expect(subject['foo']).to eq [nil, 'Foo']
+        expect(subject['bar']).to be_nil
+      end
 
-        expect(subject['foo']).to eq([nil, 'foo-value'])
+      it 'should include tracked embeds_one objects attributes' do
+        expect(subject['my_embed_one_model'][0]).to be_nil
+        expect(subject['my_embed_one_model'][1]['_id']).to be_a BSON::ObjectId
+        expect(subject['my_embed_one_model'][1]['baz']).to eq 'Baz'
+      end
 
-        my_embedded_model_attrs = subject['my_embedded_models']
-        expect(my_embedded_model_attrs.size).to eq 2
-        expect(my_embedded_model_attrs.first).to be_nil
-        expect(my_embedded_model_attrs.last.size).to eq 1
+      it 'should include tracked embeds_many objects attributes' do
+        expect(subject['my_embed_many_models'][0]).to be_nil
+        expect(subject['my_embed_many_models'][1].size).to eq 1
+        expect(subject['my_embed_many_models'][1][0]['_id']).to be_a BSON::ObjectId
+        expect(subject['my_embed_many_models'][1][0]['bla']).to eq 'Bla'
+      end
 
-        json = my_embedded_model_attrs.last.first
-        em_keys = json.keys
-        expect(em_keys.size).to eq 3
-        expect(em_keys).to include '_id'
-        expect(em_keys).to include 'foo'
-        expect(em_keys).to include 'bar'
+      context 'when embeds_one object blank' do
+        let(:my_embed_one_model) { nil }
 
-        expect(json['_id']).to eq my_embedded_models[0].id
-        expect(json['foo']).to eq 'embedded-foo-value'
-        expect(json['bar']).to eq 'embedded-bar-value'
+        it 'should not include embeds_one model key' do
+          expect(subject.keys).to_not include 'my_embed_one_model'
+        end
       end
     end
 
     describe '#modified_attributes_for_destroy' do
-      subject { my_model.send(:modified_attributes_for_destroy) }
+      subject { my_trackable_model.send(:modified_attributes_for_destroy) }
 
-      it 'should include tracked embedded objects attributes' do
-        keys = subject.keys
-        expect(keys.size).to eq 3
-        expect(keys).to include '_id'
-        expect(keys).to include 'foo'
-        expect(keys).to include 'my_embedded_models'
-
-        expect(subject['_id']).to eq([my_model.id, nil])
-        expect(subject['foo']).to eq(['foo-value', nil])
-
-        my_embedded_model_attrs = subject['my_embedded_models']
-        expect(my_embedded_model_attrs.size).to eq 2
-        expect(my_embedded_model_attrs.first.size).to eq 1
-
-        json = my_embedded_model_attrs.first.first
-        em_keys = json.keys
-        expect(em_keys.size).to eq 3
-        expect(em_keys).to include '_id'
-        expect(em_keys).to include 'foo'
-        expect(em_keys).to include 'bar'
-
-        expect(json['_id']).to eq my_embedded_models[0].id
-        expect(json['foo']).to eq 'embedded-foo-value'
-        expect(json['bar']).to eq 'embedded-bar-value'
-
-        expect(my_embedded_model_attrs.last).to be_nil
+      it 'should track reserved fields' do
+        expect(subject['_id'][0]).to be_a BSON::ObjectId
+        expect(subject['_id'][1]).to be_nil
       end
+
+      it 'should include tracked fields' do
+        expect(subject['foo']).to eq ['Foo', nil]
+        expect(subject['bar']).to be_nil
+      end
+
+      it 'should include tracked embeds_one objects attributes' do
+        expect(subject['my_embed_one_model'][0]['_id']).to be_a BSON::ObjectId
+        expect(subject['my_embed_one_model'][0]['baz']).to eq 'Baz'
+        expect(subject['my_embed_one_model'][1]).to be_nil
+      end
+
+      it 'should include tracked embeds_many objects attributes' do
+        expect(subject['my_embed_many_models'][0].size).to eq 1
+        expect(subject['my_embed_many_models'][0][0]['_id']).to be_a BSON::ObjectId
+        expect(subject['my_embed_many_models'][0][0]['bla']).to eq 'Bla'
+        expect(subject['my_embed_many_models'][1]).to be_nil
+      end
+
+      context 'when embeds_one object blank' do
+        let(:my_embed_one_model) { nil }
+
+        it 'should not include embeds_one model key' do
+          expect(subject.keys).to_not include 'my_embed_one_model'
+        end
+      end
+    end
+
+    after :all do
+      Object.send(:remove_const, :MyTrackableModel)
+      Object.send(:remove_const, :MyEmbedOneModel)
+      Object.send(:remove_const, :MyEmbedManyModel)
     end
   end
 
   describe 'SingletonMethods' do
-    before(:all) { MyModel.track_history(embeds_many: [:my_embedded_models]) }
+    before :all do
+      MyTrackableModel = Class.new do
+        include Mongoid::Document
+        include Mongoid::History::Trackable
+        field :foo
+        field :b, as: :bar
+        embeds_one :my_embed_one_model, inverse_class_name: 'MyEmbedOneModel'
+        embeds_one :my_untracked_embed_one_model, inverse_class_name: 'MyUntrackedEmbedOneModel'
+        embeds_many :my_embed_many_models, inverse_class_name: 'MyEmbedManyModel'
+      end
+
+      MyEmbedOneModel = Class.new do
+        include Mongoid::Document
+        field :baz
+        embedded_in :my_trackable_model
+      end
+
+      MyUntrackedEmbedOneModel = Class.new do
+        include Mongoid::Document
+        field :baz
+        embedded_in :my_trackable_model
+      end
+
+      MyEmbedManyModel = Class.new do
+        include Mongoid::Document
+        field :bla
+        embedded_in :my_trackable_model
+      end
+
+      MyTrackableModel.track_history(on: [:foo, :my_embed_one_model, :my_embed_many_models, :my_dynamic_field])
+    end
 
     describe '#tracked?' do
-      describe 'embeds_many relation' do
-        context 'when included in options' do
-          it { expect(MyModel.tracked?(:my_embedded_models)).to be true }
-        end
+      it { expect(MyTrackableModel.tracked?(:foo)).to be true }
+      it { expect(MyTrackableModel.tracked?(:bar)).to be false }
+      it { expect(MyTrackableModel.tracked?(:my_embed_one_model)).to be true }
+      it { expect(MyTrackableModel.tracked?(:my_untracked_embed_one_model)).to be false }
+      it { expect(MyTrackableModel.tracked?(:my_embed_many_models)).to be true }
+      it { expect(MyTrackableModel.tracked?(:my_dynamic_field)).to be true }
+    end
 
-        context 'when not included in options' do
-          context 'and dynamic_field disabled' do
-            before { allow(MyModel).to receive(:dynamic_enabled?) { false } }
-            it { expect(MyModel.tracked?(:my_untracked_embedded_models)).to be false }
-          end
-        end
+    describe '#tracked_fields' do
+      it 'should include fields and dynamic fields' do
+        expect(MyTrackableModel.tracked_fields).to eq %w(foo my_dynamic_field)
       end
+    end
+
+    describe '#tracked_relation?' do
+      it 'should return true if a relation is tracked' do
+        expect(MyTrackableModel.tracked_relation?(:my_embed_one_model)).to be true
+        expect(MyTrackableModel.tracked_relation?(:my_untracked_embed_one_model)).to be false
+        expect(MyTrackableModel.tracked_relation?(:my_embed_many_models)).to be true
+      end
+    end
+
+    describe '#tracked_embedded_one?' do
+      it { expect(MyTrackableModel.tracked_embedded_one?(:my_embed_one_model)).to be true }
+      it { expect(MyTrackableModel.tracked_embedded_one?(:my_untracked_embed_one_model)).to be false }
+      it { expect(MyTrackableModel.tracked_embedded_one?(:my_embed_many_models)).to be false }
+    end
+
+    describe '#tracked_embedded_one' do
+      it { expect(MyTrackableModel.tracked_embedded_one).to include 'my_embed_one_model' }
+      it { expect(MyTrackableModel.tracked_embedded_one).to_not include 'my_untracked_embed_one_model' }
     end
 
     describe '#tracked_embedded_many?' do
-      context 'when included in options' do
-        it { expect(MyModel.tracked_embedded_many?(:my_embedded_models)).to be true }
-      end
-
-      context 'when not included in options' do
-        it { expect(MyModel.tracked_embedded_many?(:my_untracked_embedded_models)).to be false }
-      end
+      it { expect(MyTrackableModel.tracked_embedded_many?(:my_embed_one_model)).to be false }
+      it { expect(MyTrackableModel.tracked_embedded_many?(:my_untracked_embed_one_model)).to be false }
+      it { expect(MyTrackableModel.tracked_embedded_many?(:my_embed_many_models)).to be true }
     end
 
     describe '#tracked_embedded_many' do
-      it { expect(MyModel.tracked_embedded_many).to eq(['my_embedded_models']) }
+      it { expect(MyTrackableModel.tracked_embedded_many).to eq ['my_embed_many_models'] }
+    end
+
+    after :all do
+      Object.send(:remove_const, :MyTrackableModel)
+      Object.send(:remove_const, :MyEmbedOneModel)
+      Object.send(:remove_const, :MyUntrackedEmbedOneModel)
+      Object.send(:remove_const, :MyEmbedManyModel)
     end
   end
 end

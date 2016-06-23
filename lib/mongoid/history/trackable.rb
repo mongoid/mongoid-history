@@ -198,8 +198,18 @@ module Mongoid
           aliased_fields = self.class.aliased_fields
           attrs = {}
           attributes.each { |k, v| attrs[k] = [nil, v] if self.class.tracked_field?(k, :create) }
-          self.class.tracked_embedded_one.map { |rel| aliased_fields.key(rel) || rel }.each { |rel| attrs[rel] = [nil, send(rel).attributes] }
-          self.class.tracked_embedded_many.map { |rel| aliased_fields.key(rel) || rel }.each { |rel| attrs[rel] = [nil, send(rel).map(&:attributes)] }
+
+          self.class.tracked_embedded_one
+            .map { |rel| aliased_fields.key(rel) || rel }
+            .each do |rel|
+              obj = send(rel)
+              attrs[rel] = [nil, obj.attributes] if obj
+            end
+
+          self.class.tracked_embedded_many
+            .map { |rel| aliased_fields.key(rel) || rel }
+            .each { |rel| attrs[rel] = [nil, send(rel).map(&:attributes)] }
+
           @modified_attributes_for_create = attrs
         end
 
@@ -208,8 +218,18 @@ module Mongoid
           aliased_fields = self.class.aliased_fields
           attrs = {}
           attributes.each { |k, v| attrs[k] = [v, nil] if self.class.tracked_field?(k, :destroy) }
-          self.class.tracked_embedded_one.map { |rel| aliased_fields.key(rel) || rel }.each { |rel| attrs[rel] = [send(rel).attributes, nil] }
-          self.class.tracked_embedded_many.map { |rel| aliased_fields.key(rel) || rel }.each { |rel| attrs[rel] = [send(rel).map(&:attributes), nil] }
+
+          self.class.tracked_embedded_one
+            .map { |rel| aliased_fields.key(rel) || rel }
+            .each do |rel|
+              obj = send(rel)
+              attrs[rel] = [obj.attributes, nil] if obj
+            end
+
+          self.class.tracked_embedded_many
+            .map { |rel| aliased_fields.key(rel) || rel }
+            .each { |rel| attrs[rel] = [send(rel).map(&:attributes), nil] }
+
           @modified_attributes_for_destroy = attrs
         end
 
