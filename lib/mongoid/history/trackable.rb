@@ -338,7 +338,7 @@ module Mongoid
           end
         end
 
-        # Retrieves the memoized base list of tracked fields, and associations excluding reserved fields.
+        # Retrieves the memoized base list of tracked fields, excluding reserved fields.
         #
         # @return [ Array < String > ] the base list of tracked database field names
         def tracked_fields
@@ -356,19 +356,27 @@ module Mongoid
           @reserved_tracked_fields ||= ['_id', history_trackable_options[:version_field].to_s, "#{history_trackable_options[:modifier_field]}_id"]
         end
 
-        # Whether or not the embedded relation should be tracked.
+        # Whether or not the relation should be tracked.
         #
-        # @param [ String | Symbol ] relation The name of the embedded relation
+        # @param [ String | Symbol ] relation The name of the relation
         #
-        # @return [ Boolean ] whether or not the embedded relation is tracked
+        # @return [ Boolean ] whether or not the relation is tracked
         def tracked_relation?(relation)
           tracked_embedded_one?(relation) || tracked_embedded_many?(relation)
         end
 
+        # Whether or not the embeds_one relation should be tracked.
+        #
+        # @param [ String | Symbol ] relation The name of the embeds_one relation
+        #
+        # @return [ Boolean ] whether or not the embeds_one relation is tracked
         def tracked_embedded_one?(relation)
           tracked_embedded_one.include?(database_field_name(relation))
         end
 
+        # Retrieves the memoized list of tracked embeds_one relations
+        #
+        # @return [ Array < String > ] the list of tracked embeds_one relations
         def tracked_embedded_one
           @tracked_embedded_one ||= begin
             reflect_on_all_associations(:embeds_one)
@@ -377,10 +385,18 @@ module Mongoid
           end
         end
 
+        # Whether or not the embeds_many relation should be tracked.
+        #
+        # @param [ String | Symbol ] relation The name of the embeds_many relation
+        #
+        # @return [ Boolean ] whether or not the embeds_many relation is tracked
         def tracked_embedded_many?(relation)
           tracked_embedded_many.include?(database_field_name(relation))
         end
 
+        # Retrieves the memoized list of tracked embeds_many relations
+        #
+        # @return [ Array < String > ] the list of tracked embeds_many relations
         def tracked_embedded_many
           @tracked_embedded_many ||= begin
             reflect_on_all_associations(:embeds_many)
