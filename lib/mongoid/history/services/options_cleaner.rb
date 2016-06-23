@@ -51,7 +51,7 @@ module Mongoid
           @options[:tracked_fields] = trackable.fields.keys
           @options[:tracked_relations] = options[:on].reject { |opt| opt == 'fields' }
         else
-          @options[:tracked_fields] = trackable.fields.keys.select { |field| options[:on].include?(field) }
+          @options[:tracked_fields] = trackable.fields.keys & options[:on]
           @options[:tracked_relations] = options[:on] - options[:tracked_fields]
         end
 
