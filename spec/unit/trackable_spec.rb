@@ -324,6 +324,8 @@ describe Mongoid::History::Trackable do
                            my_embed_many_models: my_embed_many_models)
     end
 
+    let(:bson_class) { defined?(BSON::ObjectId) ? BSON::ObjectId : Moped::BSON::ObjectId }
+
     describe '#modified_attributes_for_create' do
       subject { my_trackable_model.send(:modified_attributes_for_create) }
 
@@ -334,14 +336,14 @@ describe Mongoid::History::Trackable do
 
       it 'should include tracked embeds_one objects attributes' do
         expect(subject['my_embed_one_model'][0]).to be_nil
-        expect(subject['my_embed_one_model'][1]['_id']).to be_a Moped::BSON::ObjectId
+        expect(subject['my_embed_one_model'][1]['_id']).to be_a bson_class
         expect(subject['my_embed_one_model'][1]['baz']).to eq 'Baz'
       end
 
       it 'should include tracked embeds_many objects attributes' do
         expect(subject['my_embed_many_models'][0]).to be_nil
         expect(subject['my_embed_many_models'][1].size).to eq 1
-        expect(subject['my_embed_many_models'][1][0]['_id']).to be_a Moped::BSON::ObjectId
+        expect(subject['my_embed_many_models'][1][0]['_id']).to be_a bson_class
         expect(subject['my_embed_many_models'][1][0]['bla']).to eq 'Bla'
       end
 
@@ -358,7 +360,7 @@ describe Mongoid::History::Trackable do
       subject { my_trackable_model.send(:modified_attributes_for_destroy) }
 
       it 'should track reserved fields' do
-        expect(subject['_id'][0]).to be_a Moped::BSON::ObjectId
+        expect(subject['_id'][0]).to be_a bson_class
         expect(subject['_id'][1]).to be_nil
       end
 
@@ -368,14 +370,14 @@ describe Mongoid::History::Trackable do
       end
 
       it 'should include tracked embeds_one objects attributes' do
-        expect(subject['my_embed_one_model'][0]['_id']).to be_a Moped::BSON::ObjectId
+        expect(subject['my_embed_one_model'][0]['_id']).to be_a bson_class
         expect(subject['my_embed_one_model'][0]['baz']).to eq 'Baz'
         expect(subject['my_embed_one_model'][1]).to be_nil
       end
 
       it 'should include tracked embeds_many objects attributes' do
         expect(subject['my_embed_many_models'][0].size).to eq 1
-        expect(subject['my_embed_many_models'][0][0]['_id']).to be_a Moped::BSON::ObjectId
+        expect(subject['my_embed_many_models'][0][0]['_id']).to be_a bson_class
         expect(subject['my_embed_many_models'][0][0]['bla']).to eq 'Bla'
         expect(subject['my_embed_many_models'][1]).to be_nil
       end
