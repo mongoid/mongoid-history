@@ -286,7 +286,8 @@ describe Mongoid::History::Trackable do
   end
 
   describe '#tracker_class' do
-    class MyTrackerClass
+    before :all do
+      MyTrackerClass = Class.new
     end
 
     before { MyModel.instance_variable_set(:@history_trackable_options, nil) }
@@ -311,6 +312,10 @@ describe Mongoid::History::Trackable do
     context 'when options not contain tracker_class_name' do
       before { MyModel.track_history }
       it { expect(MyModel.tracker_class).to eq Tracker }
+    end
+
+    after :all do
+      Object.send(:remove_const, :MyTrackerClass)
     end
   end
 end
