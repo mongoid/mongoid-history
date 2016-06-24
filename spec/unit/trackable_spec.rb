@@ -476,6 +476,25 @@ describe Mongoid::History::Trackable do
       it { expect(MyTrackableModel.tracked_embedded_many).to eq ['my_embed_many_models'] }
     end
 
+    describe '#clear_trackable_memoization' do
+      before do
+        MyTrackableModel.instance_variable_set(:@reserved_tracked_fields, %w(_id _type))
+        MyTrackableModel.instance_variable_set(:@history_trackable_options, on: %w(fields))
+        MyTrackableModel.instance_variable_set(:@tracked_fields, %w(foo))
+        MyTrackableModel.instance_variable_set(:@tracked_embedded_one, %w(my_embed_one_model))
+        MyTrackableModel.instance_variable_set(:@tracked_embedded_many, %w(my_embed_many_models))
+        MyTrackableModel.clear_trackable_memoization
+      end
+
+      it 'should clear all the trackable memoization' do
+        expect(MyTrackableModel.instance_variable_get(:@reserved_tracked_fields)).to be_nil
+        expect(MyTrackableModel.instance_variable_get(:@history_trackable_options)).to be_nil
+        expect(MyTrackableModel.instance_variable_get(:@tracked_fields)).to be_nil
+        expect(MyTrackableModel.instance_variable_get(:@tracked_embedded_one)).to be_nil
+        expect(MyTrackableModel.instance_variable_get(:@tracked_embedded_many)).to be_nil
+      end
+    end
+
     after :all do
       Object.send(:remove_const, :MyTrackableModel)
       Object.send(:remove_const, :MyEmbedOneModel)
