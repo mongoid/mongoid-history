@@ -9,6 +9,7 @@ module Mongoid
           default_options = {
             on: :all,
             except: [:created_at, :updated_at],
+            tracker_class_name: nil,
             modifier_field: :modifier,
             version_field: :version,
             changes_method: :changes,
@@ -51,7 +52,7 @@ module Mongoid
         end
 
         def track_history?
-          Mongoid::History.enabled? && Thread.current[track_history_flag] != false
+          Mongoid::History.enabled? && Mongoid::History.store[track_history_flag] != false
         end
 
         def dynamic_enabled?
@@ -59,20 +60,25 @@ module Mongoid
         end
 
         def disable_tracking(&_block)
-          Thread.current[track_history_flag] = false
+          Mongoid::History.store[track_history_flag] = false
           yield
         ensure
-          Thread.current[track_history_flag] = true
+          Mongoid::History.store[track_history_flag] = true
         end
 
         def track_history_flag
           "mongoid_history_#{name.underscore}_trackable_enabled".to_sym
         end
+
+        def tracker_class
+          klass = history_trackable_options[:tracker_class_name] || Mongoid::History.tracker_class_name
+          klass.is_a?(Class) ? klass : klass.to_s.camelize.constantize
+        end
       end
 
       module MyInstanceMethods
         def history_tracks
-          @history_tracks ||= Mongoid::History.tracker_class.where(
+          @history_tracks ||= self.class.tracker_class.where(
             scope: related_scope,
             association_chain: association_hash
           ).asc(:version)
@@ -286,7 +292,7 @@ module Mongoid
           if track_history_for_action?(action)
             current_version = (send(history_trackable_options[:version_field]) || 0) + 1
             send("#{history_trackable_options[:version_field]}=", current_version)
-            Mongoid::History.tracker_class.create!(history_tracker_attributes(action.to_sym).merge(version: current_version, action: action.to_s, trackable: self))
+            self.class.tracker_class.create!(history_tracker_attributes(action.to_sym).merge(version: current_version, action: action.to_s, trackable: self))
           end
           clear_trackable_memoization
         end
