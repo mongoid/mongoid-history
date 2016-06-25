@@ -156,6 +156,52 @@ Mongoid::History.disable do
 end
 ```
 
+**Include embedded objects attributes in parent audit**
+
+Modify above `Post` and `Comment` classes as below:
+
+```ruby
+class Post
+  include Mongoid::Document
+  include Mongoid::Timestamps
+  include Mongoid::History::Trackable
+
+  field           :title
+  field           :body
+  field           :rating
+  embeds_many     :comments
+
+  track_history   :on => [:title, :body, :comments],
+                  :modifier_field => :modifier,
+                  :modifier_field_inverse_of => :nil,
+                  :version_field => :version,
+                  :track_create   =>  true,     # track create on Post
+                  :track_update   =>  true,
+                  :track_destroy  =>  false
+end
+
+class Comment
+  include Mongoid::Document
+  include Mongoid::Timestamps
+
+  field             :title
+  field             :body
+  embedded_in       :post, :inverse_of => :comments
+end
+
+user = User.create(:name => "Aaron")
+post = Post.create(:title => "Test", :body => "Post", :modifier => user)
+comment = post.comments.build(:title => "test", :body => "comment", :modifier => user)
+post.save
+post.history_tracks.count # should be 1
+
+comment.respond_to?(:history_tracks) # should be false
+
+track = post.history_tracks.first
+track.original # {}
+track.modified # { "title" => "Test", "body" => "Post", "comments" => [{ "_id" => "575fa9e667d827e5ed00000d", "title" => "test", "body" => "comment" }], ... }
+```
+
 **Retrieving the list of tracked fields**
 
 ```ruby
@@ -170,6 +216,19 @@ end
 Book.tracked_fields           #=> ["title", "price"]
 Book.tracked_field?(:title)   #=> true
 Book.tracked_field?(:author)  #=> false
+```
+
+**Retrieving the list of tracked relations**
+
+```ruby
+class Book
+  ...
+  track_history :on => [:pages]
+end
+
+Book.tracked_relation?(:pages)      #=> true
+Book.tracked_embedded_many          #=> ["pages"]
+Book.tracked_embedded_many?(:pages) #=> true
 ```
 
 **Displaying history trackers as an audit trail**

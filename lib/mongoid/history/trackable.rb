@@ -5,30 +5,8 @@ module Mongoid
 
       module ClassMethods
         def track_history(options = {})
-          scope_name = collection_name.to_s.singularize.to_sym
-          default_options = {
-            on: :all,
-            except: [:created_at, :updated_at],
-            modifier_field: :modifier,
-            version_field: :version,
-            changes_method: :changes,
-            scope: scope_name,
-            track_create: false,
-            track_update: true,
-            track_destroy: false
-          }
-
-          options = default_options.merge(options)
-
-          # normalize :except fields to an array of database field strings
-          options[:except] = [options[:except]] unless options[:except].is_a? Array
-          options[:except] = options[:except].map { |field| database_field_name(field) }.compact.uniq
-
-          # normalize :on fields to either :all or an array of database field strings
-          if options[:on] != :all
-            options[:on] = [options[:on]] unless options[:on].is_a? Array
-            options[:on] = options[:on].map { |field| database_field_name(field) }.compact.uniq
-          end
+          options_parser = Mongoid::History::Options.new(self)
+          options = options_parser.parse(options)
 
           field options[:version_field].to_sym, type: Integer
 
@@ -47,7 +25,7 @@ module Mongoid
           before_destroy :track_destroy if options[:track_destroy]
 
           Mongoid::History.trackable_class_options ||= {}
-          Mongoid::History.trackable_class_options[scope_name] = options
+          Mongoid::History.trackable_class_options[options_parser.scope] = options
         end
 
         def track_history?
@@ -212,21 +190,47 @@ module Mongoid
         end
 
         def modified_attributes_for_update
-          @modified_attributes_for_update ||= send(history_trackable_options[:changes_method]).select { |k, _| self.class.tracked_field?(k, :update) }
+          @modified_attributes_for_update ||= send(history_trackable_options[:changes_method]).select { |k, _| self.class.tracked?(k, :update) }
         end
 
         def modified_attributes_for_create
-          @modified_attributes_for_create ||= attributes.inject({}) do |h, (k, v)|
-            h[k] = [nil, v]
-            h
-          end.select { |k, _| self.class.tracked_field?(k, :create) }
+          return @modified_attributes_for_create if @modified_attributes_for_create
+          aliased_fields = self.class.aliased_fields
+          attrs = {}
+          attributes.each { |k, v| attrs[k] = [nil, v] if self.class.tracked_field?(k, :create) }
+
+          self.class.tracked_embedded_one
+            .map { |rel| aliased_fields.key(rel) || rel }
+            .each do |rel|
+              obj = send(rel)
+              attrs[rel] = [nil, obj.attributes] if obj
+            end
+
+          self.class.tracked_embedded_many
+            .map { |rel| aliased_fields.key(rel) || rel }
+            .each { |rel| attrs[rel] = [nil, send(rel).map(&:attributes)] }
+
+          @modified_attributes_for_create = attrs
         end
 
         def modified_attributes_for_destroy
-          @modified_attributes_for_destroy ||= attributes.inject({}) do |h, (k, v)|
-            h[k] = [v, nil]
-            h
-          end.select { |k, _| self.class.tracked_field?(k, :destroy) }
+          return @modified_attributes_for_destroy if @modified_attributes_for_destroy
+          aliased_fields = self.class.aliased_fields
+          attrs = {}
+          attributes.each { |k, v| attrs[k] = [v, nil] if self.class.tracked_field?(k, :destroy) }
+
+          self.class.tracked_embedded_one
+            .map { |rel| aliased_fields.key(rel) || rel }
+            .each do |rel|
+              obj = send(rel)
+              attrs[rel] = [obj.attributes, nil] if obj
+            end
+
+          self.class.tracked_embedded_many
+            .map { |rel| aliased_fields.key(rel) || rel }
+            .each { |rel| attrs[rel] = [send(rel).map(&:attributes), nil] }
+
+          @modified_attributes_for_destroy = attrs
         end
 
         def history_tracker_attributes(action)
@@ -293,6 +297,16 @@ module Mongoid
       end
 
       module SingletonMethods
+        # Whether or not the field or embedded relation should be tracked.
+        #
+        # @param [ String | Symbol ] field_or_relation The name or alias of the field OR the name of embedded relation
+        # @param [ String | Symbol ] action The optional action name (:create, :update, or :destroy)
+        #
+        # @return [ Boolean ] whether or not the field or embedded relation is tracked for the given action
+        def tracked?(field_or_relation, action = :update)
+          tracked_field?(field_or_relation, action) || tracked_relation?(field_or_relation)
+        end
+
         # Whether or not the field should be tracked.
         #
         # @param [ String | Symbol ] field The name or alias of the field
@@ -329,8 +343,9 @@ module Mongoid
         # @return [ Array < String > ] the base list of tracked database field names
         def tracked_fields
           @tracked_fields ||= begin
-            h = history_trackable_options
-            (h[:on] == :all ? fields.keys : h[:on]) - h[:except] - reserved_tracked_fields
+            fields = history_trackable_options[:tracked_fields] + history_trackable_options[:tracked_dynamic]
+            fields = fields - tracked_embedded_one - tracked_embedded_many
+            fields
           end
         end
 
@@ -339,6 +354,55 @@ module Mongoid
         # @return [ Array < String > ] the list of reserved database field names
         def reserved_tracked_fields
           @reserved_tracked_fields ||= ['_id', history_trackable_options[:version_field].to_s, "#{history_trackable_options[:modifier_field]}_id"]
+        end
+
+        # Whether or not the relation should be tracked.
+        #
+        # @param [ String | Symbol ] relation The name of the relation
+        #
+        # @return [ Boolean ] whether or not the relation is tracked
+        def tracked_relation?(relation)
+          tracked_embedded_one?(relation) || tracked_embedded_many?(relation)
+        end
+
+        # Whether or not the embeds_one relation should be tracked.
+        #
+        # @param [ String | Symbol ] relation The name of the embeds_one relation
+        #
+        # @return [ Boolean ] whether or not the embeds_one relation is tracked
+        def tracked_embedded_one?(relation)
+          tracked_embedded_one.include?(database_field_name(relation))
+        end
+
+        # Retrieves the memoized list of tracked embeds_one relations
+        #
+        # @return [ Array < String > ] the list of tracked embeds_one relations
+        def tracked_embedded_one
+          @tracked_embedded_one ||= begin
+            reflect_on_all_associations(:embeds_one)
+            .map(&:key)
+            .select { |rel| history_trackable_options[:tracked_relations].include? rel }
+          end
+        end
+
+        # Whether or not the embeds_many relation should be tracked.
+        #
+        # @param [ String | Symbol ] relation The name of the embeds_many relation
+        #
+        # @return [ Boolean ] whether or not the embeds_many relation is tracked
+        def tracked_embedded_many?(relation)
+          tracked_embedded_many.include?(database_field_name(relation))
+        end
+
+        # Retrieves the memoized list of tracked embeds_many relations
+        #
+        # @return [ Array < String > ] the list of tracked embeds_many relations
+        def tracked_embedded_many
+          @tracked_embedded_many ||= begin
+            reflect_on_all_associations(:embeds_many)
+            .map(&:key)
+            .select { |rel| history_trackable_options[:tracked_relations].include? rel }
+          end
         end
 
         def history_trackable_options
@@ -370,6 +434,14 @@ module Mongoid
         # @return [ String ] the database name of the embedded field
         def embedded_alias(embed)
           embedded_aliases[embed]
+        end
+
+        def clear_trackable_memoization
+          @reserved_tracked_fields = nil
+          @history_trackable_options = nil
+          @tracked_fields = nil
+          @tracked_embedded_one = nil
+          @tracked_embedded_many = nil
         end
 
         protected
