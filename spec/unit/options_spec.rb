@@ -44,6 +44,7 @@ describe Mongoid::History::Options do
     let(:expected_options) do
       { on: :all,
         except: [:created_at, :updated_at],
+        tracker_class_name: nil,
         modifier_field: :modifier,
         version_field: :version,
         changes_method: :changes,
@@ -60,6 +61,7 @@ describe Mongoid::History::Options do
       let(:expected_options) do
         { on: %w(fields),
           except: %w(created_at updated_at),
+          tracker_class_name: nil,
           modifier_field: :modifier,
           version_field: :version,
           changes_method: :changes,
