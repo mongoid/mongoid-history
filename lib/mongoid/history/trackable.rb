@@ -243,9 +243,10 @@ module Mongoid
             .map { |rel| aliased_fields.key(rel) || rel }
             .each do |rel|
               permitted_attrs = self.class.tracked_embeds_many_attributes(rel)
-              attrs[rel] = [nil, send(rel)
-                .reject { |obj| obj.respond_to?(:deleted?) && obj.deleted? }
-                .map { |obj| obj.attributes.slice(*permitted_attrs) }]
+              attrs[rel] = [nil,
+                            send(rel)
+                            .reject { |obj| obj.respond_to?(:deleted?) && obj.deleted? }
+                            .map { |obj| obj.attributes.slice(*permitted_attrs) }]
             end
 
           @modified_attributes_for_create = attrs
