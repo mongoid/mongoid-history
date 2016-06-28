@@ -34,14 +34,14 @@ class HistoryTracker
 end
 ```
 
-**Set tracker class name**
+**Set default tracker class name (Optional)**
 
-Manually set the tracker class name to make sure your tracker can be found and loaded properly. You can skip this step if you manually require your tracker before using any trackables.
-
-The following example sets the tracker class name using a Rails initializer.
+Mongoid::History will use the first loaded class to include Mongoid::History::Tracker as the
+default history tracker. If you are using multiple Tracker classes and would like to set
+a global default you may do so in a Rails initializer:
 
 ```ruby
-# config/initializers/mongoid-history.rb
+# config/initializers/mongoid_history.rb
 # initializer for mongoid-history
 # assuming HistoryTracker is your tracker class
 Mongoid::History.tracker_class_name = :history_tracker
@@ -396,6 +396,15 @@ end
 ```
 
 For more examples, check out [spec/integration/integration_spec.rb](https://github.com/aq1018/mongoid-history/blob/master/spec/integration/integration_spec.rb).
+
+
+**Thread Safety**
+
+Mongoid::History stores the tracking enable/disable flag in `Thread.current`.
+If the [RequestStore](https://github.com/steveklabnik/request_store) gem is installed, Mongoid::History
+will automatically store variables in the `RequestStore.store` instead. RequestStore is recommended
+for threaded web servers like Thin or Puma.
+
 
 Contributing to mongoid-history
 -------------------------------
