@@ -5,6 +5,8 @@ module Mongoid
 
       module ClassMethods
         def track_history(options = {})
+          extend EmbeddedMethods
+
           options_parser = Mongoid::History::Options.new(self)
           options = options_parser.parse(options)
 
@@ -301,6 +303,82 @@ module Mongoid
         end
       end
 
+      module EmbeddedMethods
+        # Indicates whether there is an Embedded::One relation for the given embedded field.
+        #
+        # @param [ String | Symbol ] embed The name of the embedded field
+        #
+        # @return [ Boolean ] true if there is an Embedded::One relation for the given embedded field
+        def embeds_one?(embed)
+          relation_of(embed) == Mongoid::Relations::Embedded::One
+        end
+
+        # Return the class for embeds_one relation
+        #
+        # @param [ String ] field The database field name for embedded relation
+        #
+        # @return [ nil | Constant ]
+        def embeds_one_class(field)
+          @embeds_one_class ||= {}
+          return @embeds_one_class[field] if @embeds_one_class.key?(field)
+          field_alias = aliased_fields.key(field)
+          relation = relations
+            .select { |k, v| v.relation == Mongoid::Relations::Embedded::One }
+            .detect { |rel_k, rel_v| rel_k == field_alias }
+          @embeds_one_class[field] = relation && relation.last.class_name.constantize
+        end
+
+        # Indicates whether there is an Embedded::Many relation for the given embedded field.
+        #
+        # @param [ String | Symbol ] embed The name of the embedded field
+        #
+        # @return [ Boolean ] true if there is an Embedded::Many relation for the given embedded field
+        def embeds_many?(embed)
+          relation_of(embed) == Mongoid::Relations::Embedded::Many
+        end
+
+        # Return the class for embeds_many relation
+        #
+        # @param [ String ] field The database field name for embedded relation
+        #
+        # @return [ nil | Constant ]
+        def embeds_many_class(field)
+          @embeds_many_class ||= {}
+          return @embeds_many_class[field] if @embeds_many_class.key?(field)
+          field_alias = aliased_fields.key(field)
+          relation = relations
+            .select { |k, v| v.relation == Mongoid::Relations::Embedded::Many }
+            .detect { |rel_k, rel_v| rel_k == field_alias }
+          @embeds_many_class[field] = relation && relation.last.class_name.constantize
+        end
+
+        # Retrieves the database representation of an embedded field name, in case the :store_as option is used.
+        #
+        # @param [ String | Symbol ] embed The name or alias of the embedded field
+        #
+        # @return [ String ] the database name of the embedded field
+        def embedded_alias(embed)
+          embedded_aliases[embed]
+        end
+
+        protected
+
+        # Retrieves the memoized hash of embedded aliases and their associated database representations.
+        #
+        # @return [ Hash < String, String > ] hash of embedded aliases (keys) to database representations (values)
+        def embedded_aliases
+          @embedded_aliases ||= relations.inject(HashWithIndifferentAccess.new) do |h, (k, v)|
+            h[v[:store_as] || k] = k
+            h
+          end
+        end
+
+        def relation_of(embed)
+          meta = reflect_on_association(embedded_alias(embed))
+          meta ? meta.relation : nil
+        end
+      end
+
       module SingletonMethods
         # Whether or not the field or embedded relation should be tracked.
         #
@@ -347,11 +425,7 @@ module Mongoid
         #
         # @return [ Array < String > ] the base list of tracked database field names
         def tracked_fields
-          @tracked_fields ||= begin
-            fields = history_trackable_options[:tracked_fields] + history_trackable_options[:tracked_dynamic]
-            fields = fields - tracked_embedded_one - tracked_embedded_many
-            fields
-          end
+          @tracked_fields ||= history_trackable_options[:fields] + history_trackable_options[:dynamic]
         end
 
         # Retrieves the memoized list of reserved tracked fields, which are only included for certain actions.
@@ -386,7 +460,7 @@ module Mongoid
           @tracked_embedded_one ||= begin
             reflect_on_all_associations(:embeds_one)
             .map(&:key)
-            .select { |rel| history_trackable_options[:tracked_relations].include? rel }
+            .select { |rel| history_trackable_options[:relations][:embeds_one].include? rel }
           end
         end
 
@@ -406,39 +480,12 @@ module Mongoid
           @tracked_embedded_many ||= begin
             reflect_on_all_associations(:embeds_many)
             .map(&:key)
-            .select { |rel| history_trackable_options[:tracked_relations].include? rel }
+            .select { |rel| history_trackable_options[:relations][:embeds_many].include? rel }
           end
         end
 
         def history_trackable_options
           @history_trackable_options ||= Mongoid::History.trackable_class_options[collection_name.to_s.singularize.to_sym]
-        end
-
-        # Indicates whether there is an Embedded::One relation for the given embedded field.
-        #
-        # @param [ String | Symbol ] embed The name of the embedded field
-        #
-        # @return [ Boolean ] true if there is an Embedded::One relation for the given embedded field
-        def embeds_one?(embed)
-          relation_of(embed) == Mongoid::Relations::Embedded::One
-        end
-
-        # Indicates whether there is an Embedded::Many relation for the given embedded field.
-        #
-        # @param [ String | Symbol ] embed The name of the embedded field
-        #
-        # @return [ Boolean ] true if there is an Embedded::Many relation for the given embedded field
-        def embeds_many?(embed)
-          relation_of(embed) == Mongoid::Relations::Embedded::Many
-        end
-
-        # Retrieves the database representation of an embedded field name, in case the :store_as option is used.
-        #
-        # @param [ String | Symbol ] embed The name or alias of the embedded field
-        #
-        # @return [ String ] the database name of the embedded field
-        def embedded_alias(embed)
-          embedded_aliases[embed]
         end
 
         def clear_trackable_memoization
@@ -447,23 +494,6 @@ module Mongoid
           @tracked_fields = nil
           @tracked_embedded_one = nil
           @tracked_embedded_many = nil
-        end
-
-        protected
-
-        # Retrieves the memoized hash of embedded aliases and their associated database representations.
-        #
-        # @return [ Hash < String, String > ] hash of embedded aliases (keys) to database representations (values)
-        def embedded_aliases
-          @embedded_aliases ||= relations.inject(HashWithIndifferentAccess.new) do |h, (k, v)|
-            h[v[:store_as] || k] = k
-            h
-          end
-        end
-
-        def relation_of(embed)
-          meta = reflect_on_association(embedded_alias(embed))
-          meta ? meta.relation : nil
         end
       end
     end
