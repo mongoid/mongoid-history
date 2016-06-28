@@ -133,7 +133,7 @@ module Mongoid
         @options[:relations][:embeds_one][field] = if field_options.blank?
           relation_class.fields.keys
         else
-          field_options.map { |field| relation_class.database_field_name(field) }
+          %w(_id) | field_options.map { |field| relation_class.database_field_name(field) }
         end
       end
 
@@ -142,7 +142,7 @@ module Mongoid
         @options[:relations][:embeds_many][field] = if field_options.blank?
           relation_class.fields.keys
         else
-          field_options.map { |field| relation_class.database_field_name(field) }
+          %w(_id) | field_options.map { |field| relation_class.database_field_name(field) }
         end
       end
 
