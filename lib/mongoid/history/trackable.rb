@@ -199,6 +199,7 @@ module Mongoid
         def modified_attributes_for_update
           return @modified_attributes_for_update if @modified_attributes_for_update
           attrs = {}
+          paranoia_field = history_trackable_options[:paranoia_field].to_s.presence
           changes = send(history_trackable_options[:changes_method])
 
           changes.each do |k, v|
@@ -210,13 +211,17 @@ module Mongoid
             elsif self.class.tracked_embeds_many?(k)
               permitted_attrs = self.class.tracked_embeds_many_attributes(k)
               attrs[k] = []
-              attrs[k][0] = v[0].map { |v_attrs| v_attrs.slice(*permitted_attrs) }
-              attrs[k][1] = v[1].map { |v_attrs| v_attrs.slice(*permitted_attrs) }
+              if paranoia_field
+                attrs[k][0] = v[0].reject { |rel| rel[paranoia_field].present? }.map { |v_attrs| v_attrs.slice(*permitted_attrs) }
+                attrs[k][1] = v[1].reject { |rel| rel[paranoia_field].present? }.map { |v_attrs| v_attrs.slice(*permitted_attrs) }
+              else
+                attrs[k][0] = v[0].map { |v_attrs| v_attrs.slice(*permitted_attrs) }
+                attrs[k][1] = v[1].map { |v_attrs| v_attrs.slice(*permitted_attrs) }
+              end
             elsif self.class.tracked?(k, :update)
               attrs[k] = v
             end
           end
-
           @modified_attributes_for_update = attrs
         end
 
@@ -238,7 +243,9 @@ module Mongoid
             .map { |rel| aliased_fields.key(rel) || rel }
             .each do |rel|
               permitted_attrs = self.class.tracked_embeds_many_attributes(rel)
-              attrs[rel] = [nil, send(rel).map { |obj| obj.attributes.slice(*permitted_attrs) }]
+              attrs[rel] = [nil, send(rel)
+                .reject { |obj| obj.respond_to?(:deleted?) && obj.deleted? }
+                .map { |obj| obj.attributes.slice(*permitted_attrs) }]
             end
 
           @modified_attributes_for_create = attrs

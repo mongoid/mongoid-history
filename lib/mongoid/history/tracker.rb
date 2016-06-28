@@ -106,22 +106,31 @@ module Mongoid
       def tracked_edits
         @tracked_edits ||= tracked_changes.inject(HashWithIndifferentAccess.new) do |h, (k, v)|
           unless v[:from].blank? && v[:to].blank?
-            if v[:from].blank?
+            if trackable_parent_class.tracked_embedded_many?(k)
+              h[:embeds_many] ||= {}
+              v[:from] ||= []
+              v[:to] ||= []
+              modify_ids = v[:from].map{|vv| vv['_id']}.compact & v[:to].map{|vv| vv['_id']}.compact
+              modify_values = modify_ids.map{|id| {from: v[:from].detect{|vv| vv['_id']==id}, to: v[:to].detect{|vv| vv['_id']==id}}}
+              modify_values.delete_if {|vv| vv[:from] == vv[:to]}
+              ignore_values = modify_values.map{|vv| [vv[:from], vv[:to]]}.flatten
+              old_values = v[:from] - v[:to] - ignore_values
+              new_values = v[:to] - v[:from] - ignore_values
+              h[:embeds_many][k] = { add: new_values, remove: old_values, modify: modify_values }.delete_if {|_, vv| vv.blank? }
+            elsif v[:from].blank?
               h[:add] ||= {}
               h[:add][k] = v[:to]
             elsif v[:to].blank?
               h[:remove] ||= {}
               h[:remove][k] = v[:from]
+            elsif v[:from].is_a?(Array) && v[:to].is_a?(Array)
+              h[:array] ||= {}
+              old_values = v[:from] - v[:to]
+              new_values = v[:to] - v[:from]
+              h[:array][k] = { add: new_values, remove: old_values }.delete_if { |_, vv| vv.blank? }
             else
-              if v[:from].is_a?(Array) && v[:to].is_a?(Array)
-                h[:array] ||= {}
-                old_values = v[:from] - v[:to]
-                new_values = v[:to] - v[:from]
-                h[:array][k] = { add: new_values, remove: old_values }.delete_if { |_, vv| vv.blank? }
-              else
-                h[:modify] ||= {}
-                h[:modify][k] = v
-              end
+              h[:modify] ||= {}
+              h[:modify][k] = v
             end
           end
           h
