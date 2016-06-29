@@ -36,6 +36,7 @@ describe Mongoid::History::Trackable do
     let(:expected_option) do
       { on: ['fields'],
         except: %w(created_at updated_at),
+        tracker_class_name: nil,
         modifier_field: :modifier,
         version_field: :version,
         changes_method: :changes,
@@ -284,6 +285,40 @@ describe Mongoid::History::Trackable do
         expect(m).to receive(:my_changes).once.and_call_original
         m.save
       end
+    end
+  end
+
+  describe '#tracker_class' do
+    before :all do
+      MyTrackerClass = Class.new
+    end
+
+    before { MyModel.instance_variable_set(:@history_trackable_options, nil) }
+
+    context 'when options contain tracker_class_name' do
+      context 'when underscored' do
+        before { MyModel.track_history tracker_class_name: 'my_tracker_class' }
+        it { expect(MyModel.tracker_class).to eq MyTrackerClass }
+      end
+
+      context 'when camelcased' do
+        before { MyModel.track_history tracker_class_name: 'MyTrackerClass' }
+        it { expect(MyModel.tracker_class).to eq MyTrackerClass }
+      end
+
+      context 'when constant' do
+        before { MyModel.track_history tracker_class_name: MyTrackerClass }
+        it { expect(MyModel.tracker_class).to eq MyTrackerClass }
+      end
+    end
+
+    context 'when options not contain tracker_class_name' do
+      before { MyModel.track_history }
+      it { expect(MyModel.tracker_class).to eq Tracker }
+    end
+
+    after :all do
+      Object.send(:remove_const, :MyTrackerClass)
     end
   end
 

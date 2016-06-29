@@ -12,3 +12,5 @@ when /3/
 else
   gem 'mongoid', version
 end
+
+gem 'request_store', ENV['REQUEST_STORE_VERSION'] if ENV['REQUEST_STORE_VERSION']

@@ -5,6 +5,7 @@ $LOAD_PATH.push File.expand_path('../../lib', __FILE__)
 
 require 'active_support/all'
 require 'mongoid'
+require 'request_store' if ENV['REQUEST_STORE_VERSION']
 
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| require f }
 
