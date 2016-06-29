@@ -206,14 +206,14 @@ module Mongoid
           attrs = {}
           attributes.each { |k, v| attrs[k] = [nil, v] if self.class.tracked_field?(k, :create) }
 
-          self.class.tracked_embedded_one
+          self.class.tracked_embeds_one
             .map { |rel| aliased_fields.key(rel) || rel }
             .each do |rel|
               obj = send(rel)
               attrs[rel] = [nil, obj.attributes] if obj
             end
 
-          self.class.tracked_embedded_many
+          self.class.tracked_embeds_many
             .map { |rel| aliased_fields.key(rel) || rel }
             .each { |rel| attrs[rel] = [nil, send(rel).map(&:attributes)] }
 
@@ -226,14 +226,14 @@ module Mongoid
           attrs = {}
           attributes.each { |k, v| attrs[k] = [v, nil] if self.class.tracked_field?(k, :destroy) }
 
-          self.class.tracked_embedded_one
+          self.class.tracked_embeds_one
             .map { |rel| aliased_fields.key(rel) || rel }
             .each do |rel|
               obj = send(rel)
               attrs[rel] = [obj.attributes, nil] if obj
             end
 
-          self.class.tracked_embedded_many
+          self.class.tracked_embeds_many
             .map { |rel| aliased_fields.key(rel) || rel }
             .each { |rel| attrs[rel] = [send(rel).map(&:attributes), nil] }
 
@@ -441,7 +441,7 @@ module Mongoid
         #
         # @return [ Boolean ] whether or not the relation is tracked
         def tracked_relation?(relation)
-          tracked_embedded_one?(relation) || tracked_embedded_many?(relation)
+          tracked_embeds_one?(relation) || tracked_embeds_many?(relation)
         end
 
         # Whether or not the embeds_one relation should be tracked.
@@ -449,15 +449,15 @@ module Mongoid
         # @param [ String | Symbol ] relation The name of the embeds_one relation
         #
         # @return [ Boolean ] whether or not the embeds_one relation is tracked
-        def tracked_embedded_one?(relation)
-          tracked_embedded_one.include?(database_field_name(relation))
+        def tracked_embeds_one?(relation)
+          tracked_embeds_one.include?(database_field_name(relation))
         end
 
         # Retrieves the memoized list of tracked embeds_one relations
         #
         # @return [ Array < String > ] the list of tracked embeds_one relations
-        def tracked_embedded_one
-          @tracked_embedded_one ||= begin
+        def tracked_embeds_one
+          @tracked_embeds_one ||= begin
             reflect_on_all_associations(:embeds_one)
             .map(&:key)
             .select { |rel| history_trackable_options[:relations][:embeds_one].include? rel }
@@ -469,15 +469,15 @@ module Mongoid
         # @param [ String | Symbol ] relation The name of the embeds_many relation
         #
         # @return [ Boolean ] whether or not the embeds_many relation is tracked
-        def tracked_embedded_many?(relation)
-          tracked_embedded_many.include?(database_field_name(relation))
+        def tracked_embeds_many?(relation)
+          tracked_embeds_many.include?(database_field_name(relation))
         end
 
         # Retrieves the memoized list of tracked embeds_many relations
         #
         # @return [ Array < String > ] the list of tracked embeds_many relations
-        def tracked_embedded_many
-          @tracked_embedded_many ||= begin
+        def tracked_embeds_many
+          @tracked_embeds_many ||= begin
             reflect_on_all_associations(:embeds_many)
             .map(&:key)
             .select { |rel| history_trackable_options[:relations][:embeds_many].include? rel }
@@ -492,8 +492,8 @@ module Mongoid
           @reserved_tracked_fields = nil
           @history_trackable_options = nil
           @tracked_fields = nil
-          @tracked_embedded_one = nil
-          @tracked_embedded_many = nil
+          @tracked_embeds_one = nil
+          @tracked_embeds_many = nil
         end
       end
     end

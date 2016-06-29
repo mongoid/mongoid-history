@@ -490,25 +490,25 @@ describe Mongoid::History::Trackable do
       end
     end
 
-    describe '#tracked_embedded_one?' do
-      it { expect(MyTrackableModel.tracked_embedded_one?(:my_embed_one_model)).to be true }
-      it { expect(MyTrackableModel.tracked_embedded_one?(:my_untracked_embed_one_model)).to be false }
-      it { expect(MyTrackableModel.tracked_embedded_one?(:my_embed_many_models)).to be false }
+    describe '#tracked_embeds_one?' do
+      it { expect(MyTrackableModel.tracked_embeds_one?(:my_embed_one_model)).to be true }
+      it { expect(MyTrackableModel.tracked_embeds_one?(:my_untracked_embed_one_model)).to be false }
+      it { expect(MyTrackableModel.tracked_embeds_one?(:my_embed_many_models)).to be false }
     end
 
-    describe '#tracked_embedded_one' do
-      it { expect(MyTrackableModel.tracked_embedded_one).to include 'my_embed_one_model' }
-      it { expect(MyTrackableModel.tracked_embedded_one).to_not include 'my_untracked_embed_one_model' }
+    describe '#tracked_embeds_one' do
+      it { expect(MyTrackableModel.tracked_embeds_one).to include 'my_embed_one_model' }
+      it { expect(MyTrackableModel.tracked_embeds_one).to_not include 'my_untracked_embed_one_model' }
     end
 
-    describe '#tracked_embedded_many?' do
-      it { expect(MyTrackableModel.tracked_embedded_many?(:my_embed_one_model)).to be false }
-      it { expect(MyTrackableModel.tracked_embedded_many?(:my_untracked_embed_one_model)).to be false }
-      it { expect(MyTrackableModel.tracked_embedded_many?(:my_embed_many_models)).to be true }
+    describe '#tracked_embeds_many?' do
+      it { expect(MyTrackableModel.tracked_embeds_many?(:my_embed_one_model)).to be false }
+      it { expect(MyTrackableModel.tracked_embeds_many?(:my_untracked_embed_one_model)).to be false }
+      it { expect(MyTrackableModel.tracked_embeds_many?(:my_embed_many_models)).to be true }
     end
 
-    describe '#tracked_embedded_many' do
-      it { expect(MyTrackableModel.tracked_embedded_many).to eq ['my_embed_many_models'] }
+    describe '#tracked_embeds_many' do
+      it { expect(MyTrackableModel.tracked_embeds_many).to eq ['my_embed_many_models'] }
     end
 
     describe '#clear_trackable_memoization' do
@@ -516,8 +516,8 @@ describe Mongoid::History::Trackable do
         MyTrackableModel.instance_variable_set(:@reserved_tracked_fields, %w(_id _type))
         MyTrackableModel.instance_variable_set(:@history_trackable_options, on: %w(fields))
         MyTrackableModel.instance_variable_set(:@tracked_fields, %w(foo))
-        MyTrackableModel.instance_variable_set(:@tracked_embedded_one, %w(my_embed_one_model))
-        MyTrackableModel.instance_variable_set(:@tracked_embedded_many, %w(my_embed_many_models))
+        MyTrackableModel.instance_variable_set(:@tracked_embeds_one, %w(my_embed_one_model))
+        MyTrackableModel.instance_variable_set(:@tracked_embeds_many, %w(my_embed_many_models))
         MyTrackableModel.clear_trackable_memoization
       end
 
@@ -525,8 +525,8 @@ describe Mongoid::History::Trackable do
         expect(MyTrackableModel.instance_variable_get(:@reserved_tracked_fields)).to be_nil
         expect(MyTrackableModel.instance_variable_get(:@history_trackable_options)).to be_nil
         expect(MyTrackableModel.instance_variable_get(:@tracked_fields)).to be_nil
-        expect(MyTrackableModel.instance_variable_get(:@tracked_embedded_one)).to be_nil
-        expect(MyTrackableModel.instance_variable_get(:@tracked_embedded_many)).to be_nil
+        expect(MyTrackableModel.instance_variable_get(:@tracked_embeds_one)).to be_nil
+        expect(MyTrackableModel.instance_variable_get(:@tracked_embeds_many)).to be_nil
       end
     end
 
