@@ -197,7 +197,25 @@ module Mongoid
         end
 
         def modified_attributes_for_update
-          @modified_attributes_for_update ||= send(history_trackable_options[:changes_method]).select { |k, _| self.class.tracked?(k, :update) }
+          return @modified_attributes_for_update if @modified_attributes_for_update
+          changes = send(history_trackable_options[:changes_method])
+          attrs = {}
+          changes.each do |k, v|
+            if self.class.tracked_embeds_one?(k)
+              permitted_attrs = self.class.tracked_embeds_one_attributes(k)
+              attrs[k] = []
+              attrs[k][0] = v[0].slice(*permitted_attrs)
+              attrs[k][1] = v[1].slice(*permitted_attrs)
+            elsif self.class.tracked_embeds_many?(k)
+              permitted_attrs = self.class.tracked_embeds_many_attributes(k)
+              attrs[k] = []
+              attrs[k][0] = v[0].map { |v_attrs| v_attrs.slice(*permitted_attrs) }
+              attrs[k][1] = v[1].map { |v_attrs| v_attrs.slice(*permitted_attrs) }
+            elsif self.class.tracked?(k, :update)
+              attrs[k] = v
+            end
+          end
+          @modified_attributes_for_update = attrs
         end
 
         def modified_attributes_for_create
@@ -209,13 +227,17 @@ module Mongoid
           self.class.tracked_embeds_one
             .map { |rel| aliased_fields.key(rel) || rel }
             .each do |rel|
+              permitted_attrs = self.class.tracked_embeds_one_attributes(rel)
               obj = send(rel)
-              attrs[rel] = [nil, obj.attributes] if obj
+              attrs[rel] = [nil, obj.attributes.slice(*permitted_attrs)] if obj
             end
 
           self.class.tracked_embeds_many
             .map { |rel| aliased_fields.key(rel) || rel }
-            .each { |rel| attrs[rel] = [nil, send(rel).map(&:attributes)] }
+            .each do |rel|
+              permitted_attrs = self.class.tracked_embeds_many_attributes(rel)
+              attrs[rel] = [nil, send(rel).map { |obj| obj.attributes.slice(*permitted_attrs) }]
+            end
 
           @modified_attributes_for_create = attrs
         end
@@ -229,13 +251,17 @@ module Mongoid
           self.class.tracked_embeds_one
             .map { |rel| aliased_fields.key(rel) || rel }
             .each do |rel|
+              permitted_attrs = self.class.tracked_embeds_one_attributes(rel)
               obj = send(rel)
-              attrs[rel] = [obj.attributes, nil] if obj
+              attrs[rel] = [obj.attributes.slice(*permitted_attrs), nil] if obj
             end
 
           self.class.tracked_embeds_many
             .map { |rel| aliased_fields.key(rel) || rel }
-            .each { |rel| attrs[rel] = [send(rel).map(&:attributes), nil] }
+            .each do |rel|
+              permitted_attrs = self.class.tracked_embeds_many_attributes(rel)
+              attrs[rel] = [send(rel).map { |obj| obj.attributes.slice(*permitted_attrs) }, nil]
+            end
 
           @modified_attributes_for_destroy = attrs
         end
@@ -328,6 +354,10 @@ module Mongoid
           @embeds_one_class[field] = relation && relation.last.class_name.constantize
         end
 
+        def tracked_embeds_one_attributes(relation)
+          history_trackable_options[:relations][:embeds_one][database_field_name(relation)]
+        end
+
         # Indicates whether there is an Embedded::Many relation for the given embedded field.
         #
         # @param [ String | Symbol ] embed The name of the embedded field
@@ -350,6 +380,10 @@ module Mongoid
                      .select { |_, v| v.relation == Mongoid::Relations::Embedded::Many }
                      .detect { |rel_k, _| rel_k == field_alias }
           @embeds_many_class[field] = relation && relation.last.class_name.constantize
+        end
+
+        def tracked_embeds_many_attributes(relation)
+          history_trackable_options[:relations][:embeds_many][database_field_name(relation)]
         end
 
         # Retrieves the database representation of an embedded field name, in case the :store_as option is used.
