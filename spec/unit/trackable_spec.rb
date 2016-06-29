@@ -34,7 +34,7 @@ describe Mongoid::History::Trackable do
     end
     before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
     let(:expected_option) do
-      { on: ['fields'],
+      { on: %i(foo),
         except: %w(created_at updated_at),
         tracker_class_name: nil,
         modifier_field: :modifier,
@@ -44,9 +44,9 @@ describe Mongoid::History::Trackable do
         track_create: false,
         track_update: true,
         track_destroy: false,
-        tracked_fields: %w(foo),
-        tracked_relations: [],
-        tracked_dynamic: [] }
+        fields: %w(foo),
+        relations: { embeds_one: {}, embeds_many: {} },
+        dynamic: [] }
     end
     let(:regular_fields) { ['foo'] }
     let(:reserved_fields) { %w(_id version modifier_id) }

@@ -124,4 +124,12 @@ describe Mongoid::History::Tracker do
     expect(company.embone.history_tracks.last.action).to eq('create')
     expect(company.embone.history_tracks.last.association_chain.last['name']).to eq('embone')
   end
+
+  after :all do
+    Object.send(:remove_const, :RealState)
+    Object.send(:remove_const, :Company)
+    Object.send(:remove_const, :Embone)
+    Object.send(:remove_const, :Contact)
+    Object.send(:remove_const, :User)
+  end
 end

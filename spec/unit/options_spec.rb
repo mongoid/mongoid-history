@@ -10,6 +10,7 @@ describe Mongoid::History::Options do
       field :bar
       embeds_many :my_options_embed_many_models, inverse_class_name: 'MyOptionsEmbedManyModel'
       embeds_many :my_options_embed_many_two_models, store_as: :emtwo, inverse_class_name: 'MyOptionsEmbedManyTwoModel'
+      track_history
     end
 
     MyOptionsEmbedManyModel = Class.new do
@@ -53,13 +54,13 @@ describe Mongoid::History::Options do
         track_update: true,
         track_destroy: false }
     end
-    it { expect(service.default_options).to eq expected_options }
+    it { expect(service.send(:default_options)).to eq expected_options }
   end
 
   describe '#parse' do
     context 'when options not passed' do
       let(:expected_options) do
-        { on: %w(fields),
+        { on: %i(foo bar),
           except: %w(created_at updated_at),
           tracker_class_name: nil,
           modifier_field: :modifier,
@@ -69,9 +70,9 @@ describe Mongoid::History::Options do
           track_create: false,
           track_update: true,
           track_destroy: false,
-          tracked_fields: %w(foo bar),
-          tracked_relations: [],
-          tracked_dynamic: [] }
+          fields: %w(foo bar),
+          dynamic: [],
+          relations: { embeds_one: {}, embeds_many: {} } }
       end
       it { expect(service.parse).to eq expected_options }
     end
@@ -84,151 +85,165 @@ describe Mongoid::History::Options do
 
         context 'with :fields' do
           let(:value) { :fields }
-          it { expect(subject[:on]).to eq %w(fields) }
-          it { expect(subject[:tracked_fields]).to eq %w(foo bar) }
-          it { expect(subject[:tracked_dynamic]).to eq [] }
+          it { expect(subject[:on]).to eq %i(foo bar) }
+          it { expect(subject[:fields]).to eq %w(foo bar) }
+          it { expect(subject[:dynamic]).to eq [] }
         end
 
         context 'with :foo' do
           let(:value) { :foo }
-          it { expect(subject[:on]).to eq %w(foo) }
-          it { expect(subject[:tracked_fields]).to eq %w(foo) }
-          it { expect(subject[:tracked_dynamic]).to eq [] }
+          it { expect(subject[:on]).to eq %i(foo) }
+          it { expect(subject[:fields]).to eq %w(foo) }
+          it { expect(subject[:dynamic]).to eq [] }
         end
 
         context 'with [:foo]' do
           let(:value) { [:foo] }
-          it { expect(subject[:on]).to eq %w(foo) }
-          it { expect(subject[:tracked_fields]).to eq %w(foo) }
-          it { expect(subject[:tracked_dynamic]).to eq [] }
+          it { expect(subject[:on]).to eq %i(foo) }
+          it { expect(subject[:fields]).to eq %w(foo) }
+          it { expect(subject[:dynamic]).to eq [] }
         end
 
         context 'with :my_options_embed_many_models' do
           let(:value) { :my_options_embed_many_models }
-          it { expect(subject[:on]).to eq %w(my_options_embed_many_models) }
-          it { expect(subject[:tracked_fields]).to eq [] }
-          it { expect(subject[:tracked_relations]).to eq %w(my_options_embed_many_models) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(my_options_embed_many_models) }
+          it { expect(subject[:on]).to eq %i(my_options_embed_many_models) }
+          it { expect(subject[:fields]).to eq [] }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq('my_options_embed_many_models' => %w(_id baz)) }
+          it { expect(subject[:dynamic]).to eq [] }
         end
 
         context 'with [:my_options_embed_many_models]' do
           let(:value) { [:my_options_embed_many_models] }
-          it { expect(subject[:on]).to eq %w(my_options_embed_many_models) }
-          it { expect(subject[:tracked_fields]).to eq [] }
-          it { expect(subject[:tracked_relations]).to eq %w(my_options_embed_many_models) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(my_options_embed_many_models) }
+          it { expect(subject[:on]).to eq %i(my_options_embed_many_models) }
+          it { expect(subject[:fields]).to eq [] }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq('my_options_embed_many_models' => %w(_id baz)) }
+          it { expect(subject[:dynamic]).to eq [] }
         end
 
         context 'with [:my_options_embed_many_models, :my_options_embed_many_two_models]' do
           let(:value) { [:my_options_embed_many_models, :my_options_embed_many_two_models] }
-          it { expect(subject[:on]).to eq %w(my_options_embed_many_models emtwo) }
-          it { expect(subject[:tracked_fields]).to eq [] }
-          it { expect(subject[:tracked_relations]).to eq %w(my_options_embed_many_models emtwo) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(my_options_embed_many_models emtwo) }
+          it { expect(subject[:on]).to eq %i(my_options_embed_many_models my_options_embed_many_two_models) }
+          it { expect(subject[:fields]).to eq [] }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq('my_options_embed_many_models' => %w(_id baz), 'emtwo' => %w(_id baz_two)) }
+          it { expect(subject[:dynamic]).to eq [] }
         end
 
         context 'with [:all, :my_options_embed_many_models]' do
           let(:value) { [:all, :my_options_embed_many_models] }
-          it { expect(subject[:on]).to eq %w(fields my_options_embed_many_models) }
-          it { expect(subject[:tracked_fields]).to eq %w(foo bar) }
-          it { expect(subject[:tracked_relations]).to eq %w(my_options_embed_many_models) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(my_options_embed_many_models) }
+          it { expect(subject[:on]).to eq %i(my_options_embed_many_models foo bar) }
+          it { expect(subject[:fields]).to eq %w(foo bar) }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq('my_options_embed_many_models' => %w(_id baz)) }
+          it { expect(subject[:dynamic]).to eq [] }
         end
 
         context 'with [:fields, :my_options_embed_many_models]' do
           let(:value) { [:all, :my_options_embed_many_models] }
-          it { expect(subject[:on]).to eq %w(fields my_options_embed_many_models) }
-          it { expect(subject[:tracked_fields]).to eq %w(foo bar) }
-          it { expect(subject[:tracked_relations]).to eq %w(my_options_embed_many_models) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(my_options_embed_many_models) }
+          it { expect(subject[:on]).to eq %i(my_options_embed_many_models foo bar) }
+          it { expect(subject[:fields]).to eq %w(foo bar) }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq('my_options_embed_many_models' => %w(_id baz)) }
+          it { expect(subject[:dynamic]).to eq [] }
         end
 
         context 'with [:foo, :my_options_embed_many_models]' do
           let(:value) { [:foo, :my_options_embed_many_models] }
-          it { expect(subject[:on]).to eq %w(foo my_options_embed_many_models) }
-          it { expect(subject[:tracked_fields]).to eq %w(foo) }
-          it { expect(subject[:tracked_relations]).to eq %w(my_options_embed_many_models) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(my_options_embed_many_models) }
+          it { expect(subject[:on]).to eq %i(foo my_options_embed_many_models) }
+          it { expect(subject[:fields]).to eq %w(foo) }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq('my_options_embed_many_models' => %w(_id baz)) }
+          it { expect(subject[:dynamic]).to eq [] }
         end
 
         context 'with [:foo, :bar, :my_options_embed_many_models]' do
           let(:value) { [:foo, :bar, :my_options_embed_many_models] }
-          it { expect(subject[:on]).to eq %w(foo bar my_options_embed_many_models) }
-          it { expect(subject[:tracked_fields]).to eq %w(foo bar) }
-          it { expect(subject[:tracked_relations]).to eq %w(my_options_embed_many_models) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(my_options_embed_many_models) }
+          it { expect(subject[:on]).to eq %i(foo bar my_options_embed_many_models) }
+          it { expect(subject[:fields]).to eq %w(foo bar) }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq('my_options_embed_many_models' => %w(_id baz)) }
+          it { expect(subject[:dynamic]).to eq [] }
         end
 
         context 'with [:foo, :bar, :my_options_embed_many_models, :my_options_embed_many_two_models]' do
           let(:value) { [:foo, :bar, :my_options_embed_many_models, :my_options_embed_many_two_models] }
-          it { expect(subject[:on]).to eq %w(foo bar my_options_embed_many_models emtwo) }
-          it { expect(subject[:tracked_fields]).to eq %w(foo bar) }
-          it { expect(subject[:tracked_relations]).to eq %w(my_options_embed_many_models emtwo) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(my_options_embed_many_models emtwo) }
+          it { expect(subject[:on]).to eq %i(foo bar my_options_embed_many_models my_options_embed_many_two_models) }
+          it { expect(subject[:fields]).to eq %w(foo bar) }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq('my_options_embed_many_models' => %w(_id baz), 'emtwo' => %w(_id baz_two)) }
+          it { expect(subject[:dynamic]).to eq [] }
         end
 
         context 'with :my_dynamic_field' do
           let(:value) { :my_dynamic_field }
-          it { expect(subject[:on]).to eq %w(my_dynamic_field) }
-          it { expect(subject[:tracked_fields]).to eq [] }
-          it { expect(subject[:tracked_relations]).to eq %w(my_dynamic_field) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(my_dynamic_field) }
+          it { expect(subject[:on]).to eq %i(my_dynamic_field) }
+          it { expect(subject[:fields]).to eq [] }
+          it { expect(subject[:relations]).to eq(embeds_one: {}, embeds_many: {}) }
+          it { expect(subject[:dynamic]).to eq %w(my_dynamic_field) }
         end
 
         context 'with [:my_dynamic_field]' do
           let(:value) { [:my_dynamic_field] }
-          it { expect(subject[:on]).to eq %w(my_dynamic_field) }
-          it { expect(subject[:tracked_fields]).to eq [] }
-          it { expect(subject[:tracked_relations]).to eq %w(my_dynamic_field) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(my_dynamic_field) }
+          it { expect(subject[:on]).to eq %i(my_dynamic_field) }
+          it { expect(subject[:fields]).to eq [] }
+          it { expect(subject[:relations]).to eq(embeds_one: {}, embeds_many: {}) }
+          it { expect(subject[:dynamic]).to eq %w(my_dynamic_field) }
         end
 
         context 'with [:all, :my_dynamic_field]' do
           let(:value) { [:all, :my_dynamic_field] }
-          it { expect(subject[:on]).to eq %w(fields my_dynamic_field) }
-          it { expect(subject[:tracked_fields]).to eq %w(foo bar) }
-          it { expect(subject[:tracked_relations]).to eq %w(my_dynamic_field) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(my_dynamic_field) }
+          it { expect(subject[:on]).to eq %i(my_dynamic_field foo bar) }
+          it { expect(subject[:fields]).to eq %w(foo bar) }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq({}) }
+          it { expect(subject[:dynamic]).to eq %w(my_dynamic_field) }
         end
 
         context 'with [:fields, :my_dynamic_field]' do
           let(:value) { [:fields, :my_dynamic_field] }
-          it { expect(subject[:on]).to eq %w(fields my_dynamic_field) }
-          it { expect(subject[:tracked_fields]).to eq %w(foo bar) }
-          it { expect(subject[:tracked_relations]).to eq %w(my_dynamic_field) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(my_dynamic_field) }
+          it { expect(subject[:on]).to eq %i(my_dynamic_field foo bar) }
+          it { expect(subject[:fields]).to eq %w(foo bar) }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq({}) }
+          it { expect(subject[:dynamic]).to eq %w(my_dynamic_field) }
         end
 
         context 'with [:foo, :bar, :my_dynamic_field]' do
           let(:value) { [:foo, :bar, :my_dynamic_field] }
-          it { expect(subject[:on]).to eq %w(foo bar my_dynamic_field) }
-          it { expect(subject[:tracked_fields]).to eq %w(foo bar) }
-          it { expect(subject[:tracked_relations]).to eq %w(my_dynamic_field) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(my_dynamic_field) }
+          it { expect(subject[:on]).to eq %i(foo bar my_dynamic_field) }
+          it { expect(subject[:fields]).to eq %w(foo bar) }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq({}) }
+          it { expect(subject[:dynamic]).to eq %w(my_dynamic_field) }
         end
 
         context 'with [:my_dynamic_field, :my_options_embed_many_models]' do
           let(:value) { [:my_dynamic_field, :my_options_embed_many_models] }
-          it { expect(subject[:on]).to eq %w(my_dynamic_field my_options_embed_many_models) }
-          it { expect(subject[:tracked_fields]).to eq [] }
-          it { expect(subject[:tracked_relations]).to eq %w(my_dynamic_field my_options_embed_many_models) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(my_dynamic_field my_options_embed_many_models) }
+          it { expect(subject[:on]).to eq %i(my_dynamic_field my_options_embed_many_models) }
+          it { expect(subject[:fields]).to eq [] }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq('my_options_embed_many_models' => %w(_id baz)) }
+          it { expect(subject[:dynamic]).to eq %w(my_dynamic_field) }
         end
 
         context 'with [:all, :my_dynamic_field, :my_options_embed_many_models]' do
           let(:value) { [:all, :my_dynamic_field, :my_options_embed_many_models] }
-          it { expect(subject[:on]).to eq %w(fields my_dynamic_field my_options_embed_many_models) }
-          it { expect(subject[:tracked_fields]).to eq %w(foo bar) }
-          it { expect(subject[:tracked_relations]).to eq %w(my_dynamic_field my_options_embed_many_models) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(my_dynamic_field my_options_embed_many_models) }
+          it { expect(subject[:on]).to eq %i(my_dynamic_field my_options_embed_many_models foo bar) }
+          it { expect(subject[:fields]).to eq %w(foo bar) }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq('my_options_embed_many_models' => %w(_id baz)) }
+          it { expect(subject[:dynamic]).to eq %w(my_dynamic_field) }
         end
 
         context 'with [:foo, :some_dynamic_field, :my_options_embed_many_models]' do
           let(:value) { [:foo, :my_dynamic_field, :my_options_embed_many_models] }
-          it { expect(subject[:on]).to eq %w(foo my_dynamic_field my_options_embed_many_models) }
-          it { expect(subject[:tracked_fields]).to eq %w(foo) }
-          it { expect(subject[:tracked_relations]).to eq %w(my_dynamic_field my_options_embed_many_models) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(my_dynamic_field my_options_embed_many_models) }
+          it { expect(subject[:on]).to eq %i(foo my_dynamic_field my_options_embed_many_models) }
+          it { expect(subject[:fields]).to eq %w(foo) }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq('my_options_embed_many_models' => %w(_id baz)) }
+          it { expect(subject[:dynamic]).to eq %w(my_dynamic_field) }
         end
       end
 
@@ -237,77 +252,83 @@ describe Mongoid::History::Options do
 
         context 'with :foo' do
           let(:value) { :foo }
-          it { expect(subject[:on]).to eq %w(fields) }
-          it { expect(subject[:tracked_fields]).to eq %w(bar) }
-          it { expect(subject[:tracked_dynamic]).to eq [] }
+          it { expect(subject[:on]).to eq %i(foo bar) }
+          it { expect(subject[:fields]).to eq %w(bar) }
+          it { expect(subject[:dynamic]).to eq [] }
         end
 
         context 'with [:foo]' do
           let(:value) { [:foo] }
-          it { expect(subject[:on]).to eq %w(fields) }
-          it { expect(subject[:tracked_fields]).to eq %w(bar) }
-          it { expect(subject[:tracked_dynamic]).to eq [] }
+          it { expect(subject[:on]).to eq %i(foo bar) }
+          it { expect(subject[:fields]).to eq %w(bar) }
+          it { expect(subject[:dynamic]).to eq [] }
         end
 
         context 'with [:foo, :bar]' do
           let(:value) { [:foo, :bar] }
-          it { expect(subject[:on]).to eq %w(fields) }
-          it { expect(subject[:tracked_fields]).to eq [] }
-          it { expect(subject[:tracked_dynamic]).to eq [] }
+          it { expect(subject[:on]).to eq %i(foo bar) }
+          it { expect(subject[:fields]).to eq [] }
+          it { expect(subject[:dynamic]).to eq [] }
         end
 
         context 'with :my_options_embed_many_models' do
           let(:value) { :my_options_embed_many_models }
           let(:options) { { on: [:foo, :my_options_embed_many_models], except: value } }
-          it { expect(subject[:on]).to eq %w(foo my_options_embed_many_models) }
-          it { expect(subject[:tracked_fields]).to eq %w(foo) }
-          it { expect(subject[:tracked_relations]).to eq [] }
-          it { expect(subject[:tracked_dynamic]).to eq [] }
+          it { expect(subject[:on]).to eq %i(foo my_options_embed_many_models) }
+          it { expect(subject[:fields]).to eq %w(foo) }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq({}) }
+          it { expect(subject[:dynamic]).to eq [] }
         end
 
         context 'with [:my_options_embed_many_models]' do
           let(:value) { [:my_options_embed_many_models] }
           let(:options) { { on: [:foo, :my_options_embed_many_models], except: value } }
-          it { expect(subject[:on]).to eq %w(foo my_options_embed_many_models) }
-          it { expect(subject[:tracked_fields]).to eq %w(foo) }
-          it { expect(subject[:tracked_relations]).to eq [] }
-          it { expect(subject[:tracked_dynamic]).to eq [] }
+          it { expect(subject[:on]).to eq %i(foo my_options_embed_many_models) }
+          it { expect(subject[:fields]).to eq %w(foo) }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq({}) }
+          it { expect(subject[:dynamic]).to eq [] }
         end
 
         context 'with [:foo, :my_options_embed_many_models]' do
           let(:value) { [:foo, :my_options_embed_many_models] }
           let(:options) { { on: [:all, :my_options_embed_many_models, :my_options_embed_many_two_models], except: value } }
-          it { expect(subject[:on]).to eq %w(fields my_options_embed_many_models emtwo) }
-          it { expect(subject[:tracked_fields]).to eq %w(bar) }
-          it { expect(subject[:tracked_relations]).to eq %w(emtwo) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(emtwo) }
+          it { expect(subject[:on]).to eq %i(my_options_embed_many_models my_options_embed_many_two_models foo bar) }
+          it { expect(subject[:fields]).to eq %w(bar) }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq('emtwo' => %w(_id baz_two)) }
+          it { expect(subject[:dynamic]).to eq [] }
         end
 
         context 'with [:foo, :my_dynamic_field]' do
           let(:value) { [:foo, :my_dynamic_field] }
           let(:options) { { on: [:all, :my_dynamic_field, :my_dynamic_field_two], except: value } }
-          it { expect(subject[:on]).to eq %w(fields my_dynamic_field my_dynamic_field_two) }
-          it { expect(subject[:tracked_fields]).to eq %w(bar) }
-          it { expect(subject[:tracked_relations]).to eq %w(my_dynamic_field_two) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(my_dynamic_field_two) }
+          it { expect(subject[:on]).to eq %i(my_dynamic_field my_dynamic_field_two foo bar) }
+          it { expect(subject[:fields]).to eq %w(bar) }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq({}) }
+          it { expect(subject[:dynamic]).to eq %w(my_dynamic_field_two) }
         end
 
         context 'with [:my_dynamic_field, :my_options_embed_many_models]' do
           let(:value) { [:my_dynamic_field, :my_options_embed_many_models] }
           let(:options) { { on: [:all, :my_dynamic_field, :my_dynamic_field_two, :my_options_embed_many_models, :my_options_embed_many_two_models], except: value } }
-          it { expect(subject[:on]).to eq %w(fields my_dynamic_field my_dynamic_field_two my_options_embed_many_models emtwo) }
-          it { expect(subject[:tracked_fields]).to eq %w(foo bar) }
-          it { expect(subject[:tracked_relations]).to eq %w(my_dynamic_field_two emtwo) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(my_dynamic_field_two emtwo) }
+          it { expect(subject[:on]).to eq %i(my_dynamic_field my_dynamic_field_two my_options_embed_many_models my_options_embed_many_two_models foo bar) }
+          it { expect(subject[:fields]).to eq %w(foo bar) }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq('emtwo' => %w(_id baz_two)) }
+          it { expect(subject[:dynamic]).to eq %w(my_dynamic_field_two) }
         end
 
         context 'with [:foo, :my_dynamic_field, :my_options_embed_many_models]' do
           let(:value) { [:foo, :my_dynamic_field, :my_options_embed_many_models] }
           let(:options) { { on: [:all, :my_dynamic_field, :my_dynamic_field_two, :my_options_embed_many_models, :my_options_embed_many_two_models], except: value } }
-          it { expect(subject[:on]).to eq %w(fields my_dynamic_field my_dynamic_field_two my_options_embed_many_models emtwo) }
-          it { expect(subject[:tracked_fields]).to eq %w(bar) }
-          it { expect(subject[:tracked_relations]).to eq %w(my_dynamic_field_two emtwo) }
-          it { expect(subject[:tracked_dynamic]).to eq %w(my_dynamic_field_two emtwo) }
+          it { expect(subject[:on]).to eq %i(my_dynamic_field my_dynamic_field_two my_options_embed_many_models my_options_embed_many_two_models foo bar) }
+          it { expect(subject[:fields]).to eq %w(bar) }
+          it { expect(subject[:relations][:embeds_one]).to eq({}) }
+          it { expect(subject[:relations][:embeds_many]).to eq('emtwo' => %w(_id baz_two)) }
+          it { expect(subject[:dynamic]).to eq %w(my_dynamic_field_two) }
         end
       end
 
@@ -348,9 +369,10 @@ describe Mongoid::History::Options do
 
       describe '#remove_reserved_fields' do
         let(:options) { { on: [:_id, :_type, :foo, :version, :modifier_id] } }
-        it { expect(subject[:tracked_fields]).to eq %w(foo) }
-        it { expect(subject[:tracked_relations]).to eq [] }
-        it { expect(subject[:tracked_dynamic]).to eq [] }
+        it { expect(subject[:fields]).to eq %w(foo) }
+        it { expect(subject[:relations][:embeds_one]).to eq({}) }
+        it { expect(subject[:relations][:embeds_many]).to eq({}) }
+        it { expect(subject[:dynamic]).to eq [] }
       end
     end
   end

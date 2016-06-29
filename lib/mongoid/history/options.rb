@@ -62,7 +62,7 @@ module Mongoid
 
         if options[:on].include?(:fields)
           @options[:on] = options[:on].reject { |opt| opt == :fields }
-          @options[:on] = options[:on] | trackable.fields.keys
+          @options[:on] = options[:on] | trackable.fields.keys.map(&:to_sym) - reserved_fields.map(&:to_sym)
         end
 
         @options[:fields] = []
