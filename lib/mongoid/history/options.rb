@@ -54,8 +54,8 @@ module Mongoid
         # # :all is just an alias to :fields for now, to support existing users of `mongoid-history`
         # # In future, :all will track all the fields and relations of trackable class
         if options[:on].include?(:all)
-          warn "[DEPRECATION] Use :fields instead of :all to track all fields in class #{trackable}.\n" +
-            'Going forward, :all will track all the fields and relations for the class'
+          warn "[DEPRECATION] Use :fields instead of :all to track all fields in class #{trackable}.\n\
+            Going forward, :all will track all the fields and relations for the class"
         end
 
         @options[:on] = options[:on].map { |opt| (opt == :all) ? :fields : opt }
@@ -83,10 +83,10 @@ module Mongoid
       # @return [ String ] the database field name for tracked option
       def get_database_field_name(option)
         key = if option.is_a?(Hash)
-          option.keys.first
-        elsif option.is_a?(Array)
-          option.first
-        end
+                option.keys.first
+              elsif option.is_a?(Array)
+                option.first
+              end
         trackable.database_field_name(key || option)
       end
 
@@ -131,19 +131,19 @@ module Mongoid
       def track_embeds_one(field, field_options)
         relation_class = trackable.embeds_one_class(field)
         @options[:relations][:embeds_one][field] = if field_options.blank?
-          relation_class.fields.keys
-        else
-          %w(_id) | field_options.map { |field| relation_class.database_field_name(field) }
-        end
+                                                     relation_class.fields.keys
+                                                   else
+                                                     %w(_id) | field_options.map { |opt| relation_class.database_field_name(opt) }
+                                                   end
       end
 
       def track_embeds_many(field, field_options)
         relation_class = trackable.embeds_many_class(field)
         @options[:relations][:embeds_many][field] = if field_options.blank?
-          relation_class.fields.keys
-        else
-          %w(_id) | field_options.map { |field| relation_class.database_field_name(field) }
-        end
+                                                      relation_class.fields.keys
+                                                    else
+                                                      %w(_id) | field_options.map { |opt| relation_class.database_field_name(opt) }
+                                                    end
       end
 
       def reserved_fields

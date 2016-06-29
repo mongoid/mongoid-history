@@ -323,8 +323,8 @@ module Mongoid
           return @embeds_one_class[field] if @embeds_one_class.key?(field)
           field_alias = aliased_fields.key(field)
           relation = relations
-            .select { |k, v| v.relation == Mongoid::Relations::Embedded::One }
-            .detect { |rel_k, rel_v| rel_k == field_alias }
+                     .select { |_, v| v.relation == Mongoid::Relations::Embedded::One }
+                     .detect { |rel_k, _| rel_k == field_alias }
           @embeds_one_class[field] = relation && relation.last.class_name.constantize
         end
 
@@ -347,8 +347,8 @@ module Mongoid
           return @embeds_many_class[field] if @embeds_many_class.key?(field)
           field_alias = aliased_fields.key(field)
           relation = relations
-            .select { |k, v| v.relation == Mongoid::Relations::Embedded::Many }
-            .detect { |rel_k, rel_v| rel_k == field_alias }
+                     .select { |_, v| v.relation == Mongoid::Relations::Embedded::Many }
+                     .detect { |rel_k, _| rel_k == field_alias }
           @embeds_many_class[field] = relation && relation.last.class_name.constantize
         end
 
