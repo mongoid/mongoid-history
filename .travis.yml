@@ -16,7 +16,10 @@ rvm:
 
 matrix:
   allow_failures:
-    - rvm: rbx-2
+    rvm:
+      - 1.9.3
+      - rbx-2
+      - jruby-19mode
 
 env:
   - MONGOID_VERSION=3
