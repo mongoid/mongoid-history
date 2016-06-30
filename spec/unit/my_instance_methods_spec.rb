@@ -102,6 +102,7 @@ describe Mongoid::History::Trackable do
       before(:each) do
         model_one.save!
         ModelOne.clear_trackable_memoization
+        allow(ModelOne).to receive(:dynamic_enabled?) { false }
         allow(model_one).to receive(:changes) { changes }
       end
       let(:changes) { {} }
@@ -160,6 +161,7 @@ describe Mongoid::History::Trackable do
 
     describe '#modified_attributes_for_destroy' do
       before(:each) do
+        allow(ModelOne).to receive(:dynamic_enabled?) { false }
         model_one.save!
         ModelOne.clear_trackable_memoization
       end
