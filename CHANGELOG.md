@@ -5,6 +5,8 @@
 * [#151](https://github.com/aq1018/mongoid-history/pull/151): Added ability to customize tracker class for each trackable; multiple trackers across the app are now possible - [@JagdeepSingh](https://github.com/JagdeepSingh).
 * [#151](https://github.com/aq1018/mongoid-history/pull/151): Added automatic support for `request_store` gem as drop-in replacement for `Thread.current` - [@JagdeepSingh](https://github.com/JagdeepSingh).
 
+* [#155](https://github.com/aq1018/mongoid-history/pull/155): Modify structure of options to keep tracked fields and relations as separate. Add support to whitelist the attributes for tracked embeds_one and embeds_many relations - [@JagdeepSingh](https://github.com/JagdeepSingh).
+
 * [#150](https://github.com/aq1018/mongoid-history/pull/150): Added support for keeping embedded objects audit history in parent itself - [@JagdeepSingh](https://github.com/JagdeepSingh).
 
 0.5.0 (2015/09/18)
