@@ -198,8 +198,9 @@ module Mongoid
 
         def modified_attributes_for_update
           return @modified_attributes_for_update if @modified_attributes_for_update
-          changes = send(history_trackable_options[:changes_method])
           attrs = {}
+          changes = send(history_trackable_options[:changes_method])
+
           changes.each do |k, v|
             if self.class.tracked_embeds_one?(k)
               permitted_attrs = self.class.tracked_embeds_one_attributes(k)
@@ -215,6 +216,7 @@ module Mongoid
               attrs[k] = v
             end
           end
+
           @modified_attributes_for_update = attrs
         end
 

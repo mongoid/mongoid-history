@@ -17,6 +17,8 @@ class HistoryTracker
 end
 
 describe Mongoid::History::Trackable do
+  let(:bson_class) { defined?(BSON::ObjectId) ? BSON::ObjectId : Moped::BSON::ObjectId }
+
   it 'should have #track_history' do
     expect(MyModel).to respond_to :track_history
   end
@@ -324,112 +326,209 @@ describe Mongoid::History::Trackable do
 
   describe 'MyInstanceMethods' do
     before :all do
-      MyTrackableModel = Class.new do
+      ModelOne = Class.new do
         include Mongoid::Document
         include Mongoid::History::Trackable
+        store_in collection: :model_ones
         field :foo
         field :b, as: :bar
-        embeds_one :my_embed_one_model, inverse_class_name: 'MyEmbedOneModel'
-        embeds_many :my_embed_many_models, inverse_class_name: 'MyEmbedManyModel'
+        embeds_one :emb_one, inverse_class_name: 'EmbOne'
+        embeds_one :emb_two, store_as: :emt, inverse_class_name: 'EmbTwo'
+        embeds_many :emb_threes, inverse_class_name: 'EmbThree'
+        embeds_many :emb_fours, store_as: :emfs, inverse_class_name: 'EmbFour'
       end
 
-      MyEmbedOneModel = Class.new do
+      EmbOne = Class.new do
+        include Mongoid::Document
+        field :f_em_foo
+        field :fmb, as: :f_em_bar
+        embedded_in :model_one
+      end
+
+      EmbTwo = Class.new do
         include Mongoid::Document
         field :baz
-        embedded_in :my_trackable_model
+        embedded_in :model_one
       end
 
-      MyEmbedManyModel = Class.new do
+      EmbThree = Class.new do
         include Mongoid::Document
-        field :bla
-        embedded_in :my_trackable_model
+        field :f_em_foo
+        field :fmb, as: :f_em_bar
+        embedded_in :model_one
       end
 
-      MyTrackableModel.track_history(on: [:foo, :my_embed_one_model, :my_embed_many_models])
+      EmbFour = Class.new do
+        include Mongoid::Document
+        field :baz
+        embedded_in :model_one
+      end
+
+      ModelOne.track_history(on: %i(foo emb_one emb_threes))
       @persisted_history_options = Mongoid::History.trackable_class_options
     end
     before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
 
-    let(:my_embed_one_model) { MyEmbedOneModel.new(baz: 'Baz') }
-    let(:my_embed_many_models) { [MyEmbedManyModel.new(bla: 'Bla')] }
-    let(:my_trackable_model) do
-      MyTrackableModel.new(foo: 'Foo',
-                           bar: 'Bar',
-                           my_embed_one_model: my_embed_one_model,
-                           my_embed_many_models: my_embed_many_models)
+    let(:emb_one) { EmbOne.new(f_em_foo: 'Foo', f_em_bar: 'Bar') }
+    let(:emb_threes) { [EmbThree.new(f_em_foo: 'Foo', f_em_bar: 'Bar')] }
+    let(:model_one) do
+      ModelOne.new(foo: 'Foo',
+                   bar: 'Bar',
+                   emb_one: emb_one,
+                   emb_threes: emb_threes)
     end
 
-    let(:bson_class) { defined?(BSON::ObjectId) ? BSON::ObjectId : Moped::BSON::ObjectId }
-
     describe '#modified_attributes_for_create' do
-      subject { my_trackable_model.send(:modified_attributes_for_create) }
+      before(:each) { ModelOne.clear_trackable_memoization }
+      subject { model_one.send(:modified_attributes_for_create) }
 
-      it 'should include tracked fields' do
-        expect(subject['foo']).to eq [nil, 'Foo']
-        expect(subject['bar']).to be_nil
+      context 'with tracked embeds_one object' do
+        before(:each) { ModelOne.track_history(on: { emb_one: :f_em_foo }) }
+        it 'should include tracked attributes only' do
+          expect(subject['emb_one'][0]).to be_nil
+
+          expect(subject['emb_one'][1].keys.size).to eq 2
+          expect(subject['emb_one'][1]['_id']).to eq emb_one._id
+          expect(subject['emb_one'][1]['f_em_foo']).to eq 'Foo'
+        end
       end
 
-      it 'should include tracked embeds_one objects attributes' do
-        expect(subject['my_embed_one_model'][0]).to be_nil
-        expect(subject['my_embed_one_model'][1]['_id']).to be_a bson_class
-        expect(subject['my_embed_one_model'][1]['baz']).to eq 'Baz'
+      context 'with untracked embeds_one object' do
+        before(:each) { ModelOne.track_history(on: :fields) }
+        it 'should not include embeds_one attributes' do
+          expect(subject['emb_one']).to be_nil
+        end
       end
 
-      it 'should include tracked embeds_many objects attributes' do
-        expect(subject['my_embed_many_models'][0]).to be_nil
-        expect(subject['my_embed_many_models'][1].size).to eq 1
-        expect(subject['my_embed_many_models'][1][0]['_id']).to be_a bson_class
-        expect(subject['my_embed_many_models'][1][0]['bla']).to eq 'Bla'
+      context 'with tracked embeds_many objects' do
+        before(:each) { ModelOne.track_history(on: { emb_threes: :f_em_foo }) }
+        it 'should include tracked attributes only' do
+          expect(subject['emb_threes'][0]).to be_nil
+
+          expect(subject['emb_threes'][1][0].keys.count).to eq 2
+          expect(subject['emb_threes'][1][0]['_id']).to eq emb_threes.first._id
+          expect(subject['emb_threes'][1][0]['f_em_foo']).to eq 'Foo'
+        end
       end
 
-      context 'when embeds_one object blank' do
-        let(:my_embed_one_model) { nil }
-
-        it 'should not include embeds_one model key' do
-          expect(subject.keys).to_not include 'my_embed_one_model'
+      context 'with untracked embeds_many objects' do
+        before(:each) { ModelOne.track_history(on: :fields) }
+        it 'should include not tracked embeds_many attributes' do
+          expect(subject['emb_threes']).to be_nil
         end
       end
     end
 
+    describe '#modified_attributes_for_update' do
+      before(:each) do
+        model_one.save!
+        ModelOne.clear_trackable_memoization
+        allow(model_one).to receive(:changes) { changes }
+      end
+      let(:changes) { {} }
+      subject { model_one.send(:modified_attributes_for_update) }
+
+      context 'when embeds_one attributes passed in options' do
+        before(:each) { ModelOne.track_history(on: { emb_one: :f_em_foo }) }
+        let(:changes) { { 'emb_one' => [{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }, { 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }] } }
+        it { expect(subject['emb_one'][0]).to eq('f_em_foo' => 'Foo') }
+        it { expect(subject['emb_one'][1]).to eq('f_em_foo' => 'Foo-new') }
+      end
+
+      context 'when embeds_one relation passed in options' do
+        before(:each) { ModelOne.track_history(on: :emb_one) }
+        let(:changes) { { 'emb_one' => [{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }, { 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }] } }
+        it { expect(subject['emb_one'][0]).to eq('f_em_foo' => 'Foo', 'fmb' => 'Bar') }
+        it { expect(subject['emb_one'][1]).to eq('f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new') }
+      end
+
+      context 'when embeds_one relation not tracked' do
+        before(:each) { ModelOne.track_history(on: :fields) }
+        let(:changes) { { 'emb_one' => [{ 'f_em_foo' => 'Foo' }, { 'f_em_foo' => 'Foo-new' }] } }
+        it { expect(subject['emb_one']).to be_nil }
+      end
+
+      context 'when embeds_many attributes passed in options' do
+        before(:each) { ModelOne.track_history(on: { emb_threes: :f_em_foo }) }
+        let(:changes) { { 'emb_threes' => [[{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }], [{ 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }]] } }
+        it { expect(subject['emb_threes']).to eq [[{ 'f_em_foo' => 'Foo' }], [{ 'f_em_foo' => 'Foo-new' }]] }
+      end
+
+      context 'when embeds_many relation passed in options' do
+        before(:each) { ModelOne.track_history(on: :emb_threes) }
+        let(:changes) { { 'emb_threes' => [[{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }], [{ 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }]] } }
+        it { expect(subject['emb_threes']).to eq [[{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }], [{ 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }]] }
+      end
+
+      context 'when embeds_many relation not tracked' do
+        before(:each) { ModelOne.track_history(on: :fields) }
+        let(:changes) { { 'emb_threes' => [[{ 'f_em_foo' => 'Foo' }], [{ 'f_em_foo' => 'Foo-new' }]] } }
+        it { expect(subject['emb_threes']).to be_nil }
+      end
+
+      context 'when field tracked' do
+        before(:each) { ModelOne.track_history(on: :foo) }
+        let(:changes) { { 'foo' => ['Foo', 'Foo-new'], 'b' => ['Bar', 'Bar-new'] } }
+        it { is_expected.to eq('foo' => ['Foo', 'Foo-new']) }
+      end
+
+      context 'when field not tracked' do
+        before(:each) { ModelOne.track_history(on: []) }
+        let(:changes) { { 'foo' => ['Foo', 'Foo-new'] } }
+        it { is_expected.to eq({}) }
+      end
+    end
+
     describe '#modified_attributes_for_destroy' do
-      subject { my_trackable_model.send(:modified_attributes_for_destroy) }
+      before(:each) do
+        model_one.save!
+        ModelOne.clear_trackable_memoization
+      end
+      subject { model_one.send(:modified_attributes_for_destroy) }
 
-      it 'should track reserved fields' do
-        expect(subject['_id'][0]).to be_a bson_class
-        expect(subject['_id'][1]).to be_nil
+      context 'with tracked embeds_one object' do
+        before(:each) { ModelOne.track_history(on: { emb_one: :f_em_foo }) }
+        it 'should include tracked attributes only' do
+          expect(subject['emb_one'][0].keys.size).to eq 2
+          expect(subject['emb_one'][0]['_id']).to eq emb_one._id
+          expect(subject['emb_one'][0]['f_em_foo']).to eq 'Foo'
+
+          expect(subject['emb_one'][1]).to be_nil
+        end
       end
 
-      it 'should include tracked fields' do
-        expect(subject['foo']).to eq ['Foo', nil]
-        expect(subject['bar']).to be_nil
+      context 'with untracked embeds_one object' do
+        before(:each) { ModelOne.track_history(on: :fields) }
+        it 'should not include embeds_one attributes' do
+          expect(subject['emb_one']).to be_nil
+        end
       end
 
-      it 'should include tracked embeds_one objects attributes' do
-        expect(subject['my_embed_one_model'][0]['_id']).to be_a bson_class
-        expect(subject['my_embed_one_model'][0]['baz']).to eq 'Baz'
-        expect(subject['my_embed_one_model'][1]).to be_nil
+      context 'with tracked embeds_many objects' do
+        before(:each) { ModelOne.track_history(on: { emb_threes: :f_em_foo }) }
+        it 'should include tracked attributes only' do
+          expect(subject['emb_threes'][0][0].keys.count).to eq 2
+          expect(subject['emb_threes'][0][0]['_id']).to eq emb_threes.first._id
+          expect(subject['emb_threes'][0][0]['f_em_foo']).to eq 'Foo'
+
+          expect(subject['emb_threes'][1]).to be_nil
+        end
       end
 
-      it 'should include tracked embeds_many objects attributes' do
-        expect(subject['my_embed_many_models'][0].size).to eq 1
-        expect(subject['my_embed_many_models'][0][0]['_id']).to be_a bson_class
-        expect(subject['my_embed_many_models'][0][0]['bla']).to eq 'Bla'
-        expect(subject['my_embed_many_models'][1]).to be_nil
-      end
-
-      context 'when embeds_one object blank' do
-        let(:my_embed_one_model) { nil }
-
-        it 'should not include embeds_one model key' do
-          expect(subject.keys).to_not include 'my_embed_one_model'
+      context 'with untracked embeds_many objects' do
+        before(:each) { ModelOne.track_history(on: :fields) }
+        it 'should include not tracked embeds_many attributes' do
+          expect(subject['emb_threes']).to be_nil
         end
       end
     end
 
     after :all do
-      Object.send(:remove_const, :MyTrackableModel)
-      Object.send(:remove_const, :MyEmbedOneModel)
-      Object.send(:remove_const, :MyEmbedManyModel)
+      Object.send(:remove_const, :ModelOne)
+      Object.send(:remove_const, :EmbOne)
+      Object.send(:remove_const, :EmbTwo)
+      Object.send(:remove_const, :EmbThree)
+      Object.send(:remove_const, :EmbFour)
     end
   end
 

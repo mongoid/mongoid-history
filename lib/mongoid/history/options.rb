@@ -12,7 +12,6 @@ module Mongoid
       end
 
       def parse(options = {})
-        @original_options = options
         @options = default_options.merge(options)
         prepare_skipped_fields
         parse_tracked_fields_and_relations
