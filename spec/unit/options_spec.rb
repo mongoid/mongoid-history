@@ -109,6 +109,7 @@ describe Mongoid::History::Options do
         let(:expected_options) do
           { on: %i(foo b),
             except: %w(created_at updated_at),
+            tracker_class_name: nil,
             modifier_field: :modifier,
             version_field: :version,
             changes_method: :changes,
