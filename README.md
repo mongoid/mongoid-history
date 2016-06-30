@@ -204,7 +204,7 @@ track.modified # { "title" => "Test", "body" => "Post", "comments" => [{ "_id" =
 
 **Whitelist the tracked attributes of embedded relations**
 
-If you want to track all the attributes of embedded relations in parent audit history, you can whitelist the attributes as below:
+If you don't want to track all the attributes of embedded relations in parent audit history, you can whitelist the attributes as below:
 
 ```ruby
 class Book
