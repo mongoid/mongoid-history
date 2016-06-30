@@ -41,6 +41,7 @@ describe Mongoid::History::Trackable do
         tracker_class_name: nil,
         modifier_field: :modifier,
         version_field: :version,
+        paranoia_field: nil,
         changes_method: :changes,
         scope: :my_model,
         track_create: false,

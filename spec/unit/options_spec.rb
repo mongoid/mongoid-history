@@ -65,6 +65,7 @@ describe Mongoid::History::Options do
           tracker_class_name: nil,
           modifier_field: :modifier,
           version_field: :version,
+          paranoia_field: nil,
           changes_method: :changes,
           scope: :model_one,
           track_create: false,
