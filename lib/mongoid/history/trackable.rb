@@ -356,10 +356,6 @@ module Mongoid
           @embeds_one_class[field] = relation && relation.last.class_name.constantize
         end
 
-        def tracked_embeds_one_attributes(relation)
-          history_trackable_options[:relations][:embeds_one][database_field_name(relation)]
-        end
-
         # Indicates whether there is an Embedded::Many relation for the given embedded field.
         #
         # @param [ String | Symbol ] embed The name of the embedded field
@@ -382,10 +378,6 @@ module Mongoid
                      .select { |_, v| v.relation == Mongoid::Relations::Embedded::Many }
                      .detect { |rel_k, _| rel_k == field_alias }
           @embeds_many_class[field] = relation && relation.last.class_name.constantize
-        end
-
-        def tracked_embeds_many_attributes(relation)
-          history_trackable_options[:relations][:embeds_many][database_field_name(relation)]
         end
 
         # Retrieves the database representation of an embedded field name, in case the :store_as option is used.
@@ -500,6 +492,10 @@ module Mongoid
           end
         end
 
+        def tracked_embeds_one_attributes(relation)
+          history_trackable_options[:relations][:embeds_one][database_field_name(relation)]
+        end
+
         # Whether or not the embeds_many relation should be tracked.
         #
         # @param [ String | Symbol ] relation The name of the embeds_many relation
@@ -518,6 +514,10 @@ module Mongoid
             .map(&:key)
             .select { |rel| history_trackable_options[:relations][:embeds_many].include? rel }
           end
+        end
+
+        def tracked_embeds_many_attributes(relation)
+          history_trackable_options[:relations][:embeds_many][database_field_name(relation)]
         end
 
         def history_trackable_options
