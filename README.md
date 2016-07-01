@@ -256,6 +256,22 @@ Book.tracked_embeds_many          #=> ["pages"]
 Book.tracked_embeds_many?(:pages) #=> true
 ```
 
+**Ignore soft-deleted embeds_many objects from being tracked**
+
+Default paranoia column is `deleted_at`. You can use custom field here as below:
+
+```ruby
+class Book
+  include Mongoid::Document
+  include Mongoid::Paranoia
+  ...
+  embeds_many :pages
+  track_history :on => :pages, :paranoia_field => :deactivated_at
+end
+```
+
+Now it will ignore `embeds_many` documents with `deactivated_at` set to a non-blank value from tracking.
+
 **Displaying history trackers as an audit trail**
 
 In your Controller:
