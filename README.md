@@ -202,7 +202,32 @@ track.original # {}
 track.modified # { "title" => "Test", "body" => "Post", "comments" => [{ "_id" => "575fa9e667d827e5ed00000d", "title" => "test", "body" => "comment" }], ... }
 ```
 
-**Retrieving the list of tracked fields**
+**Whitelist the tracked attributes of embedded relations**
+
+If you don't want to track all the attributes of embedded relations in parent audit history, you can whitelist the attributes as below:
+
+```ruby
+class Book
+  include Mongoid::Document
+  ...
+  embeds_many :pages
+  track_history :on => { :pages => [:title, :content] }
+end
+
+class Page
+  include Mongoid::Document
+  ...
+  field :number
+  field :title
+  field :subtitle
+  field :content
+  embedded_in :book
+end
+```
+
+It will now track only `_id` (Mandatory), `title` and `content` attributes for `pages` relation.
+
+**Retrieving the list of tracked static and dynamic fields**
 
 ```ruby
 class Book
@@ -226,9 +251,9 @@ class Book
   track_history :on => [:pages]
 end
 
-Book.tracked_relation?(:pages)      #=> true
-Book.tracked_embedded_many          #=> ["pages"]
-Book.tracked_embedded_many?(:pages) #=> true
+Book.tracked_relation?(:pages)    #=> true
+Book.tracked_embeds_many          #=> ["pages"]
+Book.tracked_embeds_many?(:pages) #=> true
 ```
 
 **Displaying history trackers as an audit trail**
