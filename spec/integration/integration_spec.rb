@@ -329,7 +329,7 @@ describe Mongoid::History do
       context 'with empty values' do
         before do
           allow(subject).to receive(:trackable_parent_class) { Tracker }
-          allow(Tracker).to receive(:tracked_embedded_many?) { false }
+          allow(Tracker).to receive(:tracked_embeds_many?) { false }
         end
         subject { Tracker.new }
         it 'should skip empty values' do

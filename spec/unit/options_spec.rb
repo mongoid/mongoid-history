@@ -76,24 +76,24 @@ describe Mongoid::History::Options do
 
       describe ':paranoia_field' do
         before(:all) do
-          ModelOne = Class.new do
+          ModelTwo = Class.new do
             include Mongoid::Document
           end
         end
-        let(:service) { described_class.new(ModelOne) }
+        let(:service) { described_class.new(ModelTwo) }
 
         context 'when trackable class includes Mongoid::Paranoia' do
-          before(:each) { allow(ModelOne).to receive_message_chain(:included_modules, :map) { ['Mongoid::Document', 'Mongoid::Paranoia'] } }
-          it { expect(service.default_options[:paranoia_field]).to eq :deleted_at }
+          before(:each) { allow(ModelTwo).to receive_message_chain(:included_modules, :map) { ['Mongoid::Document', 'Mongoid::Paranoia'] } }
+          it { expect(service.send(:default_options)[:paranoia_field]).to eq :deleted_at }
         end
 
         context 'when trackable class does not include Mongoid::Paranoia' do
-          before(:each) { allow(ModelOne).to receive_message_chain(:included_modules, :map) { ['Mongoid::Document'] } }
-          it { expect(service.default_options[:paranoia_field]).to be_nil }
+          before(:each) { allow(ModelTwo).to receive_message_chain(:included_modules, :map) { ['Mongoid::Document'] } }
+          it { expect(service.send(:default_options)[:paranoia_field]).to be_nil }
         end
 
         after(:all) do
-          Object.send(:remove_const, :ModelOne)
+          Object.send(:remove_const, :ModelTwo)
         end
       end
     end
@@ -136,6 +136,7 @@ describe Mongoid::History::Options do
             tracker_class_name: nil,
             modifier_field: :modifier,
             version_field: :version,
+            paranoia_field: nil,
             changes_method: :changes,
             scope: :model_one,
             track_create: false,

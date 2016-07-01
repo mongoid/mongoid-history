@@ -96,6 +96,82 @@ describe Mongoid::History::Trackable do
           expect(subject['emb_threes']).to be_nil
         end
       end
+
+      context 'when embeds_one object blank' do
+        let(:emb_one) { nil }
+
+        it 'should not include embeds_one model key' do
+          expect(subject.keys).to_not include 'emb_one'
+        end
+      end
+
+      describe 'paranoia' do
+        before(:all) do
+          ModelParanoia = Class.new do
+            include Mongoid::Document
+            include Mongoid::History::Trackable
+            store_in collection: :model_paranoias
+            embeds_many :emb_para_ones, inverse_class_name: 'EmbParaOne'
+          end
+
+          EmbParaOne = Class.new do
+            include Mongoid::Document
+            field :em_foo
+            field :deleted_at
+            embedded_in :model_paranoia
+
+            def deleted?
+              deleted_at.present?
+            end
+          end
+        end
+
+        let(:emb_para_one) { EmbParaOne.new(em_foo: 'Em-Foo') }
+        let(:model_paranoia) { ModelParanoia.new(emb_para_ones: [emb_para_one]) }
+
+        context 'when does not respond to #deleted?' do
+          before(:each) do
+            ModelParanoia.instance_variable_set(:@history_trackable_options, nil)
+            ModelParanoia.track_history(on: :emb_para_ones)
+          end
+
+          subject { model_paranoia.send(:modified_attributes_for_create) }
+
+          it 'should include tracked embeds_many objects attributes' do
+            expect(subject['emb_para_ones'][0]).to be_nil
+            expect(subject['emb_para_ones'][1].size).to eq 1
+            expect(subject['emb_para_ones'][1][0]['_id']).to be_a bson_class
+            expect(subject['emb_para_ones'][1][0]['em_foo']).to eq 'Em-Foo'
+          end
+        end
+
+        context 'when responds to #deleted?' do
+          before(:each) do
+            ModelParanoia.instance_variable_set(:@history_trackable_options, nil)
+            allow(ModelParanoia).to receive_message_chain(:included_modules, :map) { included_modules }
+            ModelParanoia.track_history(on: :emb_para_ones)
+            allow(emb_para_one).to receive(:deleted_at) { Time.now }
+            allow(emb_para_one_2).to receive(:deleted_at) { nil }
+          end
+
+          let(:included_modules) { ['Mongoid::Document', 'Mongoid::History::Trackable', 'Mongoid::Paranoia'] }
+          let(:model_paranoia) { ModelParanoia.new(emb_para_ones: [emb_para_one, emb_para_one_2]) }
+          let(:emb_para_one) { EmbParaOne.new(em_foo: 'Em-Foo') }
+          let(:emb_para_one_2) { EmbParaOne.new(em_foo: 'Em-Foo-2') }
+
+          subject { model_paranoia.send(:modified_attributes_for_create) }
+
+          it 'should not include deleted objects attributes' do
+            expect(subject['emb_para_ones'][0]).to be_nil
+            expect(subject['emb_para_ones'][1]).to eq [{ '_id' => emb_para_one_2._id, 'em_foo' => 'Em-Foo-2' }]
+          end
+        end
+
+        after(:all) do
+          Object.send(:remove_const, :ModelParanoia)
+          Object.send(:remove_const, :EmbParaOne)
+        end
+      end
     end
 
     describe '#modified_attributes_for_update' do

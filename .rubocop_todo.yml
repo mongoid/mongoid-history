@@ -11,6 +11,9 @@ Lint/HandleExceptions:
   Exclude:
     - 'spec/unit/trackable_spec.rb'
 
+Metrics/ClassLength:
+  Max: 103
+
 # Offense count: 12
 Metrics/AbcSize:
   Max: 60
@@ -32,7 +35,7 @@ Metrics/MethodLength:
 # Offense count: 2
 # Configuration parameters: CountComments.
 Metrics/ModuleLength:
-  Max: 206
+  Max: 223
 
 # Offense count: 4
 Metrics/PerceivedComplexity:

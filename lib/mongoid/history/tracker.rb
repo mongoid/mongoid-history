@@ -110,7 +110,7 @@ module Mongoid
         tracked_changes.each do |k, v|
           next if v[:from].blank? && v[:to].blank?
 
-          if trackable_parent_class.tracked_embedded_many?(k)
+          if trackable_parent_class.tracked_embeds_many?(k)
             prepare_tracked_edits_for_embeds_many(k, v)
           elsif v[:from].blank?
             @tracked_edits[:add] ||= {}
