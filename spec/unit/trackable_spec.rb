@@ -313,6 +313,153 @@ describe Mongoid::History::Trackable do
         before { MyModel.track_history tracker_class_name: MyTrackerClass }
         it { expect(MyModel.tracker_class).to eq MyTrackerClass }
       end
+
+      context 'when embeds_one object blank' do
+        let(:my_embed_one_model) { nil }
+
+        it 'should not include embeds_one model key' do
+          expect(subject.keys).to_not include 'my_embed_one_model'
+        end
+      end
+
+      describe 'embeds_many' do
+        before(:all) do
+          ModelOne = Class.new do
+            include Mongoid::Document
+            include Mongoid::History::Trackable
+            store_in collection: :model_ones
+            embeds_many :emb_ones, inverse_class_name: 'EmbOne'
+          end
+
+          EmbOne = Class.new do
+            include Mongoid::Document
+            field :em_foo
+            field :deleted_at
+            embedded_in :model_one
+
+            def deleted?
+              deleted_at.present?
+            end
+          end
+        end
+
+        context 'when does not respond to #deleted?' do
+          it 'should include tracked embeds_many objects attributes' do
+            expect(subject['my_embed_many_models'][0]).to be_nil
+            expect(subject['my_embed_many_models'][1].size).to eq 1
+            expect(subject['my_embed_many_models'][1][0]['_id']).to be_a bson_class
+            expect(subject['my_embed_many_models'][1][0]['bla']).to eq 'Bla'
+          end
+        end
+
+        context 'when responds to #deleted?' do
+          before(:each) do
+            ModelOne.instance_variable_set(:@history_trackable_options, nil)
+            allow(ModelOne).to receive_message_chain(:included_modules, :map) { included_modules }
+            ModelOne.track_history(on: :emb_ones)
+            allow(emb_one).to receive(:deleted_at) { Time.now }
+            allow(emb_one_2).to receive(:deleted_at) { nil }
+          end
+
+          let(:included_modules) { ['Mongoid::Document', 'Mongoid::History::Trackable', 'Mongoid::Paranoia'] }
+          let(:model_one) { ModelOne.new(emb_ones: [emb_one, emb_one_2]) }
+          let(:emb_one) { EmbOne.new(em_foo: 'Em-Foo') }
+          let(:emb_one_2) { EmbOne.new(em_foo: 'Em-Foo-2') }
+
+          subject { model_one.send(:modified_attributes_for_create) }
+
+          it 'should not include deleted objects attributes' do
+            expect(subject['emb_ones'][0]).to be_nil
+            expect(subject['emb_ones'][1]).to eq [{ '_id' => emb_one_2._id, 'em_foo' => 'Em-Foo-2' }]
+          end
+        end
+
+        after(:all) do
+          Object.send(:remove_const, :ModelOne)
+          Object.send(:remove_const, :EmbOne)
+        end
+      end
+    end
+
+    describe '#modified_attributes_for_update' do
+      before(:all) do
+        ModelOne = Class.new do
+          include Mongoid::Document
+          include Mongoid::History::Trackable
+          store_in collection: :model_ones
+          field :foo
+          embeds_many :emb_ones, inverse_class_name: 'EmbOne'
+        end
+
+        EmbOne = Class.new do
+          include Mongoid::Document
+          field :em_foo
+          embedded_in :model_one
+        end
+      end
+
+      before(:each) do
+        model_one.save!
+        ModelOne.instance_variable_set(:@history_trackable_options, nil)
+        allow(ModelOne).to receive_message_chain(:included_modules, :map) { included_modules }
+      end
+
+      let(:included_modules) { ['Mongoid::Document', 'Mongoid::History::Trackable'] }
+      let(:model_one) { ModelOne.new(foo: 'Foo') }
+      let(:changes) { {} }
+      subject { model_one.send(:modified_attributes_for_update) }
+
+      describe 'embeds_many' do
+        before(:each) { allow(model_one).to receive(:changes) { changes } }
+
+        context 'when not paranoia' do
+          before(:each) { ModelOne.track_history(on: :emb_ones) }
+          let(:changes) { { 'emb_ones' => [[{ 'em_foo' => 'Foo' }], [{ 'em_foo' => 'Foo-new' }]] } }
+          it { expect(subject['emb_ones'][0]).to eq [{ 'em_foo' => 'Foo' }] }
+          it { expect(subject['emb_ones'][1]).to eq [{ 'em_foo' => 'Foo-new' }] }
+        end
+
+        context 'when default field for paranoia' do
+          before(:each) { ModelOne.track_history(on: :emb_ones) }
+          let(:included_modules) { ['Mongoid::Document', 'Mongoid::History::Trackable', 'Mongoid::Paranoia'] }
+          let(:changes) do
+            { 'emb_ones' => [[{ 'em_foo' => 'Foo' }, { 'em_foo' => 'Foo-2', 'deleted_at' => Time.now }],
+                             [{ 'em_foo' => 'Foo-new' }, { 'em_foo' => 'Foo-2-new', 'deleted_at' => Time.now }]] }
+          end
+          it { expect(subject['emb_ones'][0]).to eq [{ 'em_foo' => 'Foo' }] }
+          it { expect(subject['emb_ones'][1]).to eq [{ 'em_foo' => 'Foo-new' }] }
+        end
+
+        context 'when custom field for paranoia' do
+          before(:each) { ModelOne.track_history(on: :emb_ones, paranoia_field: :my_paranoia_field) }
+          let(:included_modules) { ['Mongoid::Document', 'Mongoid::History::Trackable', 'Mongoid::Paranoia'] }
+          let(:changes) do
+            { 'emb_ones' => [[{ 'em_foo' => 'Foo', 'my_paranoia_field' => Time.now },
+                              { 'em_foo' => 'Foo-2' }],
+                             [{ 'em_foo' => 'Foo-new', 'my_paranoia_field' => Time.now },
+                              { 'em_foo' => 'Foo-2-new' }]] }
+          end
+          it { expect(subject['emb_ones'][0]).to eq [{ 'em_foo' => 'Foo-2' }] }
+          it { expect(subject['emb_ones'][1]).to eq [{ 'em_foo' => 'Foo-2-new' }] }
+        end
+      end
+
+      describe 'fields' do
+        context 'when custom method for changes' do
+          before(:each) do
+            ModelOne.track_history(on: :foo, changes_method: :my_changes_method)
+            allow(ModelOne).to receive(:dynamic_enabled?) { false }
+            allow(model_one).to receive(:my_changes_method) { changes }
+          end
+          let(:changes) { { 'foo' => ['Foo', 'Foo-new'], 'bar' => ['Bar', 'Bar-new'] } }
+          it { is_expected.to eq('foo' => ['Foo', 'Foo-new']) }
+        end
+      end
+
+      after(:all) do
+        Object.send(:remove_const, :ModelOne)
+        Object.send(:remove_const, :EmbOne)
+      end
     end
 
     context 'when options not contain tracker_class_name' do

@@ -73,6 +73,29 @@ describe Mongoid::History::Options do
           track_destroy: false }
       end
       it { expect(service.send(:default_options)).to eq expected_options }
+
+      describe ':paranoia_field' do
+        before(:all) do
+          ModelOne = Class.new do
+            include Mongoid::Document
+          end
+        end
+        let(:service) { described_class.new(ModelOne) }
+
+        context 'when trackable class includes Mongoid::Paranoia' do
+          before(:each) { allow(ModelOne).to receive_message_chain(:included_modules, :map) { ['Mongoid::Document', 'Mongoid::Paranoia'] } }
+          it { expect(service.default_options[:paranoia_field]).to eq :deleted_at }
+        end
+
+        context 'when trackable class does not include Mongoid::Paranoia' do
+          before(:each) { allow(ModelOne).to receive_message_chain(:included_modules, :map) { ['Mongoid::Document'] } }
+          it { expect(service.default_options[:paranoia_field]).to be_nil }
+        end
+
+        after(:all) do
+          Object.send(:remove_const, :ModelOne)
+        end
+      end
     end
 
     describe '#prepare_skipped_fields' do
