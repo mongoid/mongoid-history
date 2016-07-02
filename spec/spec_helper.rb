@@ -5,7 +5,11 @@ $LOAD_PATH.push File.expand_path('../../lib', __FILE__)
 
 require 'active_support/all'
 require 'mongoid'
-require 'request_store' if ENV['REQUEST_STORE_VERSION']
+require 'request_store'
+
+# Undefine RequestStore so that it may be stubbed in specific tests
+RequestStoreTemp = RequestStore
+Object.send(:remove_const, :RequestStore)
 
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| require f }
 

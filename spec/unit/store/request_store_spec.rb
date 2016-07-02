@@ -1,6 +1,8 @@
 require 'spec_helper'
 
-describe 'RequestStore', if: ENV['REQUEST_STORE_VERSION'].present? do
+describe 'RequestStore' do
+  before { stub_const('RequestStore', RequestStoreTemp) }
+
   describe 'Mongoid::History' do
     describe '.store' do
       it 'should return RequestStore' do

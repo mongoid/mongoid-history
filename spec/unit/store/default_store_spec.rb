@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Default Store', if: ENV['REQUEST_STORE_VERSION'].blank? do
+describe 'Default Store' do
   describe 'Mongoid::History' do
     describe '.store' do
       it 'should return Thread object' do
