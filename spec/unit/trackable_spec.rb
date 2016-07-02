@@ -169,9 +169,7 @@ describe Mongoid::History::Trackable do
     end
 
     describe '#track_history?' do
-
       shared_examples_for 'history tracking' do
-
         context 'when tracking is globally enabled' do
           it 'should be enabled on the current thread' do
             expect(Mongoid::History.enabled?).to eq(true)
@@ -211,7 +209,6 @@ describe Mongoid::History::Trackable do
         end
 
         context 'when tracking is globally disabled' do
-
           it 'should be disabled by the global disablement' do
             Mongoid::History.disable do
               expect(Mongoid::History.enabled?).to eq(false)
