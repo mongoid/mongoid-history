@@ -27,16 +27,12 @@ module Mongoid
             tracker_class_name: nil,
             modifier_field: :modifier,
             version_field: :version,
-            paranoia_field: paranoia_field,
+            paranoia_field: :deleted_at,
             changes_method: :changes,
             scope: scope,
             track_create: false,
             track_update: true,
             track_destroy: false }
-      end
-
-      def paranoia_field
-        :deleted_at if trackable.included_modules.map(&:to_s).include?('Mongoid::Paranoia')
       end
 
       # Sets the :except attributes and relations in `options` to be an [ Array <String> ]

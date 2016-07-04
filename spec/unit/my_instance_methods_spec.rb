@@ -119,17 +119,13 @@ describe Mongoid::History::Trackable do
             field :em_foo
             field :deleted_at
             embedded_in :model_paranoia
-
-            def deleted?
-              deleted_at.present?
-            end
           end
         end
 
         let(:emb_para_one) { EmbParaOne.new(em_foo: 'Em-Foo') }
         let(:model_paranoia) { ModelParanoia.new(emb_para_ones: [emb_para_one]) }
 
-        context 'when does not respond to #deleted?' do
+        context 'when does not respond to paranoia_field' do
           before(:each) do
             ModelParanoia.instance_variable_set(:@history_trackable_options, nil)
             ModelParanoia.track_history(on: :emb_para_ones)
@@ -145,16 +141,14 @@ describe Mongoid::History::Trackable do
           end
         end
 
-        context 'when responds to #deleted?' do
+        context 'when responds to paranoia_field' do
           before(:each) do
             ModelParanoia.instance_variable_set(:@history_trackable_options, nil)
-            allow(ModelParanoia).to receive_message_chain(:included_modules, :map) { included_modules }
             ModelParanoia.track_history(on: :emb_para_ones)
             allow(emb_para_one).to receive(:deleted_at) { Time.now }
             allow(emb_para_one_2).to receive(:deleted_at) { nil }
           end
 
-          let(:included_modules) { ['Mongoid::Document', 'Mongoid::History::Trackable', 'Mongoid::Paranoia'] }
           let(:model_paranoia) { ModelParanoia.new(emb_para_ones: [emb_para_one, emb_para_one_2]) }
           let(:emb_para_one) { EmbParaOne.new(em_foo: 'Em-Foo') }
           let(:emb_para_one_2) { EmbParaOne.new(em_foo: 'Em-Foo-2') }

@@ -34,8 +34,6 @@ describe Mongoid::History::Trackable do
       MyTrackableModel.track_history(on: [:foo, :my_embed_one_model, :my_embed_many_models, :my_dynamic_field])
     end
 
-    let(:bson_class) { defined?(BSON::ObjectId) ? BSON::ObjectId : Moped::BSON::ObjectId }
-
     describe '#tracked?' do
       before { allow(MyTrackableModel).to receive(:dynamic_enabled?) { false } }
       it { expect(MyTrackableModel.tracked?(:foo)).to be true }

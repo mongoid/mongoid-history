@@ -65,7 +65,7 @@ describe Mongoid::History::Options do
           tracker_class_name: nil,
           modifier_field: :modifier,
           version_field: :version,
-          paranoia_field: nil,
+          paranoia_field: :deleted_at,
           changes_method: :changes,
           scope: :model_one,
           track_create: false,
@@ -73,29 +73,6 @@ describe Mongoid::History::Options do
           track_destroy: false }
       end
       it { expect(service.send(:default_options)).to eq expected_options }
-
-      describe ':paranoia_field' do
-        before(:all) do
-          ModelTwo = Class.new do
-            include Mongoid::Document
-          end
-        end
-        let(:service) { described_class.new(ModelTwo) }
-
-        context 'when trackable class includes Mongoid::Paranoia' do
-          before(:each) { allow(ModelTwo).to receive_message_chain(:included_modules, :map) { ['Mongoid::Document', 'Mongoid::Paranoia'] } }
-          it { expect(service.send(:default_options)[:paranoia_field]).to eq :deleted_at }
-        end
-
-        context 'when trackable class does not include Mongoid::Paranoia' do
-          before(:each) { allow(ModelTwo).to receive_message_chain(:included_modules, :map) { ['Mongoid::Document'] } }
-          it { expect(service.send(:default_options)[:paranoia_field]).to be_nil }
-        end
-
-        after(:all) do
-          Object.send(:remove_const, :ModelTwo)
-        end
-      end
     end
 
     describe '#prepare_skipped_fields' do
@@ -136,7 +113,7 @@ describe Mongoid::History::Options do
             tracker_class_name: nil,
             modifier_field: :modifier,
             version_field: :version,
-            paranoia_field: nil,
+            paranoia_field: :deleted_at,
             changes_method: :changes,
             scope: :model_one,
             track_create: false,
@@ -268,6 +245,11 @@ describe Mongoid::History::Options do
         describe ':version_field' do
           let(:options) { { version_field: :my_version_field } }
           it { expect(subject[:version_field]).to eq :my_version_field }
+        end
+
+        describe ':paranoia_field' do
+          let(:options) { { paranoia_field: :my_paranoia_field } }
+          it { expect(subject[:paranoia_field]).to eq :my_paranoia_field }
         end
 
         describe ':changes_method' do

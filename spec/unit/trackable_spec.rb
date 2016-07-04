@@ -17,8 +17,6 @@ class HistoryTracker
 end
 
 describe Mongoid::History::Trackable do
-  let(:bson_class) { defined?(BSON::ObjectId) ? BSON::ObjectId : Moped::BSON::ObjectId }
-
   it 'should have #track_history' do
     expect(MyModel).to respond_to :track_history
   end
@@ -41,7 +39,7 @@ describe Mongoid::History::Trackable do
         tracker_class_name: nil,
         modifier_field: :modifier,
         version_field: :version,
-        paranoia_field: nil,
+        paranoia_field: :deleted_at,
         changes_method: :changes,
         scope: :my_model,
         track_create: false,
@@ -335,10 +333,8 @@ describe Mongoid::History::Trackable do
       before(:each) do
         model_one.save!
         ModelOne.instance_variable_set(:@history_trackable_options, nil)
-        allow(ModelOne).to receive_message_chain(:included_modules, :map) { included_modules }
       end
 
-      let(:included_modules) { ['Mongoid::Document', 'Mongoid::History::Trackable'] }
       let(:model_one) { ModelOne.new(foo: 'Foo') }
       let(:changes) { {} }
       subject { model_one.send(:modified_attributes_for_update) }
@@ -355,7 +351,6 @@ describe Mongoid::History::Trackable do
 
         context 'when default field for paranoia' do
           before(:each) { ModelOne.track_history(on: :emb_ones) }
-          let(:included_modules) { ['Mongoid::Document', 'Mongoid::History::Trackable', 'Mongoid::Paranoia'] }
           let(:changes) do
             { 'emb_ones' => [[{ 'em_foo' => 'Foo' }, { 'em_foo' => 'Foo-2', 'deleted_at' => Time.now }],
                              [{ 'em_foo' => 'Foo-new' }, { 'em_foo' => 'Foo-2-new', 'deleted_at' => Time.now }]] }
@@ -366,7 +361,6 @@ describe Mongoid::History::Trackable do
 
         context 'when custom field for paranoia' do
           before(:each) { ModelOne.track_history(on: :emb_ones, paranoia_field: :my_paranoia_field) }
-          let(:included_modules) { ['Mongoid::Document', 'Mongoid::History::Trackable', 'Mongoid::Paranoia'] }
           let(:changes) do
             { 'emb_ones' => [[{ 'em_foo' => 'Foo', 'my_paranoia_field' => Time.now },
                               { 'em_foo' => 'Foo-2' }],

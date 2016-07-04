@@ -258,7 +258,7 @@ Book.tracked_embeds_many?(:pages) #=> true
 
 **Ignore soft-deleted embeds_many objects from being tracked**
 
-Default paranoia column is `deleted_at`. You can use custom field here as below:
+Default paranoia field is `deleted_at`. You can use custom field here as below:
 
 ```ruby
 class Book

@@ -199,7 +199,7 @@ module Mongoid
         def modified_attributes_for_update
           return @modified_attributes_for_update if @modified_attributes_for_update
           attrs = {}
-          paranoia_field = history_trackable_options[:paranoia_field].to_s.presence
+          paranoia_field = self.class.history_trackable_options[:paranoia_field].to_s
           changes = send(history_trackable_options[:changes_method])
 
           changes.each do |k, v|
@@ -211,13 +211,8 @@ module Mongoid
             elsif self.class.tracked_embeds_many?(k)
               permitted_attrs = self.class.tracked_embeds_many_attributes(k)
               attrs[k] = []
-              if paranoia_field
-                attrs[k][0] = v[0].reject { |rel| rel[paranoia_field].present? }.map { |v_attrs| v_attrs.slice(*permitted_attrs) }
-                attrs[k][1] = v[1].reject { |rel| rel[paranoia_field].present? }.map { |v_attrs| v_attrs.slice(*permitted_attrs) }
-              else
-                attrs[k][0] = v[0].map { |v_attrs| v_attrs.slice(*permitted_attrs) }
-                attrs[k][1] = v[1].map { |v_attrs| v_attrs.slice(*permitted_attrs) }
-              end
+              attrs[k][0] = v[0].reject { |rel| rel[paranoia_field].present? }.map { |v_attrs| v_attrs.slice(*permitted_attrs) }
+              attrs[k][1] = v[1].reject { |rel| rel[paranoia_field].present? }.map { |v_attrs| v_attrs.slice(*permitted_attrs) }
             elsif self.class.tracked?(k, :update)
               attrs[k] = v
             end
@@ -229,6 +224,7 @@ module Mongoid
           return @modified_attributes_for_create if @modified_attributes_for_create
           aliased_fields = self.class.aliased_fields
           attrs = {}
+          paranoia_field = self.class.history_trackable_options[:paranoia_field]
           attributes.each { |k, v| attrs[k] = [nil, v] if self.class.tracked_field?(k, :create) }
 
           self.class.tracked_embeds_one
@@ -245,7 +241,7 @@ module Mongoid
               permitted_attrs = self.class.tracked_embeds_many_attributes(rel)
               attrs[rel] = [nil,
                             send(rel)
-                            .reject { |obj| obj.respond_to?(:deleted?) && obj.deleted? }
+                            .reject { |obj| obj.respond_to?(paranoia_field) && obj.public_send(paranoia_field).present? }
                             .map { |obj| obj.attributes.slice(*permitted_attrs) }]
             end
 
