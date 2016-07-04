@@ -105,6 +105,59 @@ describe Mongoid::History::Trackable do
         end
       end
 
+      describe 'embeds_one' do
+        before(:all) do
+          Mail = Class.new do
+            include Mongoid::Document
+            include Mongoid::History::Trackable
+            store_in collection: :mails
+            field :provider
+            embeds_one :mail_subject, inverse_class_name: 'MailSubject'
+          end
+
+          MailSubject = Class.new do
+            include Mongoid::Document
+            field :content
+            embedded_in :mail
+          end
+        end
+
+        before(:each) do
+          Mail.instance_variable_set(:@history_trackable_options, nil)
+          Mail.track_history(on: :mail_subject)
+        end
+
+        let(:mail) { Mail.new(mail_subject: mail_subject) }
+        let(:mail_subject) { nil }
+        subject { mail.send(:modified_attributes_for_create)['mail_subject'] }
+
+        context 'when obj not built' do
+          it { is_expected.to be_nil }
+        end
+
+        context 'when obj does not respond to paranoia_field' do
+          let(:mail_subject) { MailSubject.new(content: 'Content') }
+          it { is_expected.to eq [nil, { '_id' => mail_subject._id, 'content' => 'Content' }] }
+        end
+
+        context 'when obj not soft-deleted' do
+          before(:each) { allow(mail_subject).to receive(:deleted_at) { nil } }
+          let(:mail_subject) { MailSubject.new(content: 'Content') }
+          it { is_expected.to eq [nil, { '_id' => mail_subject._id, 'content' => 'Content' }] }
+        end
+
+        context 'when obj soft-deleted' do
+          before(:each) { allow(mail_subject).to receive(:deleted_at) { Time.now } }
+          let(:mail_subject) { MailSubject.new(content: 'Content') }
+          it { is_expected.to be_nil }
+        end
+
+        after(:all) do
+          Object.send(:remove_const, :MailSubject)
+          Object.send(:remove_const, :Mail)
+        end
+      end
+
       describe 'paranoia' do
         before(:all) do
           ModelParanoia = Class.new do
@@ -226,6 +279,62 @@ describe Mongoid::History::Trackable do
         before(:each) { ModelOne.track_history(on: []) }
         let(:changes) { { 'foo' => ['Foo', 'Foo-new'] } }
         it { is_expected.to eq({}) }
+      end
+
+      describe 'embeds_one' do
+        before(:all) do
+          Email = Class.new do
+            include Mongoid::Document
+            include Mongoid::History::Trackable
+            store_in collection: :emails
+            field :provider
+            embeds_one :email_subject, inverse_class_name: 'EmailSubject'
+          end
+
+          EmailSubject = Class.new do
+            include Mongoid::Document
+            field :content
+            embedded_in :email_subject
+          end
+        end
+
+        before(:each) do
+          Email.instance_variable_set(:@history_trackable_options, nil)
+          Email.track_history(on: :email_subject)
+          allow(Email).to receive(:dynamic_enabled?) { false }
+          allow(email).to receive(:changes) { changes }
+        end
+
+        let(:email) { Email.new }
+        let(:changes) { {} }
+        subject { email.send(:modified_attributes_for_update)['email_subject'] }
+
+        context 'when paranoia_field not present' do
+          let(:changes) { { 'email_subject' => [{ 'content' => 'Content' }, { 'content' => 'Content-new' }] } }
+          it { is_expected.to eq [{ 'content' => 'Content' }, { 'content' => 'Content-new' }] }
+        end
+
+        context 'when older soft-deleted' do
+          let(:changes) { { 'email_subject' => [{ 'content' => 'Content', 'deleted_at' => Time.now }, { 'content' => 'Content-new' }] } }
+          it { is_expected.to eq [{}, { 'content' => 'Content-new' }] }
+        end
+
+        context 'when new soft-deleted' do
+          let(:changes) { { 'email_subject' => [{ 'content' => 'Content' }, { 'content' => 'Content-new', 'deleted_at' => Time.now }] } }
+          it { is_expected.to eq [{ 'content' => 'Content' }, {}] }
+        end
+
+        context 'when not soft-deleted' do
+          let(:changes) do
+            { 'email_subject' => [{ 'content' => 'Content', 'deleted_at' => nil }, { 'content' => 'Content-new', 'deleted_at' => nil }] }
+          end
+          it { is_expected.to eq [{ 'content' => 'Content' }, { 'content' => 'Content-new' }] }
+        end
+
+        after(:all) do
+          Object.send(:remove_const, :EmailSubject)
+          Object.send(:remove_const, :Email)
+        end
       end
     end
 

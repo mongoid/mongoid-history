@@ -181,7 +181,7 @@ describe Mongoid::History::Options do
             end
 
             context 'with reserved field' do
-              let(:options) { { on: %i(_id _type foo) } }
+              let(:options) { { on: %i(_id _type foo deleted_at) } }
               it { expect(subject[:fields]).to eq %w(foo) }
             end
 

@@ -147,7 +147,7 @@ module Mongoid
       end
 
       def reserved_fields
-        @reserved_fields ||= ['_id', '_type', options[:version_field].to_s, "#{options[:modifier_field]}_id"]
+        @reserved_fields ||= ['_id', '_type', options[:version_field].to_s, "#{options[:modifier_field]}_id", options[:paranoia_field].to_s]
       end
     end
   end

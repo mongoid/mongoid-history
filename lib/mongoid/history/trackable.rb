@@ -206,8 +206,8 @@ module Mongoid
             if self.class.tracked_embeds_one?(k)
               permitted_attrs = self.class.tracked_embeds_one_attributes(k)
               attrs[k] = []
-              attrs[k][0] = v[0].slice(*permitted_attrs)
-              attrs[k][1] = v[1].slice(*permitted_attrs)
+              attrs[k][0] = v[0][paranoia_field].present? ? {} : v[0].slice(*permitted_attrs)
+              attrs[k][1] = v[1][paranoia_field].present? ? {} : v[1].slice(*permitted_attrs)
             elsif self.class.tracked_embeds_many?(k)
               permitted_attrs = self.class.tracked_embeds_many_attributes(k)
               attrs[k] = []
@@ -232,7 +232,8 @@ module Mongoid
             .each do |rel|
               permitted_attrs = self.class.tracked_embeds_one_attributes(rel)
               obj = send(rel)
-              attrs[rel] = [nil, obj.attributes.slice(*permitted_attrs)] if obj
+              next if !obj || (obj.respond_to?(paranoia_field) && obj.public_send(paranoia_field).present?)
+              attrs[rel] = [nil, obj.attributes.slice(*permitted_attrs)]
             end
 
           self.class.tracked_embeds_many
