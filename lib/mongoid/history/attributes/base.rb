@@ -18,12 +18,12 @@ module Mongoid
           @aliased_fields ||= trackable_class.aliased_fields
         end
 
-        def changes
-          trackable.send(changes_method)
-        end
-
         def changes_method
           trackable_class.history_trackable_options[:changes_method]
+        end
+
+        def changes
+          trackable.send(changes_method)
         end
       end
     end
