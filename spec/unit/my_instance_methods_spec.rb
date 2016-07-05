@@ -17,6 +17,7 @@ describe Mongoid::History::Trackable do
 
       EmbOne = Class.new do
         include Mongoid::Document
+        include Mongoid::History::Trackable
         field :f_em_foo
         field :fmb, as: :f_em_bar
         embedded_in :model_one
@@ -24,12 +25,14 @@ describe Mongoid::History::Trackable do
 
       EmbTwo = Class.new do
         include Mongoid::Document
+        include Mongoid::History::Trackable
         field :baz
         embedded_in :model_one
       end
 
       EmbThree = Class.new do
         include Mongoid::Document
+        include Mongoid::History::Trackable
         field :f_em_foo
         field :fmb, as: :f_em_bar
         embedded_in :model_one
@@ -37,6 +40,7 @@ describe Mongoid::History::Trackable do
 
       EmbFour = Class.new do
         include Mongoid::Document
+        include Mongoid::History::Trackable
         field :baz
         embedded_in :model_one
       end
@@ -293,6 +297,7 @@ describe Mongoid::History::Trackable do
 
           EmailSubject = Class.new do
             include Mongoid::Document
+            include Mongoid::History::Trackable
             field :content
             embedded_in :email_subject
           end
@@ -334,6 +339,92 @@ describe Mongoid::History::Trackable do
         after(:all) do
           Object.send(:remove_const, :EmailSubject)
           Object.send(:remove_const, :Email)
+        end
+      end
+
+      describe 'paranoia_field' do
+        context 'when embeds_one has alias' do
+          before(:all) do
+            # Here i need class name constant in trackable.rb. So, not using `let` to define classes
+            ModelTwo = Class.new do
+              include Mongoid::Document
+              include Mongoid::History::Trackable
+              store_in collection: :model_twos
+              embeds_one :emb_two_one, inverse_class_name: 'EmbTwoOne'
+            end
+
+            EmbTwoOne = Class.new do
+              include Mongoid::Document
+              include Mongoid::History::Trackable
+              field :foo
+              field :cncl, as: :cancelled_at
+              embedded_in :model_two
+            end
+          end
+
+          before(:each) do
+            ModelTwo.instance_variable_set(:@history_trackable_options, nil)
+            ModelTwo.instance_variable_set(:@trackable_settings, nil)
+            EmbTwoOne.instance_variable_set(:@trackable_settings, nil)
+
+            ModelTwo.track_history on: :emb_two_one
+            EmbTwoOne.history_settings paranoia_field: :cancelled_at
+
+            allow(ModelTwo).to receive(:dynamic_enabled?) { false }
+            allow(model_two_obj).to receive(:changes) { changes }
+          end
+
+          let(:model_two_obj) { ModelTwo.new }
+          let(:changes) { { 'emb_two_one' => [{ 'foo' => 'Foo', 'cncl' => Time.now }, { 'foo' => 'Foo-new' }] } }
+          subject { model_two_obj.send(:modified_attributes_for_update)['emb_two_one'] }
+          it { is_expected.to eq [{}, { 'foo' => 'Foo-new' }] }
+
+          after(:all) do
+            Object.send(:remove_const, :ModelTwo)
+            Object.send(:remove_const, :EmbTwoOne)
+          end
+        end
+
+        context 'when embeds_many has alias' do
+          before(:all) do
+            # Here i need class name constant in trackable.rb. So, not using `let` to define classes
+            ModelTwo = Class.new do
+              include Mongoid::Document
+              include Mongoid::History::Trackable
+              store_in collection: :model_twos
+              embeds_many :emb_two_ones, inverse_class_name: 'EmbTwoOne'
+            end
+
+            EmbTwoOne = Class.new do
+              include Mongoid::Document
+              include Mongoid::History::Trackable
+              field :foo
+              field :cncl, as: :cancelled_at
+              embedded_in :model_two
+            end
+          end
+
+          before(:each) do
+            ModelTwo.instance_variable_set(:@history_trackable_options, nil)
+            ModelTwo.instance_variable_set(:@trackable_settings, nil)
+            EmbTwoOne.instance_variable_set(:@trackable_settings, nil)
+
+            ModelTwo.track_history on: :emb_two_ones
+            EmbTwoOne.history_settings paranoia_field: :cancelled_at
+
+            allow(ModelTwo).to receive(:dynamic_enabled?) { false }
+            allow(model_two_obj).to receive(:changes) { changes }
+          end
+
+          let(:model_two_obj) { ModelTwo.new }
+          let(:changes) { { 'emb_two_ones' => [[{ 'foo' => 'Foo', 'cncl' => Time.now }], [{ 'foo' => 'Foo-new' }]] } }
+          subject { model_two_obj.send(:modified_attributes_for_update)['emb_two_ones'] }
+          it { is_expected.to eq [[], [{ 'foo' => 'Foo-new' }]] }
+
+          after(:all) do
+            Object.send(:remove_const, :ModelTwo)
+            Object.send(:remove_const, :EmbTwoOne)
+          end
         end
       end
     end

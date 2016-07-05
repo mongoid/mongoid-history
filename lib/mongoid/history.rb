@@ -1,5 +1,9 @@
 require 'easy_diff'
 require 'mongoid/compatibility'
+require 'mongoid/history/attributes/base'
+require 'mongoid/history/attributes/create'
+require 'mongoid/history/attributes/update'
+require 'mongoid/history/attributes/destroy'
 require 'mongoid/history/options'
 require 'mongoid/history/version'
 require 'mongoid/history/tracker'
@@ -29,6 +33,14 @@ module Mongoid
 
       def store
         defined?(RequestStore) ? RequestStore.store : Thread.current
+      end
+
+      def default_settings
+        @default_settings ||= { paranoia_field: 'deleted_at' }
+      end
+
+      def trackable_class_settings(trackable_class)
+        trackable_settings[trackable_class.name.to_sym] || default_settings
       end
     end
   end

@@ -27,7 +27,6 @@ module Mongoid
             tracker_class_name: nil,
             modifier_field: :modifier,
             version_field: :version,
-            paranoia_field: :deleted_at,
             changes_method: :changes,
             scope: scope,
             track_create: false,
@@ -147,7 +146,7 @@ module Mongoid
       end
 
       def reserved_fields
-        @reserved_fields ||= ['_id', '_type', options[:version_field].to_s, "#{options[:modifier_field]}_id", options[:paranoia_field].to_s]
+        @reserved_fields ||= ['_id', '_type', options[:version_field].to_s, "#{options[:modifier_field]}_id"]
       end
     end
   end

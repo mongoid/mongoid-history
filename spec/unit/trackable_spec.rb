@@ -39,7 +39,6 @@ describe Mongoid::History::Trackable do
         tracker_class_name: nil,
         modifier_field: :modifier,
         version_field: :version,
-        paranoia_field: :deleted_at,
         changes_method: :changes,
         scope: :my_model,
         track_create: false,
@@ -440,6 +439,7 @@ describe Mongoid::History::Trackable do
 
         EmbOne = Class.new do
           include Mongoid::Document
+          include Mongoid::History::Trackable
           field :em_foo
           embedded_in :model_one
         end
@@ -448,6 +448,8 @@ describe Mongoid::History::Trackable do
       before(:each) do
         model_one.save!
         ModelOne.instance_variable_set(:@history_trackable_options, nil)
+        ModelOne.instance_variable_set(:@trackable_settings, nil)
+        EmbOne.instance_variable_set(:@trackable_settings, nil)
       end
 
       let(:model_one) { ModelOne.new(foo: 'Foo') }
@@ -475,7 +477,10 @@ describe Mongoid::History::Trackable do
         end
 
         context 'when custom field for paranoia' do
-          before(:each) { ModelOne.track_history(on: :emb_ones, paranoia_field: :my_paranoia_field) }
+          before(:each) do
+            ModelOne.track_history on: :emb_ones
+            EmbOne.history_settings paranoia_field: :my_paranoia_field
+          end
           let(:changes) do
             { 'emb_ones' => [[{ 'em_foo' => 'Foo', 'my_paranoia_field' => Time.now },
                               { 'em_foo' => 'Foo-2' }],
@@ -512,6 +517,34 @@ describe Mongoid::History::Trackable do
 
     after :all do
       Object.send(:remove_const, :MyTrackerClass)
+    end
+  end
+
+  describe '#trackable_settings' do
+    before(:each) { Mongoid::History.trackable_settings = {} }
+    let(:model_one) do
+      Class.new do
+        include Mongoid::Document
+        include Mongoid::History::Trackable
+        store_in collection: :model_ones
+
+        def self.name
+          'ModelOne'
+        end
+      end
+    end
+
+    context 'when settings present for class' do
+      before(:each) { model_one.history_settings paranoia_field: :killed_at }
+      it 'should return class specific settings' do
+        expect(model_one.trackable_settings).to eq(paranoia_field: 'killed_at')
+      end
+    end
+
+    context 'when settings not present for class' do
+      it 'should return default settings' do
+        expect(model_one.trackable_settings).to eq(paranoia_field: 'deleted_at')
+      end
     end
   end
 end
