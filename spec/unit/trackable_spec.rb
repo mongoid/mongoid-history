@@ -289,6 +289,121 @@ describe Mongoid::History::Trackable do
     end
   end
 
+  describe '#history_settings' do
+    before(:each) { Mongoid::History.trackable_settings = nil }
+
+    let(:model_one) do
+      Class.new do
+        include Mongoid::Document
+        include Mongoid::History::Trackable
+        store_in collection: :model_ones
+        embeds_one :emb_one, inverse_class_name: 'EmbOne'
+        embeds_many :emb_twos, inverse_class_name: 'EmbTwo'
+
+        def self.name
+          'ModelOne'
+        end
+      end
+    end
+
+    let(:emb_one) do
+      Class.new do
+        include Mongoid::Document
+        include Mongoid::History::Trackable
+        embedded_in :model_one
+
+        def self.name
+          'EmbOne'
+        end
+      end
+    end
+
+    let(:emb_two) do
+      Class.new do
+        include Mongoid::Document
+        include Mongoid::History::Trackable
+        embedded_in :model_one
+
+        def self.name
+          'EmbTwo'
+        end
+      end
+    end
+
+    let(:default_options) { { paranoia_field: 'deleted_at' } }
+
+    context 'when options not passed' do
+      before(:each) do
+        model_one.history_settings
+        emb_one.history_settings
+        emb_two.history_settings
+      end
+
+      it 'should use default options' do
+        expect(Mongoid::History.trackable_settings[:ModelOne]).to eq(default_options)
+        expect(Mongoid::History.trackable_settings[:EmbOne]).to eq(default_options)
+        expect(Mongoid::History.trackable_settings[:EmbTwo]).to eq(default_options)
+      end
+    end
+
+    context 'when extra invalid options passed' do
+      before(:each) do
+        model_one.history_settings foo: :bar
+        emb_one.history_settings em_foo: :em_bar
+        emb_two.history_settings em_foo: :em_baz
+      end
+
+      it 'should ignore invalid options' do
+        expect(Mongoid::History.trackable_settings[:ModelOne]).to eq(default_options)
+        expect(Mongoid::History.trackable_settings[:EmbOne]).to eq(default_options)
+        expect(Mongoid::History.trackable_settings[:EmbTwo]).to eq(default_options)
+      end
+    end
+
+    context 'when valid options passed' do
+      before(:each) do
+        model_one.history_settings paranoia_field: :disabled_at
+        emb_one.history_settings paranoia_field: :deactivated_at
+        emb_two.history_settings paranoia_field: :omitted_at
+      end
+
+      it 'should override default options' do
+        expect(Mongoid::History.trackable_settings[:ModelOne]).to eq(paranoia_field: 'disabled_at')
+        expect(Mongoid::History.trackable_settings[:EmbOne]).to eq(paranoia_field: 'deactivated_at')
+        expect(Mongoid::History.trackable_settings[:EmbTwo]).to eq(paranoia_field: 'omitted_at')
+      end
+    end
+
+    context 'when string keys' do
+      before(:each) { model_one.history_settings 'paranoia_field' => 'erased_at' }
+
+      it 'should convert option keys to symbols' do
+        expect(Mongoid::History.trackable_settings[:ModelOne]).to eq(paranoia_field: 'erased_at')
+      end
+    end
+
+    context 'when paranoia field has alias' do
+      before(:each) do
+        Mongoid::History.trackable_settings = nil
+        model_two.history_settings paranoia_field: :neglected_at
+      end
+
+      let(:model_two) do
+        Class.new do
+          include Mongoid::Document
+          include Mongoid::History::Trackable
+          field :nglt, as: :neglected_at
+
+          def self.name
+            'ModelTwo'
+          end
+        end
+      end
+
+      it { expect(Mongoid::History.trackable_settings[:ModelTwo]).to eq(paranoia_field: 'nglt') }
+    end
+  end
+
   describe '#tracker_class' do
     before :all do
       MyTrackerClass = Class.new

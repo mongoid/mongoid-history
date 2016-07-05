@@ -30,6 +30,16 @@ module Mongoid
           Mongoid::History.trackable_class_options[options_parser.scope] = options
         end
 
+        def history_settings(options = {})
+          extend SettingsSingletonMethods
+
+          options = default_history_settings.merge(options.symbolize_keys)
+          options = options.slice(*default_history_settings.keys)
+          options[:paranoia_field] = aliased_fields[options[:paranoia_field].to_s] || options[:paranoia_field].to_s
+          Mongoid::History.trackable_settings ||= {}
+          Mongoid::History.trackable_settings[name.to_sym] = options
+        end
+
         def track_history?
           Mongoid::History.enabled? && Mongoid::History.store[track_history_flag] != false
         end
@@ -525,16 +535,31 @@ module Mongoid
           history_trackable_options[:relations][:embeds_many][database_field_name(relation)]
         end
 
+        def trackable_scope
+          collection_name.to_s.singularize.to_sym
+        end
+
         def history_trackable_options
-          @history_trackable_options ||= Mongoid::History.trackable_class_options[collection_name.to_s.singularize.to_sym]
+          @history_trackable_options ||= Mongoid::History.trackable_class_options[trackable_scope]
         end
 
         def clear_trackable_memoization
           @reserved_tracked_fields = nil
           @history_trackable_options = nil
+          @trackable_settings = nil
           @tracked_fields = nil
           @tracked_embeds_one = nil
           @tracked_embeds_many = nil
+        end
+      end
+
+      module SettingsSingletonMethods
+        def default_history_settings
+          @default_history_settings ||= { paranoia_field: :deleted_at }
+        end
+
+        def trackable_settings
+          @trackable_settings ||= Mongoid::History.trackable_settings[name.to_sym]
         end
       end
     end
