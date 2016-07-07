@@ -63,6 +63,9 @@ Style/Documentation:
     - 'spec/unit/options_spec.rb'
     - 'spec/unit/trackable_spec.rb'
     - 'spec/unit/tracker_spec.rb'
+    - 'spec/unit/attributes/create_spec.rb'
+    - 'spec/unit/attributes/destroy_spec.rb'
+    - 'spec/unit/attributes/update_spec.rb'
 
 # Offense count: 6
 Style/EachWithObject:

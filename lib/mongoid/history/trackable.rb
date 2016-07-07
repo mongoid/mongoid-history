@@ -61,10 +61,6 @@ module Mongoid
           klass = history_trackable_options[:tracker_class_name] || Mongoid::History.tracker_class_name
           klass.is_a?(Class) ? klass : klass.to_s.camelize.constantize
         end
-
-        def trackable_settings
-          @trackable_settings ||= Mongoid::History.trackable_settings[name.to_sym] || Mongoid::History.default_settings
-        end
       end
 
       module MyInstanceMethods
