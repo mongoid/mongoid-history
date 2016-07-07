@@ -256,21 +256,28 @@ Book.tracked_embeds_many          #=> ["pages"]
 Book.tracked_embeds_many?(:pages) #=> true
 ```
 
-**Ignore soft-deleted embedded objects from being tracked**
+**Skip soft-deleted embedded objects with nested tracking**
 
-Default paranoia field is `deleted_at`. You can use custom field here as below:
+Default paranoia field is `deleted_at`. You can use custom field for each class as below:
 
 ```ruby
 class Book
   include Mongoid::Document
-  ...
-  embeds_one :cover
+  include Mongoid::History::Trackable
   embeds_many :pages
-  track_history :on => [:cover, :pages], :paranoia_field => :deactivated_at
+  track_history on: :pages
+end
+
+class Page
+  include Mongoid::Document
+  include Mongoid::History::Trackable
+  ...
+  embedded_in :book
+  history_settings paranoia_field: :removed_at
 end
 ```
 
-Above will track `cover` and `pages` documents only if their `deactivated_at` is set to a blank value.
+This will skip the `page` documents with `removed_at` set to a non-blank value from nested tracking
 
 **Displaying history trackers as an audit trail**
 
