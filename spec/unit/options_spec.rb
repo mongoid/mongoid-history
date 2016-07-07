@@ -179,7 +179,7 @@ describe Mongoid::History::Options do
             end
 
             context 'with reserved field' do
-              let(:options) { { on: %i(_id _type foo) } }
+              let(:options) { { on: %i(_id _type foo deleted_at) } }
               it { expect(subject[:fields]).to eq %w(foo) }
             end
 
@@ -243,6 +243,11 @@ describe Mongoid::History::Options do
         describe ':version_field' do
           let(:options) { { version_field: :my_version_field } }
           it { expect(subject[:version_field]).to eq :my_version_field }
+        end
+
+        describe ':paranoia_field' do
+          let(:options) { { paranoia_field: :my_paranoia_field } }
+          it { expect(subject[:paranoia_field]).to eq :my_paranoia_field }
         end
 
         describe ':changes_method' do

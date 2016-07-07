@@ -34,8 +34,6 @@ describe Mongoid::History::Trackable do
       MyTrackableModel.track_history(on: [:foo, :my_embed_one_model, :my_embed_many_models, :my_dynamic_field])
     end
 
-    let(:bson_class) { defined?(BSON::ObjectId) ? BSON::ObjectId : Moped::BSON::ObjectId }
-
     describe '#tracked?' do
       before { allow(MyTrackableModel).to receive(:dynamic_enabled?) { false } }
       it { expect(MyTrackableModel.tracked?(:foo)).to be true }
@@ -199,10 +197,24 @@ describe Mongoid::History::Trackable do
       end
     end
 
+    describe '#trackable_scope' do
+      let(:model_one) do
+        Class.new do
+          include Mongoid::Document
+          include Mongoid::History::Trackable
+          store_in collection: :model_ones
+          track_history
+        end
+      end
+
+      it { expect(model_one.trackable_scope).to eq(:model_one) }
+    end
+
     describe '#clear_trackable_memoization' do
       before do
         MyTrackableModel.instance_variable_set(:@reserved_tracked_fields, %w(_id _type))
         MyTrackableModel.instance_variable_set(:@history_trackable_options, on: %w(fields))
+        MyTrackableModel.instance_variable_set(:@trackable_settings, paranoia_field: 'deleted_at')
         MyTrackableModel.instance_variable_set(:@tracked_fields, %w(foo))
         MyTrackableModel.instance_variable_set(:@tracked_embeds_one, %w(my_embed_one_model))
         MyTrackableModel.instance_variable_set(:@tracked_embeds_many, %w(my_embed_many_models))
@@ -212,6 +224,7 @@ describe Mongoid::History::Trackable do
       it 'should clear all the trackable memoization' do
         expect(MyTrackableModel.instance_variable_get(:@reserved_tracked_fields)).to be_nil
         expect(MyTrackableModel.instance_variable_get(:@history_trackable_options)).to be_nil
+        expect(MyTrackableModel.instance_variable_get(:@trackable_settings)).to be_nil
         expect(MyTrackableModel.instance_variable_get(:@tracked_fields)).to be_nil
         expect(MyTrackableModel.instance_variable_get(:@tracked_embeds_one)).to be_nil
         expect(MyTrackableModel.instance_variable_get(:@tracked_embeds_many)).to be_nil

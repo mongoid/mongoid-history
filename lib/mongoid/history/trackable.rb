@@ -30,6 +30,14 @@ module Mongoid
           Mongoid::History.trackable_class_options[options_parser.scope] = options
         end
 
+        def history_settings(options = {})
+          options = Mongoid::History.default_settings.merge(options.symbolize_keys)
+          options = options.slice(*Mongoid::History.default_settings.keys)
+          options[:paranoia_field] = aliased_fields[options[:paranoia_field].to_s] || options[:paranoia_field].to_s
+          Mongoid::History.trackable_settings ||= {}
+          Mongoid::History.trackable_settings[name.to_sym] = options
+        end
+
         def track_history?
           Mongoid::History.enabled? && Mongoid::History.store[track_history_flag] != false
         end
@@ -197,75 +205,15 @@ module Mongoid
         end
 
         def modified_attributes_for_update
-          return @modified_attributes_for_update if @modified_attributes_for_update
-          attrs = {}
-          changes = send(history_trackable_options[:changes_method])
-
-          changes.each do |k, v|
-            if self.class.tracked_embeds_one?(k)
-              permitted_attrs = self.class.tracked_embeds_one_attributes(k)
-              attrs[k] = []
-              attrs[k][0] = v[0].slice(*permitted_attrs)
-              attrs[k][1] = v[1].slice(*permitted_attrs)
-            elsif self.class.tracked_embeds_many?(k)
-              permitted_attrs = self.class.tracked_embeds_many_attributes(k)
-              attrs[k] = []
-              attrs[k][0] = v[0].map { |v_attrs| v_attrs.slice(*permitted_attrs) }
-              attrs[k][1] = v[1].map { |v_attrs| v_attrs.slice(*permitted_attrs) }
-            elsif self.class.tracked?(k, :update)
-              attrs[k] = v
-            end
-          end
-
-          @modified_attributes_for_update = attrs
+          @modified_attributes_for_update ||= Mongoid::History::Attributes::Update.new(self).attributes
         end
 
         def modified_attributes_for_create
-          return @modified_attributes_for_create if @modified_attributes_for_create
-          aliased_fields = self.class.aliased_fields
-          attrs = {}
-          attributes.each { |k, v| attrs[k] = [nil, v] if self.class.tracked_field?(k, :create) }
-
-          self.class.tracked_embeds_one
-            .map { |rel| aliased_fields.key(rel) || rel }
-            .each do |rel|
-              permitted_attrs = self.class.tracked_embeds_one_attributes(rel)
-              obj = send(rel)
-              attrs[rel] = [nil, obj.attributes.slice(*permitted_attrs)] if obj
-            end
-
-          self.class.tracked_embeds_many
-            .map { |rel| aliased_fields.key(rel) || rel }
-            .each do |rel|
-              permitted_attrs = self.class.tracked_embeds_many_attributes(rel)
-              attrs[rel] = [nil, send(rel).map { |obj| obj.attributes.slice(*permitted_attrs) }]
-            end
-
-          @modified_attributes_for_create = attrs
+          @modified_attributes_for_create ||= Mongoid::History::Attributes::Create.new(self).attributes
         end
 
         def modified_attributes_for_destroy
-          return @modified_attributes_for_destroy if @modified_attributes_for_destroy
-          aliased_fields = self.class.aliased_fields
-          attrs = {}
-          attributes.each { |k, v| attrs[k] = [v, nil] if self.class.tracked_field?(k, :destroy) }
-
-          self.class.tracked_embeds_one
-            .map { |rel| aliased_fields.key(rel) || rel }
-            .each do |rel|
-              permitted_attrs = self.class.tracked_embeds_one_attributes(rel)
-              obj = send(rel)
-              attrs[rel] = [obj.attributes.slice(*permitted_attrs), nil] if obj
-            end
-
-          self.class.tracked_embeds_many
-            .map { |rel| aliased_fields.key(rel) || rel }
-            .each do |rel|
-              permitted_attrs = self.class.tracked_embeds_many_attributes(rel)
-              attrs[rel] = [send(rel).map { |obj| obj.attributes.slice(*permitted_attrs) }, nil]
-            end
-
-          @modified_attributes_for_destroy = attrs
+          @modified_attributes_for_destroy ||= Mongoid::History::Attributes::Destroy.new(self).attributes
         end
 
         def history_tracker_attributes(action)
@@ -520,13 +468,18 @@ module Mongoid
           history_trackable_options[:relations][:embeds_many][database_field_name(relation)]
         end
 
+        def trackable_scope
+          collection_name.to_s.singularize.to_sym
+        end
+
         def history_trackable_options
-          @history_trackable_options ||= Mongoid::History.trackable_class_options[collection_name.to_s.singularize.to_sym]
+          @history_trackable_options ||= Mongoid::History.trackable_class_options[trackable_scope]
         end
 
         def clear_trackable_memoization
           @reserved_tracked_fields = nil
           @history_trackable_options = nil
+          @trackable_settings = nil
           @tracked_fields = nil
           @tracked_embeds_one = nil
           @tracked_embeds_many = nil

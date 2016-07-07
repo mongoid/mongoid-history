@@ -327,6 +327,10 @@ describe Mongoid::History do
         end
       end
       context 'with empty values' do
+        before do
+          allow(subject).to receive(:trackable_parent_class) { Tracker }
+          allow(Tracker).to receive(:tracked_embeds_many?) { false }
+        end
         subject { Tracker.new }
         it 'should skip empty values' do
           allow(subject).to receive(:tracked_changes) { { name: { to: '', from: [] }, city: { to: 'Toronto', from: '' } } }

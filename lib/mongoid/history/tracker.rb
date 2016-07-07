@@ -104,28 +104,31 @@ module Mongoid
       #     remove: { field_3: old_val },
       #     array: { field_4: {add: ['foo', 'bar'], remove: ['baz']} } }
       def tracked_edits
-        @tracked_edits ||= tracked_changes.inject(HashWithIndifferentAccess.new) do |h, (k, v)|
-          unless v[:from].blank? && v[:to].blank?
-            if v[:from].blank?
-              h[:add] ||= {}
-              h[:add][k] = v[:to]
-            elsif v[:to].blank?
-              h[:remove] ||= {}
-              h[:remove][k] = v[:from]
-            else
-              if v[:from].is_a?(Array) && v[:to].is_a?(Array)
-                h[:array] ||= {}
-                old_values = v[:from] - v[:to]
-                new_values = v[:to] - v[:from]
-                h[:array][k] = { add: new_values, remove: old_values }.delete_if { |_, vv| vv.blank? }
-              else
-                h[:modify] ||= {}
-                h[:modify][k] = v
-              end
-            end
+        return @tracked_edits if @tracked_edits
+        @tracked_edits = HashWithIndifferentAccess.new
+
+        tracked_changes.each do |k, v|
+          next if v[:from].blank? && v[:to].blank?
+
+          if trackable_parent_class.tracked_embeds_many?(k)
+            prepare_tracked_edits_for_embeds_many(k, v)
+          elsif v[:from].blank?
+            @tracked_edits[:add] ||= {}
+            @tracked_edits[:add][k] = v[:to]
+          elsif v[:to].blank?
+            @tracked_edits[:remove] ||= {}
+            @tracked_edits[:remove][k] = v[:from]
+          elsif v[:from].is_a?(Array) && v[:to].is_a?(Array)
+            @tracked_edits[:array] ||= {}
+            old_values = v[:from] - v[:to]
+            new_values = v[:to] - v[:from]
+            @tracked_edits[:array][k] = { add: new_values, remove: old_values }.delete_if { |_, vv| vv.blank? }
+          else
+            @tracked_edits[:modify] ||= {}
+            @tracked_edits[:modify][k] = v
           end
-          h
         end
+        @tracked_edits
       end
 
       # Similar to #tracked_changes, but contains only a single value for each
@@ -216,6 +219,19 @@ module Mongoid
           hash["#{name}_translations"] = hash.delete(name) if hash[name].present?
         end if klass.respond_to?(:localized_fields)
         hash
+      end
+
+      def prepare_tracked_edits_for_embeds_many(key, value)
+        @tracked_edits[:embeds_many] ||= {}
+        value[:from] ||= []
+        value[:to] ||= []
+        modify_ids = value[:from].map { |vv| vv['_id'] }.compact & value[:to].map { |vv| vv['_id'] }.compact
+        modify_values = modify_ids.map { |id| { from: value[:from].detect { |vv| vv['_id'] == id }, to: value[:to].detect { |vv| vv['_id'] == id } } }
+        modify_values.delete_if { |vv| vv[:from] == vv[:to] }
+        ignore_values = modify_values.map { |vv| [vv[:from], vv[:to]] }.flatten
+        old_values = value[:from] - value[:to] - ignore_values
+        new_values = value[:to] - value[:from] - ignore_values
+        @tracked_edits[:embeds_many][key] = { add: new_values, remove: old_values, modify: modify_values }.delete_if { |_, vv| vv.blank? }
       end
     end
   end

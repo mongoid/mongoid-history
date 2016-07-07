@@ -11,6 +11,9 @@ Lint/HandleExceptions:
   Exclude:
     - 'spec/unit/trackable_spec.rb'
 
+Metrics/ClassLength:
+  Max: 103
+
 # Offense count: 12
 Metrics/AbcSize:
   Max: 60
@@ -32,7 +35,7 @@ Metrics/MethodLength:
 # Offense count: 2
 # Configuration parameters: CountComments.
 Metrics/ModuleLength:
-  Max: 214
+  Max: 223
 
 # Offense count: 4
 Metrics/PerceivedComplexity:
@@ -46,6 +49,10 @@ Style/Documentation:
     - 'lib/mongoid/history/trackable.rb'
     - 'lib/mongoid/history/tracker.rb'
     - 'lib/mongoid/history/version.rb'
+    - 'lib/mongoid/history/attributes/base.rb'
+    - 'lib/mongoid/history/attributes/create.rb'
+    - 'lib/mongoid/history/attributes/destroy.rb'
+    - 'lib/mongoid/history/attributes/update.rb'
     - 'spec/integration/embedded_in_polymorphic_spec.rb'
     - 'spec/integration/integration_spec.rb'
     - 'spec/integration/multi_relation_spec.rb'
@@ -56,6 +63,9 @@ Style/Documentation:
     - 'spec/unit/options_spec.rb'
     - 'spec/unit/trackable_spec.rb'
     - 'spec/unit/tracker_spec.rb'
+    - 'spec/unit/attributes/create_spec.rb'
+    - 'spec/unit/attributes/destroy_spec.rb'
+    - 'spec/unit/attributes/update_spec.rb'
 
 # Offense count: 6
 Style/EachWithObject:
