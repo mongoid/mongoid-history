@@ -19,6 +19,7 @@ module Mongoid
         private
 
         def insert_embeds_one_changes(relation, value)
+          relation = trackable_class.database_field_name(relation)
           permitted_attrs = trackable_class.tracked_embeds_one_attributes(relation)
           relation_class = trackable_class.embeds_one_class(relation)
           paranoia_field = Mongoid::History.trackable_class_settings(relation_class)[:paranoia_field]
@@ -28,6 +29,7 @@ module Mongoid
         end
 
         def insert_embeds_many_changes(relation, value)
+          relation = trackable_class.database_field_name(relation)
           permitted_attrs = trackable_class.tracked_embeds_many_attributes(relation)
           relation_class = trackable_class.embeds_many_class(relation)
           paranoia_field = Mongoid::History.trackable_class_settings(relation_class)[:paranoia_field]
