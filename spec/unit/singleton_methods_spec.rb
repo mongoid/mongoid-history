@@ -44,6 +44,120 @@ describe Mongoid::History::Trackable do
       it { expect(MyTrackableModel.tracked?(:my_dynamic_field)).to be true }
     end
 
+    describe '#dynamic_field?' do
+      context 'when dynamic enabled' do
+        context 'with embeds one relation' do
+          let(:my_model) do
+            Class.new do
+              include Mongoid::Document
+              include Mongoid::History::Trackable
+              store_in collection: :my_models
+              embeds_one :emb_one, inverse_class_name: 'EmbOne'
+              track_history
+            end
+          end
+
+          let(:emb_one) do
+            Class.new do
+              include Mongoid::Document
+              embedded_in :my_model
+            end
+          end
+
+          it 'should track dynamic field' do
+            # Using `let` to define class and use that class inside `before` block to stub a method raises following error.
+            # RuntimeError:
+            #   let declaration `my_model` accessed in a `before(:context)` hook at:
+            #     /Users/vmc/projects/mongoid-history/spec/unit/singleton_methods_spec.rb:51:in `block (6 levels) in <top (required)>'
+            #
+            #   `let` and `subject` declarations are not intended to be called
+            #   in a `before(:context)` hook, as they exist to define state that
+            #   is reset between each example, while `before(:context)` exists to
+            #   define state that is shared across examples in an example group.
+            allow(my_model).to receive(:dynamic_enabled?) { true }
+            expect(my_model.dynamic_field?(:foo)).to be true
+          end
+
+          it 'should not track embeds_one relation' do
+            allow(my_model).to receive(:dynamic_enabled?) { true }
+            expect(my_model.dynamic_field?(:emb_one)).to be false
+          end
+        end
+
+        context 'with embeds one relation and alias' do
+          let(:my_model) do
+            Class.new do
+              include Mongoid::Document
+              include Mongoid::History::Trackable
+              store_in collection: :my_models
+              embeds_one :emb_one, inverse_class_name: 'EmbOne', store_as: :emo
+              track_history
+            end
+          end
+
+          let(:emb_one) do
+            Class.new do
+              include Mongoid::Document
+              embedded_in :my_model
+            end
+          end
+
+          it 'should not track embeds_one relation' do
+            allow(my_model).to receive(:dynamic_enabled?) { true }
+            expect(my_model.dynamic_field?(:emo)).to be false
+          end
+        end
+
+        context 'with embeds many relation' do
+          let(:my_model) do
+            Class.new do
+              include Mongoid::Document
+              include Mongoid::History::Trackable
+              store_in collection: :my_models
+              embeds_many :emb_ones, inverse_class_name: 'EmbOne'
+              track_history
+            end
+          end
+
+          let(:emb_one) do
+            Class.new do
+              include Mongoid::Document
+              embedded_in :my_model
+            end
+          end
+
+          it 'should not track embeds_many relation' do
+            allow(my_model).to receive(:dynamic_enabled?) { true }
+            expect(my_model.dynamic_field?(:emb_ones)).to be false
+          end
+        end
+
+        context 'with embeds many relation and alias' do
+          let(:my_model) do
+            Class.new do
+              include Mongoid::Document
+              include Mongoid::History::Trackable
+              store_in collection: :my_models
+              embeds_many :emb_ones, inverse_class_name: 'EmbOne', store_as: :emos
+              track_history
+            end
+          end
+
+          let(:emb_one) do
+            Class.new do
+              include Mongoid::Document
+              embedded_in :my_model
+            end
+          end
+
+          it 'should not track embeds_many relation' do
+            allow(my_model).to receive(:dynamic_enabled?) { true }
+            expect(my_model.dynamic_field?(:emos)).to be false
+          end
+        end
+      end
+    end
+
     describe '#tracked_fields' do
       it 'should include fields and dynamic fields' do
         expect(MyTrackableModel.tracked_fields).to eq %w(foo my_dynamic_field)
