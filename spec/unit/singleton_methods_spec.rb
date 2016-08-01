@@ -45,6 +45,13 @@ describe Mongoid::History::Trackable do
     end
 
     describe '#dynamic_field?' do
+      let(:emb_one) do
+        Class.new do
+          include Mongoid::Document
+          embedded_in :my_model
+        end
+      end
+
       context 'when dynamic enabled' do
         context 'with embeds one relation' do
           let(:my_model) do
@@ -54,13 +61,6 @@ describe Mongoid::History::Trackable do
               store_in collection: :my_models
               embeds_one :emb_one, inverse_class_name: 'EmbOne'
               track_history
-            end
-          end
-
-          let(:emb_one) do
-            Class.new do
-              include Mongoid::Document
-              embedded_in :my_model
             end
           end
 
@@ -95,13 +95,6 @@ describe Mongoid::History::Trackable do
             end
           end
 
-          let(:emb_one) do
-            Class.new do
-              include Mongoid::Document
-              embedded_in :my_model
-            end
-          end
-
           it 'should not track embeds_one relation' do
             allow(my_model).to receive(:dynamic_enabled?) { true }
             expect(my_model.dynamic_field?(:emo)).to be false
@@ -119,13 +112,6 @@ describe Mongoid::History::Trackable do
             end
           end
 
-          let(:emb_one) do
-            Class.new do
-              include Mongoid::Document
-              embedded_in :my_model
-            end
-          end
-
           it 'should not track embeds_many relation' do
             allow(my_model).to receive(:dynamic_enabled?) { true }
             expect(my_model.dynamic_field?(:emb_ones)).to be false
@@ -140,13 +126,6 @@ describe Mongoid::History::Trackable do
               store_in collection: :my_models
               embeds_many :emb_ones, inverse_class_name: 'EmbOne', store_as: :emos
               track_history
-            end
-          end
-
-          let(:emb_one) do
-            Class.new do
-              include Mongoid::Document
-              embedded_in :my_model
             end
           end
 
