@@ -20,5 +20,6 @@ RSpec.configure do |config|
   config.before :all do
     Mongoid.logger.level = Logger::INFO
     Mongo::Logger.logger.level = Logger::INFO if Mongoid::Compatibility::Version.mongoid5?
+    Mongoid.belongs_to_required_by_default = false if Mongoid::Compatibility::Version.mongoid6?
   end
 end
