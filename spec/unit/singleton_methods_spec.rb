@@ -45,8 +45,8 @@ describe Mongoid::History::Trackable do
     end
 
     describe '#dynamic_field?' do
-      let(:emb_one) do
-        Class.new do
+      before(:all) do
+        class EmbOne
           include Mongoid::Document
           embedded_in :my_model
         end
@@ -59,7 +59,7 @@ describe Mongoid::History::Trackable do
               include Mongoid::Document
               include Mongoid::History::Trackable
               store_in collection: :my_models
-              embeds_one :emb_one, inverse_class_name: 'EmbOne'
+              embeds_one :emb_one
               track_history
             end
           end
@@ -134,6 +134,10 @@ describe Mongoid::History::Trackable do
             expect(my_model.dynamic_field?(:emos)).to be false
           end
         end
+      end
+
+      after(:all) do
+        Object.send(:remove_const, :EmbOne)
       end
     end
 
