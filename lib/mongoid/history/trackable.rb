@@ -382,7 +382,9 @@ module Mongoid
         #
         # @return [ Boolean ] whether or not the field is dynamic
         def dynamic_field?(field)
-          dynamic_enabled? && !fields.keys.include?(database_field_name(field))
+          dynamic_enabled? &&
+            !fields.keys.include?(database_field_name(field)) &&
+            !embedded_relations.map { |_, v| v.key }.include?(database_field_name(field))
         end
 
         # Retrieves the list of tracked fields for a given action.
