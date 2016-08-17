@@ -2,6 +2,7 @@
 ------------
 
 * Your contribution here.
+* [#166](https://github.com/aq1018/mongoid-history/pull/166): Hash fields should default to an empty Hash - [@johnnyshields](https://github.com/johnnyshields).
 * [#144](https://github.com/aq1018/mongoid-history/pull/158): Can modify history tracker insertion on object creation - [@sivagollapalli](https://github.com/sivagollapalli).
 * [#155](https://github.com/aq1018/mongoid-history/pull/155): Add support to whitelist the attributes for tracked embeds_one and embeds_many relations - [@JagdeepSingh](https://github.com/JagdeepSingh).
 * [#154](https://github.com/aq1018/mongoid-history/pull/154): Prevent soft-deleted embedded documents from tracking - [@JagdeepSingh](https://github.com/JagdeepSingh).

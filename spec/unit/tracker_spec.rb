@@ -13,6 +13,15 @@ describe Mongoid::History::Tracker do
     expect(Mongoid::History.tracker_class_name).to eq(:my_tracker)
   end
 
+  it 'should set fields defaults' do
+    class MyTrackerTwo
+      include Mongoid::History::Tracker
+    end
+    expect(MyTrackerTwo.new.association_chain).to eq([])
+    expect(MyTrackerTwo.new.original).to eq({})
+    expect(MyTrackerTwo.new.modified).to eq({})
+  end
+
   describe '#tracked_edits' do
     before(:all) do
       TrackerOne = Class.new do
