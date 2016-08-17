@@ -61,6 +61,7 @@ Style/Documentation:
     - 'spec/integration/subclasses_spec.rb'
     - 'spec/support/mongoid_history.rb'
     - 'spec/unit/options_spec.rb'
+    - 'spec/unit/singleton_methods_spec.rb'
     - 'spec/unit/trackable_spec.rb'
     - 'spec/unit/tracker_spec.rb'
     - 'spec/unit/attributes/create_spec.rb'
