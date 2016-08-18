@@ -9,8 +9,8 @@ module Mongoid
         attr_writer :trackable
 
         field :association_chain,       type: Array, default: []
-        field :modified,                type: Hash
-        field :original,                type: Hash
+        field :modified,                type: Hash, default: {}
+        field :original,                type: Hash, default: {}
         field :version,                 type: Integer
         field :action,                  type: String
         field :scope,                   type: String
