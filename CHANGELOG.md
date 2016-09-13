@@ -1,21 +1,22 @@
 0.5.1 (Next)
 ------------
 
-* Your contribution here.
+* [#1](https://github.com/mongoid/mongoid-history/pull/1): Added Danger, PR linter - [@dblock](https://github.com/dblock).
 * [#166](https://github.com/aq1018/mongoid-history/pull/166): Hash fields should default to an empty Hash - [@johnnyshields](https://github.com/johnnyshields).
-* [#162](https://github.com/aq1018/mongoid-history/pull/162): Do not consider embedded relations as dynamic fields - [@JagdeepSingh](https://github.com/JagdeepSingh)
+* [#162](https://github.com/aq1018/mongoid-history/pull/162): Do not consider embedded relations as dynamic fields - [@JagdeepSingh](https://github.com/JagdeepSingh).
 * [#144](https://github.com/aq1018/mongoid-history/pull/158): Can modify history tracker insertion on object creation - [@sivagollapalli](https://github.com/sivagollapalli).
 * [#155](https://github.com/aq1018/mongoid-history/pull/155): Add support to whitelist the attributes for tracked embeds_one and embeds_many relations - [@JagdeepSingh](https://github.com/JagdeepSingh).
 * [#154](https://github.com/aq1018/mongoid-history/pull/154): Prevent soft-deleted embedded documents from tracking - [@JagdeepSingh](https://github.com/JagdeepSingh).
 * [#151](https://github.com/aq1018/mongoid-history/pull/151): Added ability to customize tracker class for each trackable; multiple trackers across the app are now possible - [@JagdeepSingh](https://github.com/JagdeepSingh).
 * [#151](https://github.com/aq1018/mongoid-history/pull/151): Added automatic support for `request_store` gem as drop-in replacement for `Thread.current` - [@JagdeepSingh](https://github.com/JagdeepSingh).
 * [#150](https://github.com/aq1018/mongoid-history/pull/150): Added support for keeping embedded objects audit history in parent itself - [@JagdeepSingh](https://github.com/JagdeepSingh).
+* Your contribution here.
 
 0.5.0 (2015/09/18)
 ------------------
 
 * [#143](https://github.com/aq1018/mongoid-history/pull/143): Added support for Mongoid 5 - [@dblock](https://github.com/dblock).
-* [#133](https://github.com/aq1018/mongoid-history/pull/133): Added dynamic attributes tracking (Mongoid::Attributes::Dynamic): [@minisai](https://github.com/minisai).
+* [#133](https://github.com/aq1018/mongoid-history/pull/133): Added dynamic attributes tracking (Mongoid::Attributes::Dynamic) - [@minisai](https://github.com/minisai).
 * [#142](https://github.com/aq1018/mongoid-history/pull/142): Allow non-database fields to be specified in conjunction with a custom changes method - [@kayakyakr](https://github.com/kayakyakr).
 
 0.4.7 (2015/04/06)
@@ -39,13 +40,13 @@
 0.4.3 (2014/07/10)
 ------------------
 
-* [#110](https://github.com/aq1018/mongoid-history/pull/110): Fixed scope reference on history tracks criteria -  [@adbeelitamar](https://github.com/adbeelitamar).
+* [#110](https://github.com/aq1018/mongoid-history/pull/110): Fixed scope reference on history tracks criteria - [@adbeelitamar](https://github.com/adbeelitamar).
 
 0.4.2 (2014/07/01)
 ------------------
 
-* [#106](https://github.com/aq1018/mongoid-history/pull/106): Added support for polymorphic relationship `scope` -  [@adbeelitamar](https://github.com/adbeelitamar).
-* [#106](https://github.com/aq1018/mongoid-history/pull/106): Enabled specifying an array of relationships in `scope` -  [@adbeelitamar](https://github.com/adbeelitamar).
+* [#106](https://github.com/aq1018/mongoid-history/pull/106): Added support for polymorphic relationship `scope` - [@adbeelitamar](https://github.com/adbeelitamar).
+* [#106](https://github.com/aq1018/mongoid-history/pull/106): Enabled specifying an array of relationships in `scope` - [@adbeelitamar](https://github.com/adbeelitamar).
 * [#83](https://github.com/aq1018/mongoid-history/pull/83): Added support for Mongoid 4.x, which removed `attr_accessible` in favor of protected attributes - [@dblock](https://github.com/dblock).
 * [#103](https://github.com/aq1018/mongoid-history/pull/103): Fixed compatibility with models using `default_scope` - [@mrjlynch](https://github.com/mrjlynch).
 
@@ -66,7 +67,7 @@
 
 * Added `Mongoid::History.disable` and `Mongoid::History.enabled?` methods for global tracking disablement - [@johnnyshields](https://github.com/johnnyshields).
 * Added `:changes_method` that optionally overrides which method to call to collect changes - [@joelnordel](https://github.com/joelnordell).
-* [API Change] The `:destroy` action now stores trackers in the format `original=value, modified=nil` (previously it was the reverse): [@johnnyshields](https://github.com/johnnyshields).
+* The `:destroy` action now stores trackers in the format `original=value, modified=nil` (previously it was the reverse) - [@johnnyshields](https://github.com/johnnyshields).
 * Support for polymorphic embedded classes - [@tstepp](https://github.com/tstepp).
 * Support for Mongoid field aliases, e.g. `field :n, as: :name` - [@johnnyshields](https://github.com/johnnyshields).
 * Support for Mongoid embedded aliases, e.g. `embeds_many :comments, store_as: :coms` - [@johnnyshields](https://github.com/johnnyshields).
@@ -115,7 +116,7 @@
 
 * [#23](https://github.com/aq1018/mongoid-history/pull/34): Updated `Trackable::association_hash` to write through parent - [@tcopple](https://github.com/tcopple).
 * Fix: `Trackable::association_hash` nil meta value call - [@tcopple](https://github.com/tcopple).
-* [#27](https://github.com/aq1018/mongoid-history/pull/27): Added support for re-creation of destroyed embedded documents - [@erlingwl](https://github.com/erlingwl)
+* [#27](https://github.com/aq1018/mongoid-history/pull/27): Added support for re-creation of destroyed embedded documents - [@erlingwl](https://github.com/erlingwl).
 
 0.1.7 (2011/12/09)
 ------------------
