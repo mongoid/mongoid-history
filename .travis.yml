@@ -1,4 +1,3 @@
-services: mongodb
 
 sudo: false
 
@@ -6,30 +5,31 @@ language: ruby
 
 cache: bundler
 
-rvm:
-  - 2.3.1
-  - 2.3.0
-  - 2.2
-  - 2.1.1
-  - 2.0.0
-  - 1.9.3
-  - rbx-2
-  - jruby-19mode
-
-matrix:
-  allow_failures:
-    - rvm: 1.9.3
-    - rvm: rbx-2
-    - rvm: jruby-19mode
-    - rvm: 2.0.0
-      env: MONGOID_VERSION=6
-    - rvm: 2.1.1
-      env: MONGOID_VERSION=6
-    - rvm: 2.2
-      env: MONGOID_VERSION=6
+services: mongodb
 
 env:
   - MONGOID_VERSION=3
   - MONGOID_VERSION=4
   - MONGOID_VERSION=5
   - MONGOID_VERSION=6
+  - MONGOID_VERSION=HEAD
+
+rvm:
+  - 2.3.1
+
+before_install:
+  - gem update bundler
+
+before_script:
+  - bundle exec danger
+
+addons:
+  apt:
+    sources:
+      - mongodb-3.2-precise
+    packages:
+      - mongodb-org-server
+
+matrix:
+  allow_failures:
+    - env: MONGOID_VERSION=HEAD
