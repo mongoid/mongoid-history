@@ -2,10 +2,10 @@ mongoid-history
 ===============
 
 [![Gem Version](https://badge.fury.io/rb/mongoid-history.svg)](http://badge.fury.io/rb/mongoid-history)
-[![Build Status](https://secure.travis-ci.org/aq1018/mongoid-history.svg?branch=master)](http://travis-ci.org/aq1018/mongoid-history)
-[![Dependency Status](https://gemnasium.com/aq1018/mongoid-history.svg)](https://gemnasium.com/aq1018/mongoid-history)
-[![Code Climate](https://codeclimate.com/github/aq1018/mongoid-history.svg)](https://codeclimate.com/github/aq1018/mongoid-history)
-[![Coverage Status](https://coveralls.io/repos/aq1018/mongoid-history/badge.svg?branch=coveralls)](https://coveralls.io/r/aq1018/mongoid-history?branch=coveralls)
+[![Build Status](https://secure.travis-ci.org/mongoid/mongoid-history.svg?branch=master)](http://travis-ci.org/mongoid/mongoid-history)
+[![Dependency Status](https://gemnasium.com/mongoid/mongoid-history.svg)](https://gemnasium.com/mongoid/mongoid-history)
+[![Code Climate](https://codeclimate.com/github/mongoid/mongoid-history.svg)](https://codeclimate.com/github/mongoid/mongoid-history)
+[![Coverage Status](https://coveralls.io/repos/mongoid/mongoid-history/badge.svg)](https://coveralls.io/r/mongoid/mongoid-history?branch=coveralls)
 
 Mongoid-history tracks historical changes for any document, including embedded ones. It achieves this by storing all history tracks in a single collection that you define. Embedded documents are referenced by storing an association path, which is an array of `document_name` and `document_id` fields starting from the top most parent document and down to the embedded document that should track history.
 
@@ -443,7 +443,7 @@ class Baz
 end
 ```
 
-For more examples, check out [spec/integration/integration_spec.rb](https://github.com/aq1018/mongoid-history/blob/master/spec/integration/integration_spec.rb).
+For more examples, check out [spec/integration/integration_spec.rb](spec/integration/integration_spec.rb).
 
 
 **Thread Safety**
@@ -464,8 +464,4 @@ Copyright
 
 Copyright (c) 2011-2012 Aaron Qian. MIT License.
 
-See [LICENSE.txt](https://github.com/aq1018/mongoid-history/blob/master/LICENSE.txt) for further details.
-
-
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/aq1018/mongoid-history/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+See [LICENSE.txt](LICENSE.txt) for further details.

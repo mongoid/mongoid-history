@@ -1,6 +1,7 @@
 0.5.1 (Next)
 ------------
 
+* [#2](https://github.com/mongoid/mongoid-history/pull/2): Froked into the [mongoid](https://github.com/mongoid) organization - [@dblock](https://github.com/dblock).
 * [#1](https://github.com/mongoid/mongoid-history/pull/1): Added Danger, PR linter - [@dblock](https://github.com/dblock).
 * [#166](https://github.com/aq1018/mongoid-history/pull/166): Hash fields should default to an empty Hash - [@johnnyshields](https://github.com/johnnyshields).
 * [#162](https://github.com/aq1018/mongoid-history/pull/162): Do not consider embedded relations as dynamic fields - [@JagdeepSingh](https://github.com/JagdeepSingh).
