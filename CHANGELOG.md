@@ -1,5 +1,5 @@
-0.5.1 (Next)
-------------
+0.6.0 (2016/09/13)
+------------------
 
 * [#2](https://github.com/mongoid/mongoid-history/pull/2): Froked into the [mongoid](https://github.com/mongoid) organization - [@dblock](https://github.com/dblock).
 * [#1](https://github.com/mongoid/mongoid-history/pull/1): Added Danger, PR linter - [@dblock](https://github.com/dblock).
@@ -11,7 +11,6 @@
 * [#151](https://github.com/aq1018/mongoid-history/pull/151): Added ability to customize tracker class for each trackable; multiple trackers across the app are now possible - [@JagdeepSingh](https://github.com/JagdeepSingh).
 * [#151](https://github.com/aq1018/mongoid-history/pull/151): Added automatic support for `request_store` gem as drop-in replacement for `Thread.current` - [@JagdeepSingh](https://github.com/JagdeepSingh).
 * [#150](https://github.com/aq1018/mongoid-history/pull/150): Added support for keeping embedded objects audit history in parent itself - [@JagdeepSingh](https://github.com/JagdeepSingh).
-* Your contribution here.
 
 0.5.0 (2015/09/18)
 ------------------
