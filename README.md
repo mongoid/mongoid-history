@@ -462,6 +462,6 @@ You're encouraged to contribute to this library. See [CONTRIBUTING](CONTRIBUTING
 Copyright
 ---------
 
-Copyright (c) 2011-2012 Aaron Qian. MIT License.
+Copyright (c) 2011-2016 Aaron Qian and Contributors.
 
-See [LICENSE.txt](LICENSE.txt) for further details.
+MIT License. See [LICENSE.txt](LICENSE.txt) for further details.
