@@ -71,15 +71,23 @@ describe Mongoid::History::Attributes::Base do
 
     subject { base.send(:format_field, :bar, 'foo') }
 
-    context 'when obfuscated' do
+    context 'when formatted via string' do
       before do
-        model_one.track_history obfuscate: :bar
+        model_one.track_history format: { bar: '*%s*' }
       end
 
-      it { is_expected.to eq '*' * 8 }
+      it { is_expected.to eq '*foo*' }
     end
 
-    context 'when not obfuscated' do
+    context 'when formatted via proc' do
+      before do
+        model_one.track_history format: { bar: ->(v) { v * 2 } }
+      end
+
+      it { is_expected.to eq 'foofoo' }
+    end
+
+    context 'when not formatted' do
       before do
         model_one.track_history
       end
@@ -109,13 +117,24 @@ describe Mongoid::History::Attributes::Base do
       end
     end
 
-    context 'with obfuscated attributes' do
+    context 'with attributes formatted via string' do
       before do
-        model_one.track_history on: { model_two: %i(foo) }, obfuscate: { model_two: %i(foo) }
+        model_one.track_history on: { model_two: %i(foo) }, format: { model_two: { foo: '&%s&' } }
       end
 
       it 'should select obfuscate permitted attributes' do
-        is_expected.to include('foo' => '********')
+        is_expected.to include('foo' => '&bar&')
+        is_expected.to_not include('goo')
+      end
+    end
+
+    context 'with attributes formatted via proc' do
+      before do
+        model_one.track_history on: { model_two: %i(foo) }, format: { model_two: { foo: ->(v) { v.to_s * 2 } } }
+      end
+
+      it 'should select obfuscate permitted attributes' do
+        is_expected.to include('foo' => 'barbar')
         is_expected.to_not include('goo')
       end
     end

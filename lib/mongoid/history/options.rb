@@ -14,7 +14,7 @@ module Mongoid
       def parse(options = {})
         @options = default_options.merge(options)
         prepare_skipped_fields
-        prepare_obfuscated_fields
+        prepare_formatted_fields
         parse_tracked_fields_and_relations
         @options
       end
@@ -33,7 +33,7 @@ module Mongoid
             track_create: false,
             track_update: true,
             track_destroy: false,
-            obfuscate: nil }
+            format: nil }
       end
 
       # Sets the :except attributes and relations in `options` to be an [ Array <String> ]
@@ -45,29 +45,28 @@ module Mongoid
         @options[:except] = options[:except].map { |field| trackable.database_field_name(field) }.compact.uniq
       end
 
-      def prepare_obfuscated_fields
-        # normalize :obfuscate fields to an array of database field strings
-        obfuscate_options = {}
+      def prepare_formatted_fields
+        formats = {}
 
-        Array(options[:obfuscate]).each do |option|
-          field = get_database_field_name(option)
-          field_options = get_field_options(option)
+        if options[:format].class == Hash
+          options[:format].each do |field, format|
+            next if field.nil?
 
-          next if field.nil?
+            field = trackable.database_field_name(field)
 
-          obfuscate_options[field] =
-            if trackable.embeds_many?(field)
+            if format.class == Hash && trackable.embeds_many?(field)
               relation_class = trackable.embeds_many_class(field)
-              Array(field_options).map { |opt| relation_class.database_field_name(opt) }
-            elsif trackable.embeds_one?(field)
+              formats[field] = format.inject({}) { |a, e| a.merge(relation_class.database_field_name(e.first) => e.last) }
+            elsif format.class == Hash && trackable.embeds_one?(field)
               relation_class = trackable.embeds_one_class(field)
-              Array(field_options).map { |opt| relation_class.database_field_name(opt) }
+              formats[field] = format.inject({}) { |a, e| a.merge(relation_class.database_field_name(e.first) => e.last) }
             else
-              true
+              formats[field] = format
             end
+          end
         end
 
-        @options[:obfuscate] = obfuscate_options
+        options[:format] = formats
       end
 
       def parse_tracked_fields_and_relations

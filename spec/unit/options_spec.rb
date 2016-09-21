@@ -70,7 +70,7 @@ describe Mongoid::History::Options do
           track_create: false,
           track_update: true,
           track_destroy: false,
-          obfuscate: nil }
+          format: nil }
       end
       it { expect(service.send(:default_options)).to eq expected_options }
     end
@@ -105,43 +105,23 @@ describe Mongoid::History::Options do
       end
     end
 
-    describe '#prepare_obfuscated_fields' do
-      let(:options) { { obfuscate: value } }
+    describe '#prepare_formatted_fields' do
+      let(:options) { { format: value } }
       subject { service.parse(options) }
 
-      context 'with field' do
+      context 'with non-hash' do
         let(:value) { :foo }
-        it { expect(subject[:obfuscate]).to include 'foo' => true }
+        it { expect(subject[:format]).to eq({}) }
       end
 
-      context 'with array of fields' do
-        let(:value) { %i(foo) }
-        it { expect(subject[:obfuscate]).to include 'foo' => true }
+      context 'with a field format' do
+        let(:value) { { foo: '&&&' } }
+        it { expect(subject[:format]).to include 'foo' => '&&&' }
       end
 
-      context 'with field alias' do
-        let(:value) { %i(foo bar) }
-        it { expect(subject[:obfuscate]).to include 'foo' => true, 'b' => true }
-      end
-
-      context 'with duplicate values' do
-        let(:value) { %i(foo bar b) }
-        it { expect(subject[:obfuscate]).to include 'foo' => true, 'b' => true }
-      end
-
-      context 'with blank values' do
-        let(:value) { %i(foo) | [nil] }
-        it { expect(subject[:obfuscate]).to include 'foo' => true }
-      end
-
-      context 'with nested field' do
-        let(:value) { { emb_one: :f_em_foo } }
-        it { expect(subject[:obfuscate]).to include 'emb_one' => ['f_em_foo'] }
-      end
-
-      context 'with nested array' do
-        let(:value) { { emb_one: [:f_em_foo] } }
-        it { expect(subject[:obfuscate]).to include 'emb_one' => ['f_em_foo'] }
+      context 'with nested format' do
+        let(:value) { { emb_one: { f_em_foo: '***' } } }
+        it { expect(subject[:format]).to include 'emb_one' => { 'f_em_foo' => '***' } }
       end
     end
 
@@ -161,7 +141,7 @@ describe Mongoid::History::Options do
             fields: %w(foo b),
             dynamic: [],
             relations: { embeds_one: {}, embeds_many: {} },
-            obfuscate: {} }
+            format: {} }
         end
         it { expect(service.parse).to eq expected_options }
       end

@@ -308,34 +308,38 @@ end
 
 This will skip the `page` documents with `removed_at` set to a non-blank value from nested tracking
 
-**Obfuscating sensitive fields**
+**Formatting fields**
 
-You may want to have a record that a field changed, but not store the actual value of the field.
+You can opt to use a proc or string interpolation to alter attributes being stored on a history record.
 
 ```ruby
-class Recipe
+class Post
   include Mongoid::Document
   include Mongoid::History::Trackable
 
-  field :secret_ingredient
-  track_history on: :secret_ingredient, obfuscate :secret_ingredient
-end
+  field           :title
+  track_history   on: :title,
+                  format: { title: ->(t){ t[0..3] } }
 ```
 
-This also works for embedded relations.
+This also works for fields on an embedded relations.
 
 ```ruby
-class Restaurant
+class Book
   include Mongoid::Document
   include Mongoid::History::Trackable
-  embeds_many :recipes
-  track_history on: :recipes, obfuscate: { recipes: [:secret_ingredient] }
+
+  embeds_many :pages
+  track_history on: :pages,
+                format: { pages: { number: 'pg. %d' } }
 end
 
-class Recipe
+class Page
   include Mongoid::Document
-  field :secret_ingredient
-  embedded_in :restaurant
+  include Mongoid::History::Trackable
+
+  field :number, type: Integer
+  embedded_in :book
 end
 ```
 

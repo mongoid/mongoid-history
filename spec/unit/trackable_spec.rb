@@ -47,7 +47,7 @@ describe Mongoid::History::Trackable do
         fields: %w(foo),
         relations: { embeds_one: {}, embeds_many: {} },
         dynamic: [],
-        obfuscate: {} }
+        format: {} }
     end
     let(:regular_fields) { ['foo'] }
     let(:reserved_fields) { %w(_id version modifier_id) }
@@ -152,60 +152,35 @@ describe Mongoid::History::Trackable do
       end
     end
 
-    describe '#obfuscated_field?' do
+    describe '#field_format' do
       before :all do
         ModelOne = Class.new do
           include Mongoid::Document
           include Mongoid::History::Trackable
           field :foo
-          field :bar
         end
       end
+
+      let(:format) { '***' }
 
       before do
-        ModelOne.track_history obfuscate: [:foo]
+        ModelOne.track_history format: { foo: format }
       end
 
-      context 'when field is obfuscated' do
-        it 'should return true' do
-          expect(ModelOne.obfuscated_field?(:foo)).to be true
+      context 'when field is formatted' do
+        it 'should return the format' do
+          expect(ModelOne.field_format(:foo)).to be format
         end
       end
 
-      context 'when field is not obfuscated' do
-        it 'should return false' do
-          expect(ModelOne.obfuscated_field?(:bar)).to be false
+      context 'when field is not formatted' do
+        it 'should return nil' do
+          expect(ModelOne.field_format(:bar)).to be_nil
         end
       end
 
       after :all do
         Object.send(:remove_const, :ModelOne)
-      end
-    end
-
-    describe '#obfuscated_embedded_attributes' do
-      before :all do
-        ModelOne = Class.new do
-          include Mongoid::Document
-          include Mongoid::History::Trackable
-          embeds_one :emb_one
-        end
-
-        EmbOne = Class.new do
-          include Mongoid::Document
-          field :f_em_foo
-          embedded_in :model_one
-        end
-      end
-
-      it 'should return the list of attributes' do
-        ModelOne.track_history obfuscate: { emb_one: :f_em_foo }
-        expect(ModelOne.obfuscated_embedded_attributes(:emb_one)).to eq ['f_em_foo']
-      end
-
-      after :all do
-        Object.send(:remove_const, :ModelOne)
-        Object.send(:remove_const, :EmbOne)
       end
     end
 
