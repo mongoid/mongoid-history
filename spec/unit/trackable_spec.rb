@@ -46,7 +46,8 @@ describe Mongoid::History::Trackable do
         track_destroy: false,
         fields: %w(foo),
         relations: { embeds_one: {}, embeds_many: {} },
-        dynamic: [] }
+        dynamic: [],
+        obfuscate: {} }
     end
     let(:regular_fields) { ['foo'] }
     let(:reserved_fields) { %w(_id version modifier_id) }
@@ -148,6 +149,63 @@ describe Mongoid::History::Trackable do
             expect(MyModel.dynamic_field?(:dynamic_field)).to be false
           end
         end
+      end
+    end
+
+    describe '#obfuscated_field?' do
+      before :all do
+        ModelOne = Class.new do
+          include Mongoid::Document
+          include Mongoid::History::Trackable
+          field :foo
+          field :bar
+        end
+      end
+
+      before do
+        ModelOne.track_history obfuscate: [:foo]
+      end
+
+      context 'when field is obfuscated' do
+        it 'should return true' do
+          expect(ModelOne.obfuscated_field?(:foo)).to be true
+        end
+      end
+
+      context 'when field is not obfuscated' do
+        it 'should return false' do
+          expect(ModelOne.obfuscated_field?(:bar)).to be false
+        end
+      end
+
+      after :all do
+        Object.send(:remove_const, :ModelOne)
+      end
+    end
+
+    describe '#obfuscated_embedded_attributes' do
+      before :all do
+        ModelOne = Class.new do
+          include Mongoid::Document
+          include Mongoid::History::Trackable
+          embeds_one :emb_one
+        end
+
+        EmbOne = Class.new do
+          include Mongoid::Document
+          field :f_em_foo
+          embedded_in :model_one
+        end
+      end
+
+      it 'should return the list of attributes' do
+        ModelOne.track_history obfuscate: { emb_one: :f_em_foo }
+        expect(ModelOne.obfuscated_embedded_attributes(:emb_one)).to eq ['f_em_foo']
+      end
+
+      after :all do
+        Object.send(:remove_const, :ModelOne)
+        Object.send(:remove_const, :EmbOne)
       end
     end
 

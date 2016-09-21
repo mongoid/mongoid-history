@@ -13,6 +13,18 @@ describe Mongoid::History::Attributes::Base do
     end
   end
 
+  before :all do
+    class ModelTwo
+      include Mongoid::Document
+      field :foo
+      field :goo
+    end
+  end
+
+  after :all do
+    Object.send(:remove_const, :ModelTwo)
+  end
+
   let(:obj_one) { model_one.new }
   let(:base) { described_class.new(obj_one) }
   subject { base }
@@ -50,5 +62,70 @@ describe Mongoid::History::Attributes::Base do
     end
     subject { base.send(:changes) }
     it { is_expected.to eq('foo' => ['Foo', 'Foo-new']) }
+  end
+
+  describe '#format_field' do
+    before(:each) do
+      model_one.instance_variable_set(:@history_trackable_options, nil)
+    end
+
+    subject { base.send(:format_field, :bar, 'foo') }
+
+    context 'when obfuscated' do
+      before do
+        model_one.track_history obfuscate: :bar
+      end
+
+      it { is_expected.to eq '*' * 8 }
+    end
+
+    context 'when not obfuscated' do
+      before do
+        model_one.track_history
+      end
+
+      it { is_expected.to eq 'foo' }
+    end
+  end
+
+  shared_examples 'formats embedded relation' do |relation_type|
+    let(:model_two) { ModelTwo.new(foo: :bar, goo: :baz) }
+
+    before :each do
+      model_one.instance_variable_set(:@history_trackable_options, nil)
+      model_one.send(relation_type, :model_two)
+    end
+
+    subject { base.send("format_#{relation_type}_relation", :model_two, model_two.attributes) }
+
+    context 'with permitted attributes' do
+      before do
+        model_one.track_history on: { model_two: %i(foo) }
+      end
+
+      it 'should select only permitted attributes' do
+        is_expected.to include('foo' => :bar)
+        is_expected.to_not include('goo')
+      end
+    end
+
+    context 'with obfuscated attributes' do
+      before do
+        model_one.track_history on: { model_two: %i(foo) }, obfuscate: { model_two: %i(foo) }
+      end
+
+      it 'should select obfuscate permitted attributes' do
+        is_expected.to include('foo' => '********')
+        is_expected.to_not include('goo')
+      end
+    end
+  end
+
+  describe '#format_embeds_one_relation' do
+    include_examples 'formats embedded relation', :embeds_one
+  end
+
+  describe '#format_embeds_many_relation' do
+    include_examples 'formats embedded relation', :embeds_many
   end
 end

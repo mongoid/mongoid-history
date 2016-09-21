@@ -69,7 +69,8 @@ describe Mongoid::History::Options do
           scope: :model_one,
           track_create: false,
           track_update: true,
-          track_destroy: false }
+          track_destroy: false,
+          obfuscate: nil }
       end
       it { expect(service.send(:default_options)).to eq expected_options }
     end
@@ -104,6 +105,46 @@ describe Mongoid::History::Options do
       end
     end
 
+    describe '#prepare_obfuscated_fields' do
+      let(:options) { { obfuscate: value } }
+      subject { service.parse(options) }
+
+      context 'with field' do
+        let(:value) { :foo }
+        it { expect(subject[:obfuscate]).to include 'foo' => true }
+      end
+
+      context 'with array of fields' do
+        let(:value) { %i(foo) }
+        it { expect(subject[:obfuscate]).to include 'foo' => true }
+      end
+
+      context 'with field alias' do
+        let(:value) { %i(foo bar) }
+        it { expect(subject[:obfuscate]).to include 'foo' => true, 'b' => true }
+      end
+
+      context 'with duplicate values' do
+        let(:value) { %i(foo bar b) }
+        it { expect(subject[:obfuscate]).to include 'foo' => true, 'b' => true }
+      end
+
+      context 'with blank values' do
+        let(:value) { %i(foo) | [nil] }
+        it { expect(subject[:obfuscate]).to include 'foo' => true }
+      end
+
+      context 'with nested field' do
+        let(:value) { { emb_one: :f_em_foo } }
+        it { expect(subject[:obfuscate]).to include 'emb_one' => ['f_em_foo'] }
+      end
+
+      context 'with nested array' do
+        let(:value) { { emb_one: [:f_em_foo] } }
+        it { expect(subject[:obfuscate]).to include 'emb_one' => ['f_em_foo'] }
+      end
+    end
+
     describe '#parse_tracked_fields_and_relations' do
       context 'when options not passed' do
         let(:expected_options) do
@@ -119,7 +160,8 @@ describe Mongoid::History::Options do
             track_destroy: false,
             fields: %w(foo b),
             dynamic: [],
-            relations: { embeds_one: {}, embeds_many: {} } }
+            relations: { embeds_one: {}, embeds_many: {} },
+            obfuscate: {} }
         end
         it { expect(service.parse).to eq expected_options }
       end
