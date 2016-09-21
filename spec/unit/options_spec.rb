@@ -232,6 +232,16 @@ describe Mongoid::History::Options do
               let(:options) { { on: :my_field } }
               it { expect(subject[:dynamic]).to eq %w(my_field) }
             end
+
+            context 'with relations' do
+              let(:options) { { on: :embedded_relations } }
+              it do
+                expect(subject[:relations]).to eq(embeds_many: { 'emb_threes' => %w(_id f_em_foo fmb),
+                                                                 'emfs'       => %w(_id f_em_baz) },
+                                                  embeds_one: { 'emb_one'    => %w(_id f_em_foo fmb),
+                                                                'emtw'       => %w(_id f_em_baz) })
+              end
+            end
           end
         end
 
