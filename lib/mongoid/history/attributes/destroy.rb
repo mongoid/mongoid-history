@@ -4,7 +4,7 @@ module Mongoid
       class Destroy < ::Mongoid::History::Attributes::Base
         def attributes
           @attributes = {}
-          trackable.attributes.each { |k, v| @attributes[k] = [v, nil] if trackable_class.tracked_field?(k, :destroy) }
+          trackable.attributes.each { |k, v| @attributes[k] = [format_field(k, v), nil] if trackable_class.tracked_field?(k, :destroy) }
           insert_embeds_one_changes
           insert_embeds_many_changes
           @attributes
@@ -16,9 +16,8 @@ module Mongoid
           trackable_class.tracked_embeds_one
             .map { |rel| aliased_fields.key(rel) || rel }
             .each do |rel|
-              permitted_attrs = trackable_class.tracked_embeds_one_attributes(rel)
               obj = trackable.send(rel)
-              @attributes[rel] = [obj.attributes.slice(*permitted_attrs), nil] if obj
+              @attributes[rel] = [format_embeds_one_relation(rel, obj.attributes), nil] if obj
             end
         end
 
@@ -26,8 +25,7 @@ module Mongoid
           trackable_class.tracked_embeds_many
             .map { |rel| aliased_fields.key(rel) || rel }
             .each do |rel|
-              permitted_attrs = trackable_class.tracked_embeds_many_attributes(rel)
-              @attributes[rel] = [trackable.send(rel).map { |obj| obj.attributes.slice(*permitted_attrs) }, nil]
+              @attributes[rel] = [trackable.send(rel).map { |obj| format_embeds_many_relation(rel, obj.attributes) }, nil]
             end
         end
       end

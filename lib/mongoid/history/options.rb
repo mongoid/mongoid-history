@@ -14,6 +14,7 @@ module Mongoid
       def parse(options = {})
         @options = default_options.merge(options)
         prepare_skipped_fields
+        prepare_obfuscated_fields
         parse_tracked_fields_and_relations
         @options
       end
@@ -31,7 +32,8 @@ module Mongoid
             scope: scope,
             track_create: false,
             track_update: true,
-            track_destroy: false }
+            track_destroy: false,
+            obfuscate: nil }
       end
 
       # Sets the :except attributes and relations in `options` to be an [ Array <String> ]
@@ -41,6 +43,31 @@ module Mongoid
         # normalize :except fields to an array of database field strings
         @options[:except] = Array(options[:except])
         @options[:except] = options[:except].map { |field| trackable.database_field_name(field) }.compact.uniq
+      end
+
+      def prepare_obfuscated_fields
+        # normalize :obfuscate fields to an array of database field strings
+        obfuscate_options = {}
+
+        Array(options[:obfuscate]).each do |option|
+          field = get_database_field_name(option)
+          field_options = get_field_options(option)
+
+          next if field.nil?
+
+          obfuscate_options[field] =
+            if trackable.embeds_many?(field)
+              relation_class = trackable.embeds_many_class(field)
+              Array(field_options).map { |opt| relation_class.database_field_name(opt) }
+            elsif trackable.embeds_one?(field)
+              relation_class = trackable.embeds_one_class(field)
+              Array(field_options).map { |opt| relation_class.database_field_name(opt) }
+            else
+              true
+            end
+        end
+
+        @options[:obfuscate] = obfuscate_options
       end
 
       def parse_tracked_fields_and_relations

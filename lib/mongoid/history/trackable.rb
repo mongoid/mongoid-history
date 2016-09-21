@@ -387,6 +387,24 @@ module Mongoid
             !embedded_relations.map { |_, v| v.key }.include?(database_field_name(field))
         end
 
+        # Checks if field is obfuscated.
+        #
+        # @param [ String | Symbol ] field The name of the obfuscated field
+        #
+        # @return [ Boolean ] whether or not the field is obfuscated
+        def obfuscated_field?(field)
+          !!obfuscated_fields[database_field_name(field)]
+        end
+
+        # Retrieves the memoized list of obfuscated fields for an embedded relation
+        #
+        # @param [ String | Symbol ] field The name of the relation
+        #
+        # @return [ Array < String | Symbol > ] the list of obfuscated fields for the given relation
+        def obfuscated_embedded_attributes(relation)
+          obfuscated_fields[database_field_name(relation)]
+        end
+
         # Retrieves the list of tracked fields for a given action.
         #
         # @param [ String | Symbol ] action The action name (:create, :update, or :destroy)
@@ -411,6 +429,13 @@ module Mongoid
         # @return [ Array < String > ] the list of reserved database field names
         def reserved_tracked_fields
           @reserved_tracked_fields ||= ['_id', history_trackable_options[:version_field].to_s, "#{history_trackable_options[:modifier_field]}_id"]
+        end
+
+        # Retrieves the memoized base list of obfuscated fields.
+        #
+        # @return [ Array < String > ] the list of obfuscated field names
+        def obfuscated_fields
+          @obfuscated_fields ||= history_trackable_options[:obfuscate]
         end
 
         # Whether or not the relation should be tracked.
@@ -485,6 +510,7 @@ module Mongoid
           @tracked_fields = nil
           @tracked_embeds_one = nil
           @tracked_embeds_many = nil
+          @obfuscated_fields = nil
         end
       end
     end
