@@ -156,6 +156,35 @@ Mongoid::History.disable do
 end
 ```
 
+You may want to track changes on all fields.
+
+```ruby
+class Post
+  include Mongoid::Document
+  include Mongoid::History::Trackable
+
+  field           :title
+  field           :body
+  field           :rating
+
+  track_history   :on => [:fields] # all fields will be tracked
+end
+```
+
+You can also track changes on all embedded relations.
+
+```ruby
+class Post
+  include Mongoid::Document
+  include Mongoid::History::Trackable
+
+  embeds_many :comments
+  embeds_one  :content
+
+  track_history   :on => [:embedded_relations] # all embedded relations will be tracked
+end
+```
+
 **Include embedded objects attributes in parent audit**
 
 Modify above `Post` and `Comment` classes as below:

@@ -64,6 +64,11 @@ module Mongoid
           @options[:on] = options[:on] | trackable.fields.keys.map(&:to_sym) - reserved_fields.map(&:to_sym)
         end
 
+        if options[:on].include?(:embedded_relations)
+          @options[:on] = options[:on].reject { |opt| opt == :embedded_relations }
+          @options[:on] = options[:on] | trackable.embedded_relations.keys
+        end
+
         @options[:fields] = []
         @options[:dynamic] = []
         @options[:relations] = { embeds_one: {}, embeds_many: {} }
