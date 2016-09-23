@@ -69,7 +69,8 @@ describe Mongoid::History::Options do
           scope: :model_one,
           track_create: false,
           track_update: true,
-          track_destroy: false }
+          track_destroy: false,
+          format: nil }
       end
       it { expect(service.send(:default_options)).to eq expected_options }
     end
@@ -104,6 +105,26 @@ describe Mongoid::History::Options do
       end
     end
 
+    describe '#prepare_formatted_fields' do
+      let(:options) { { format: value } }
+      subject { service.parse(options) }
+
+      context 'with non-hash' do
+        let(:value) { :foo }
+        it { expect(subject[:format]).to eq({}) }
+      end
+
+      context 'with a field format' do
+        let(:value) { { foo: '&&&' } }
+        it { expect(subject[:format]).to include 'foo' => '&&&' }
+      end
+
+      context 'with nested format' do
+        let(:value) { { emb_one: { f_em_foo: '***' } } }
+        it { expect(subject[:format]).to include 'emb_one' => { 'f_em_foo' => '***' } }
+      end
+    end
+
     describe '#parse_tracked_fields_and_relations' do
       context 'when options not passed' do
         let(:expected_options) do
@@ -119,7 +140,8 @@ describe Mongoid::History::Options do
             track_destroy: false,
             fields: %w(foo b),
             dynamic: [],
-            relations: { embeds_one: {}, embeds_many: {} } }
+            relations: { embeds_one: {}, embeds_many: {} },
+            format: {} }
         end
         it { expect(service.parse).to eq expected_options }
       end

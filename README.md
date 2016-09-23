@@ -308,6 +308,41 @@ end
 
 This will skip the `page` documents with `removed_at` set to a non-blank value from nested tracking
 
+**Formatting fields**
+
+You can opt to use a proc or string interpolation to alter attributes being stored on a history record.
+
+```ruby
+class Post
+  include Mongoid::Document
+  include Mongoid::History::Trackable
+
+  field           :title
+  track_history   on: :title,
+                  format: { title: ->(t){ t[0..3] } }
+```
+
+This also works for fields on an embedded relations.
+
+```ruby
+class Book
+  include Mongoid::Document
+  include Mongoid::History::Trackable
+
+  embeds_many :pages
+  track_history on: :pages,
+                format: { pages: { number: 'pg. %d' } }
+end
+
+class Page
+  include Mongoid::Document
+  include Mongoid::History::Trackable
+
+  field :number, type: Integer
+  embedded_in :book
+end
+```
+
 **Displaying history trackers as an audit trail**
 
 In your Controller:

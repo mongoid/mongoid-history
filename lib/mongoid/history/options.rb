@@ -14,6 +14,7 @@ module Mongoid
       def parse(options = {})
         @options = default_options.merge(options)
         prepare_skipped_fields
+        prepare_formatted_fields
         parse_tracked_fields_and_relations
         @options
       end
@@ -31,7 +32,8 @@ module Mongoid
             scope: scope,
             track_create: false,
             track_update: true,
-            track_destroy: false }
+            track_destroy: false,
+            format: nil }
       end
 
       # Sets the :except attributes and relations in `options` to be an [ Array <String> ]
@@ -41,6 +43,30 @@ module Mongoid
         # normalize :except fields to an array of database field strings
         @options[:except] = Array(options[:except])
         @options[:except] = options[:except].map { |field| trackable.database_field_name(field) }.compact.uniq
+      end
+
+      def prepare_formatted_fields
+        formats = {}
+
+        if options[:format].class == Hash
+          options[:format].each do |field, format|
+            next if field.nil?
+
+            field = trackable.database_field_name(field)
+
+            if format.class == Hash && trackable.embeds_many?(field)
+              relation_class = trackable.embeds_many_class(field)
+              formats[field] = format.inject({}) { |a, e| a.merge(relation_class.database_field_name(e.first) => e.last) }
+            elsif format.class == Hash && trackable.embeds_one?(field)
+              relation_class = trackable.embeds_one_class(field)
+              formats[field] = format.inject({}) { |a, e| a.merge(relation_class.database_field_name(e.first) => e.last) }
+            else
+              formats[field] = format
+            end
+          end
+        end
+
+        options[:format] = formats
       end
 
       def parse_tracked_fields_and_relations

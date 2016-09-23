@@ -387,6 +387,10 @@ module Mongoid
             !embedded_relations.map { |_, v| v.key }.include?(database_field_name(field))
         end
 
+        def field_format(field)
+          field_formats[database_field_name(field)]
+        end
+
         # Retrieves the list of tracked fields for a given action.
         #
         # @param [ String | Symbol ] action The action name (:create, :update, or :destroy)
@@ -411,6 +415,10 @@ module Mongoid
         # @return [ Array < String > ] the list of reserved database field names
         def reserved_tracked_fields
           @reserved_tracked_fields ||= ['_id', history_trackable_options[:version_field].to_s, "#{history_trackable_options[:modifier_field]}_id"]
+        end
+
+        def field_formats
+          @field_formats ||= history_trackable_options[:format]
         end
 
         # Whether or not the relation should be tracked.
@@ -485,6 +493,7 @@ module Mongoid
           @tracked_fields = nil
           @tracked_embeds_one = nil
           @tracked_embeds_many = nil
+          @obfuscated_fields = nil
         end
       end
     end

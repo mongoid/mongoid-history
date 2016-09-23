@@ -64,6 +64,7 @@ Style/Documentation:
     - 'spec/unit/singleton_methods_spec.rb'
     - 'spec/unit/trackable_spec.rb'
     - 'spec/unit/tracker_spec.rb'
+    - 'spec/unit/attributes/base_spec.rb'
     - 'spec/unit/attributes/create_spec.rb'
     - 'spec/unit/attributes/destroy_spec.rb'
     - 'spec/unit/attributes/update_spec.rb'
@@ -85,3 +86,7 @@ Style/MultilineBlockChain:
   Exclude:
     - 'lib/mongoid/history/trackable.rb'
     - 'lib/mongoid/history/tracker.rb'
+
+Style/ClassLength:
+  Exclude:
+    - 'lib/mongoid/history/options.rb'

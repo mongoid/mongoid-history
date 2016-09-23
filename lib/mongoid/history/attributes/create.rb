@@ -11,7 +11,7 @@ module Mongoid
                        else
                          v
                        end
-            @attributes[k] = [nil, modified]
+            @attributes[k] = [nil, format_field(k, modified)]
           end
           insert_embeds_one_changes
           insert_embeds_many_changes
@@ -25,11 +25,10 @@ module Mongoid
             rel_class = trackable_class.embeds_one_class(rel)
             paranoia_field = Mongoid::History.trackable_class_settings(rel_class)[:paranoia_field]
             paranoia_field = rel_class.aliased_fields.key(paranoia_field) || paranoia_field
-            permitted_attrs = trackable_class.tracked_embeds_one_attributes(rel)
             rel = aliased_fields.key(rel) || rel
             obj = trackable.send(rel)
             next if !obj || (obj.respond_to?(paranoia_field) && obj.public_send(paranoia_field).present?)
-            @attributes[rel] = [nil, obj.attributes.slice(*permitted_attrs)]
+            @attributes[rel] = [nil, format_embeds_one_relation(rel, obj.attributes)]
           end
         end
 
@@ -38,12 +37,11 @@ module Mongoid
             rel_class = trackable_class.embeds_many_class(rel)
             paranoia_field = Mongoid::History.trackable_class_settings(rel_class)[:paranoia_field]
             paranoia_field = rel_class.aliased_fields.key(paranoia_field) || paranoia_field
-            permitted_attrs = trackable_class.tracked_embeds_many_attributes(rel)
             rel = aliased_fields.key(rel) || rel
             @attributes[rel] = [nil,
                                 trackable.send(rel)
                                 .reject { |obj| obj.respond_to?(paranoia_field) && obj.public_send(paranoia_field).present? }
-                                .map { |obj| obj.attributes.slice(*permitted_attrs) }]
+                                .map { |obj| format_embeds_many_relation(rel, obj.attributes) }]
           end
         end
       end

@@ -46,7 +46,8 @@ describe Mongoid::History::Trackable do
         track_destroy: false,
         fields: %w(foo),
         relations: { embeds_one: {}, embeds_many: {} },
-        dynamic: [] }
+        dynamic: [],
+        format: {} }
     end
     let(:regular_fields) { ['foo'] }
     let(:reserved_fields) { %w(_id version modifier_id) }
@@ -148,6 +149,38 @@ describe Mongoid::History::Trackable do
             expect(MyModel.dynamic_field?(:dynamic_field)).to be false
           end
         end
+      end
+    end
+
+    describe '#field_format' do
+      before :all do
+        ModelOne = Class.new do
+          include Mongoid::Document
+          include Mongoid::History::Trackable
+          field :foo
+        end
+      end
+
+      let(:format) { '***' }
+
+      before do
+        ModelOne.track_history format: { foo: format }
+      end
+
+      context 'when field is formatted' do
+        it 'should return the format' do
+          expect(ModelOne.field_format(:foo)).to be format
+        end
+      end
+
+      context 'when field is not formatted' do
+        it 'should return nil' do
+          expect(ModelOne.field_format(:bar)).to be_nil
+        end
+      end
+
+      after :all do
+        Object.send(:remove_const, :ModelOne)
       end
     end
 
