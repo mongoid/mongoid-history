@@ -1,11 +1,11 @@
 0.6.1 (Next)
 ------------
 
+* Your contribution here.
 * [#170](https://github.com/mongoid/mongoid-history/pull/170): Parent repo is now [mongoid/mongoid-history](https://github.com/mongoid/mongoid-history) - [@dblock](https://github.com/dblock).
 * [#171](https://github.com/mongoid/mongoid-history/pull/171): Add field formatting - [@jnfeinstein](https://github.com/jnfeinstein).
 * [#172](https://github.com/mongoid/mongoid-history/pull/172): Add config helper to track all embedded relations - [@jnfeinstein](https://github.com/jnfeinstein).
-
-* Your contribution here.
+* [#173](https://github.com/mongoid/mongoid-history/pull/173): Compatible with mongoid 6 - [@sivagollapalli](https://github.com/sivagollapalli).
 
 0.6.0 (2016/09/13)
 ------------------
