@@ -14,7 +14,7 @@ This gem also implements multi-user undo, which allows users to undo any history
 Install
 -------
 
-This gem supports Mongoid 3, 4 and 5 on Ruby 1.9.3 or newer. Add it to your `Gemfile` or run `gem install mongoid-history`.
+This gem supports Mongoid 3, 4, 5 on Ruby 1.9.3 or newer and Mongoid 6 on Ruby 2.2.2+. Add it to your `Gemfile` or run `gem install mongoid-history`.
 
 ```ruby
 gem 'mongoid-history'
