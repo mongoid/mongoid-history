@@ -6,6 +6,8 @@
 * [#171](https://github.com/mongoid/mongoid-history/pull/171): Add field formatting - [@jnfeinstein](https://github.com/jnfeinstein).
 * [#172](https://github.com/mongoid/mongoid-history/pull/172): Add config helper to track all embedded relations - [@jnfeinstein](https://github.com/jnfeinstein).
 * [#173](https://github.com/mongoid/mongoid-history/pull/173): Compatible with mongoid 6 - [@sivagollapalli](https://github.com/sivagollapalli).
+* [#173](https://github.com/mongoid/mongoid-history/pull/173): Compatible with mongoid 6 - [@sivagollapalli](https://github.com/sivagollapalli).
+* [#179](https://github.com/mongoid/mongoid-history/pull/173): Improve suggested method for migrating from modified_id to userstamp fields in readme - [@colinxfleming](https://github.com/colinxfleming).
 
 0.6.0 (2016/09/13)
 ------------------
