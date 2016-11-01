@@ -405,7 +405,7 @@ Since October 2013 (mongoid-history version 0.4.1 and onwards), Mongoid::History
 instructions above then run the following command:
 
 ```
-MyHistoryTracker.all.each{|ht| ht.rename(:modifier_id, :created_by)
+MyHistoryTracker.all.rename(modifier_id: :created_by)
 ```
 
 **Setting Modifier Class Name**
