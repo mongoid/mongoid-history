@@ -136,6 +136,13 @@ describe Mongoid::History do
         post.destroy
         expect(post.history_tracks.last.affected['title']).to eq('Test')
       end
+
+      it 'should no-op on repeated calls to destroy' do
+        post.destroy
+        expect do
+          post.destroy
+        end.not_to change(Tracker, :count)
+      end
     end
 
     describe 'on update non-embedded' do

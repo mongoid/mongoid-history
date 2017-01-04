@@ -241,7 +241,7 @@ module Mongoid
         end
 
         def track_destroy
-          track_history_for_action(:destroy)
+          track_history_for_action(:destroy) unless destroyed?
         end
 
         def clear_trackable_memoization
