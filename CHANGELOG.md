@@ -1,6 +1,5 @@
-### 0.6.1 (Next)
+### 0.6.1 (2017/01/04)
 
-* Your contribution here.
 * [#182](https://github.com/mongoid/mongoid-history/pull/182): No-op on repeated calls to destroy - [@msaffitz](https://github.com/msaffitz).
 * [#170](https://github.com/mongoid/mongoid-history/pull/170): Parent repo is now [mongoid/mongoid-history](https://github.com/mongoid/mongoid-history) - [@dblock](https://github.com/dblock).
 * [#171](https://github.com/mongoid/mongoid-history/pull/171): Add field formatting - [@jnfeinstein](https://github.com/jnfeinstein).
