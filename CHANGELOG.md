@@ -1,3 +1,7 @@
+### 0.6.2 (Next)
+
+* Your contribution here.
+
 ### 0.6.1 (2017/01/04)
 
 * [#182](https://github.com/mongoid/mongoid-history/pull/182): No-op on repeated calls to destroy - [@msaffitz](https://github.com/msaffitz).
