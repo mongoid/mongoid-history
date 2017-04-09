@@ -48,7 +48,7 @@ describe Mongoid::History::Tracker do
                     track_create: true,
                     track_update: true,
                     track_destroy: true,
-                    scope: [:modelone, :modeltwo]
+                    scope: %i[modelone modeltwo]
     end
 
     class EmbeddedTwo
@@ -64,7 +64,7 @@ describe Mongoid::History::Tracker do
                     track_create: true,
                     track_update: true,
                     track_destroy: true,
-                    scope: [:modelone, :modeltwo]
+                    scope: %i[modelone modeltwo]
     end
 
     class User

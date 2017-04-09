@@ -131,7 +131,7 @@ module Mongoid
             elsif options[:last]
               versions = history_tracks.limit(options[:last])
             else
-              fail 'Invalid options, please specify (:from / :to) keys or :last key.'
+              raise 'Invalid options, please specify (:from / :to) keys or :last key.'
             end
           else
             options_or_version = options_or_version.to_a if options_or_version.is_a?(Range)
@@ -178,7 +178,7 @@ module Mongoid
                 relation.class_name == node.metadata.class_name.to_s && relation.name == node.metadata.name
               else
                 relation.class_name == node.relation_metadata.class_name.to_s &&
-                relation.name == node.relation_metadata.name
+                  relation.name == node.relation_metadata.name
               end
             end
           end
@@ -445,8 +445,8 @@ module Mongoid
         def tracked_embeds_one
           @tracked_embeds_one ||= begin
             reflect_on_all_associations(:embeds_one)
-            .map(&:key)
-            .select { |rel| history_trackable_options[:relations][:embeds_one].include? rel }
+              .map(&:key)
+              .select { |rel| history_trackable_options[:relations][:embeds_one].include? rel }
           end
         end
 
@@ -469,8 +469,8 @@ module Mongoid
         def tracked_embeds_many
           @tracked_embeds_many ||= begin
             reflect_on_all_associations(:embeds_many)
-            .map(&:key)
-            .select { |rel| history_trackable_options[:relations][:embeds_many].include? rel }
+              .map(&:key)
+              .select { |rel| history_trackable_options[:relations][:embeds_many].include? rel }
           end
         end
 

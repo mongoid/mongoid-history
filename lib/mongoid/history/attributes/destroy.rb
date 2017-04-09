@@ -14,19 +14,19 @@ module Mongoid
 
         def insert_embeds_one_changes
           trackable_class.tracked_embeds_one
-            .map { |rel| aliased_fields.key(rel) || rel }
-            .each do |rel|
-              obj = trackable.send(rel)
-              @attributes[rel] = [format_embeds_one_relation(rel, obj.attributes), nil] if obj
-            end
+                         .map { |rel| aliased_fields.key(rel) || rel }
+                         .each do |rel|
+            obj = trackable.send(rel)
+            @attributes[rel] = [format_embeds_one_relation(rel, obj.attributes), nil] if obj
+          end
         end
 
         def insert_embeds_many_changes
           trackable_class.tracked_embeds_many
-            .map { |rel| aliased_fields.key(rel) || rel }
-            .each do |rel|
-              @attributes[rel] = [trackable.send(rel).map { |obj| format_embeds_many_relation(rel, obj.attributes) }, nil]
-            end
+                         .map { |rel| aliased_fields.key(rel) || rel }
+                         .each do |rel|
+            @attributes[rel] = [trackable.send(rel).map { |obj| format_embeds_many_relation(rel, obj.attributes) }, nil]
+          end
         end
       end
     end
