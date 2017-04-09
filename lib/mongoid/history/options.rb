@@ -24,7 +24,7 @@ module Mongoid
       def default_options
         @default_options ||=
           { on: :all,
-            except: [:created_at, :updated_at],
+            except: %i[created_at updated_at],
             tracker_class_name: nil,
             modifier_field: :modifier,
             version_field: :version,
@@ -83,7 +83,7 @@ module Mongoid
             Going forward, :all will track all the fields and relations for the class"
         end
 
-        @options[:on] = options[:on].map { |opt| (opt == :all) ? :fields : opt }
+        @options[:on] = options[:on].map { |opt| opt == :all ? :fields : opt }
 
         if options[:on].include?(:fields)
           @options[:on] = options[:on].reject { |opt| opt == :fields }
@@ -163,7 +163,7 @@ module Mongoid
         @options[:relations][:embeds_one][field] = if field_options.blank?
                                                      relation_class.fields.keys
                                                    else
-                                                     %w(_id) | field_options.map { |opt| relation_class.database_field_name(opt) }
+                                                     %w[_id] | field_options.map { |opt| relation_class.database_field_name(opt) }
                                                    end
       end
 
@@ -172,7 +172,7 @@ module Mongoid
         @options[:relations][:embeds_many][field] = if field_options.blank?
                                                       relation_class.fields.keys
                                                     else
-                                                      %w(_id) | field_options.map { |opt| relation_class.database_field_name(opt) }
+                                                      %w[_id] | field_options.map { |opt| relation_class.database_field_name(opt) }
                                                     end
       end
 

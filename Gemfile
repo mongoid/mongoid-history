@@ -20,16 +20,16 @@ else
 end
 
 group :development, :test do
-  gem 'rake', '< 11.0'
   gem 'bundler'
+  gem 'rake', '< 11.0'
 end
 
 group :test do
-  gem 'mongoid-danger', '~> 0.1.0', require: false
-  gem 'rspec', '~> 3.1'
-  gem 'rubocop', '0.34.1'
-  gem 'yard'
-  gem 'gem-release'
   gem 'coveralls'
+  gem 'gem-release'
+  gem 'mongoid-danger', '~> 0.1.0', require: false
   gem 'request_store'
+  gem 'rspec', '~> 3.1'
+  gem 'rubocop', '0.48.1'
+  gem 'yard'
 end

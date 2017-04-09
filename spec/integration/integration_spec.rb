@@ -18,7 +18,7 @@ describe Mongoid::History do
 
       accepts_nested_attributes_for :tags, allow_destroy: true
 
-      track_history on: [:title, :body], track_destroy: true
+      track_history on: %i[title body], track_destroy: true
     end
 
     class Comment
@@ -29,7 +29,7 @@ describe Mongoid::History do
       field :t, as: :title
       field :body
       embedded_in :commentable, polymorphic: true
-      track_history on: [:title, :body], scope: :post, track_create: true, track_destroy: true
+      track_history on: %i[title body], scope: :post, track_create: true, track_destroy: true
     end
 
     class Section
@@ -54,7 +54,7 @@ describe Mongoid::History do
       field :city
       field :country
       field :aliases, type: Array
-      track_history except: [:email, :updated_at]
+      track_history except: %i[email updated_at]
     end
 
     class Tag
@@ -229,14 +229,14 @@ describe Mongoid::History do
 
       it 'should track array changes' do
         aliases = user.aliases
-        user.update_attributes(aliases: %w(bob joe))
+        user.update_attributes(aliases: %w[bob joe])
         expect(user.history_tracks.first.original['aliases']).to eq(aliases)
         expect(user.history_tracks.first.modified['aliases']).to eq(user.aliases)
       end
 
       it 'should undo array changes' do
         aliases = user.aliases
-        user.update_attributes(aliases: %w(bob joe))
+        user.update_attributes(aliases: %w[bob joe])
         user.history_tracks.first.undo! nil
         expect(user.reload.aliases).to eq(aliases)
       end
@@ -323,12 +323,12 @@ describe Mongoid::History do
           expect(subject[:array]).to eq({ aliases: { remove: ['bob'], add: ['', 'bill', 'james'] } }.with_indifferent_access)
         end
         it 'should not track unmodified field' do
-          %w(add modify remove array).each do |edit|
+          %w[add modify remove array].each do |edit|
             expect(subject[edit][:address]).to be_nil
           end
         end
         it 'should not track untracked fields' do
-          %w(add modify remove array).each do |edit|
+          %w[add modify remove array].each do |edit|
             expect(subject[edit][:email]).to be_nil
           end
         end
@@ -639,7 +639,7 @@ describe Mongoid::History do
       describe 'undo' do
         { 'undo' => [nil], 'undo!' => [nil, :reload] }.each do |test_method, methods|
           methods.each do |method|
-            context "#{method || 'instance'}" do
+            context (method || 'instance').to_s do
               it 'recognizes :from, :to options' do
                 comment.send test_method, user, from: 4, to: 2
                 comment.send(method) if method
@@ -694,7 +694,7 @@ describe Mongoid::History do
 
       describe 'redo' do
         [nil, :reload].each do |method|
-          context "#{method || 'instance'}" do
+          context (method || 'instance').to_s do
             before :each do
               comment.update_attributes(title: 'Test5')
             end
@@ -919,7 +919,7 @@ describe Mongoid::History do
           track_history on: [:foo], changes_method: :my_changes
 
           def my_changes
-            { foo: %w(bar baz) }
+            { foo: %w[bar baz] }
           end
         end
       end

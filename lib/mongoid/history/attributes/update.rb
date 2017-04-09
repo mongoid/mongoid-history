@@ -33,9 +33,9 @@ module Mongoid
           paranoia_field = Mongoid::History.trackable_class_settings(relation_class)[:paranoia_field]
           @attributes[relation] = []
           @attributes[relation][0] = value[0].reject { |rel| rel[paranoia_field].present? }
-                                     .map { |v_attrs| format_embeds_many_relation(relation, v_attrs) }
+                                             .map { |v_attrs| format_embeds_many_relation(relation, v_attrs) }
           @attributes[relation][1] = value[1].reject { |rel| rel[paranoia_field].present? }
-                                     .map { |v_attrs| format_embeds_many_relation(relation, v_attrs) }
+                                             .map { |v_attrs| format_embeds_many_relation(relation, v_attrs) }
         end
       end
     end

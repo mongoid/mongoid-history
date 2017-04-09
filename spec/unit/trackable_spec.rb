@@ -34,8 +34,8 @@ describe Mongoid::History::Trackable do
     end
     before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
     let(:expected_option) do
-      { on: %i(foo),
-        except: %w(created_at updated_at),
+      { on: %i[foo],
+        except: %w[created_at updated_at],
         tracker_class_name: nil,
         modifier_field: :modifier,
         version_field: :version,
@@ -44,13 +44,13 @@ describe Mongoid::History::Trackable do
         track_create: false,
         track_update: true,
         track_destroy: false,
-        fields: %w(foo),
+        fields: %w[foo],
         relations: { embeds_one: {}, embeds_many: {} },
         dynamic: [],
         format: {} }
     end
     let(:regular_fields) { ['foo'] }
-    let(:reserved_fields) { %w(_id version modifier_id) }
+    let(:reserved_fields) { %w[_id version modifier_id] }
 
     it 'should have default options' do
       expect(Mongoid::History.trackable_class_options[:my_model]).to eq(expected_option)
@@ -217,7 +217,7 @@ describe Mongoid::History::Trackable do
           it 'should be rescued if an exception occurs' do
             begin
               MyModel.disable_tracking do
-                fail 'exception'
+                raise 'exception'
               end
             rescue
             end
@@ -260,7 +260,7 @@ describe Mongoid::History::Trackable do
             Mongoid::History.disable do
               begin
                 MyModel.disable_tracking do
-                  fail 'exception'
+                  raise 'exception'
                 end
               rescue
               end
@@ -289,7 +289,7 @@ describe Mongoid::History::Trackable do
           begin
             Mongoid::History.disable do
               MyModel.disable_tracking do
-                fail 'exception'
+                raise 'exception'
               end
             end
           rescue

@@ -180,7 +180,7 @@ module Mongoid
         elsif trackable_parent.class.embeds_many?(name)
           trackable_parent.get_embedded(name).create!(localize_keys(original))
         else
-          fail 'This should never happen. Please report bug!'
+          raise 'This should never happen. Please report bug!'
         end
       end
 
@@ -205,7 +205,7 @@ module Mongoid
                 elsif doc.class.embeds_many?(name)
                   doc.get_embedded(name).unscoped.where(_id: node['id']).first
                 else
-                  fail 'This should never happen. Please report bug.'
+                  raise 'This should never happen. Please report bug.'
                 end
           documents << doc
           break if chain.empty?
@@ -215,9 +215,11 @@ module Mongoid
 
       def localize_keys(hash)
         klass = association_chain.first['name'].constantize
-        klass.localized_fields.keys.each do |name|
-          hash["#{name}_translations"] = hash.delete(name) if hash[name].present?
-        end if klass.respond_to?(:localized_fields)
+        if klass.respond_to?(:localized_fields)
+          klass.localized_fields.keys.each do |name|
+            hash["#{name}_translations"] = hash.delete(name) if hash[name].present?
+          end
+        end
         hash
       end
 

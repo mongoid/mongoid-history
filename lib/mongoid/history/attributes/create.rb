@@ -40,8 +40,8 @@ module Mongoid
             rel = aliased_fields.key(rel) || rel
             @attributes[rel] = [nil,
                                 trackable.send(rel)
-                                .reject { |obj| obj.respond_to?(paranoia_field) && obj.public_send(paranoia_field).present? }
-                                .map { |obj| format_embeds_many_relation(rel, obj.attributes) }]
+                                         .reject { |obj| obj.respond_to?(paranoia_field) && obj.public_send(paranoia_field).present? }
+                                         .map { |obj| format_embeds_many_relation(rel, obj.attributes) }]
           end
         end
       end

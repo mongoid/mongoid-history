@@ -45,7 +45,7 @@ describe Mongoid::History::Trackable do
         embedded_in :model_one
       end
 
-      ModelOne.track_history(on: %i(foo emb_one emb_threes))
+      ModelOne.track_history(on: %i[foo emb_one emb_threes])
       @persisted_history_options = Mongoid::History.trackable_class_options
     end
     before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
