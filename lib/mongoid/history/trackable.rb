@@ -225,6 +225,13 @@ module Mongoid
             modifier: send(history_trackable_options[:modifier_field])
           }
 
+          unless @history_tracker_attributes[:modifier]
+            controller = Thread.current[:mongoid_history_controller]
+            if controller && controller.respond_to?(Mongoid::History.current_user_method, true)
+              @history_tracker_attributes[:modifier] = controller.send(Mongoid::History.current_user_method)
+            end
+          end
+
           original, modified = transform_changes(modified_attributes_for_action(action))
 
           @history_tracker_attributes[:original] = original
