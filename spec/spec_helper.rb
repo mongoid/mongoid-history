@@ -22,4 +22,6 @@ RSpec.configure do |config|
     Mongo::Logger.logger.level = Logger::INFO if Mongoid::Compatibility::Version.mongoid5? || Mongoid::Compatibility::Version.mongoid6?
     Mongoid.belongs_to_required_by_default = false if Mongoid::Compatibility::Version.mongoid6?
   end
+  config.filter_run focus: true
+  config.run_all_when_everything_filtered = true
 end
