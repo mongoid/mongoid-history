@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Mongoid::History::Tracker, focus: true do
+describe Mongoid::History::Tracker do
   before :all do
     # Child model (will be embedded in Parent)
     class Child
@@ -19,7 +19,7 @@ describe Mongoid::History::Tracker, focus: true do
       field :name, type: String
       embeds_one :child
 
-      track_history on: %i[(fields embedded_relations)],
+      track_history on: %i[fields embedded_relations],
                     version_field: :version,
                     track_create: true,
                     track_update: true,
@@ -37,10 +37,14 @@ describe Mongoid::History::Tracker, focus: true do
     expect(change.modified['name']).to eq('bowser')
     expect(change.modified['child']['name']).to eq('todd')
 
+    p.update_attributes(name: 'brow')
+    expect(p.history_tracks.length).to eq(2)
+
     p.child.name = 'mario'
     p.save!
 
-    expect(p.history_tracks.length).to eq(2)
+    expect(p.history_tracks.length).to eq(3)
+    expect(p.history_tracks.last.original['child']['name']).to eq('todd')
     expect(p.history_tracks.last.modified['child']['name']).to eq('mario')
   end
 

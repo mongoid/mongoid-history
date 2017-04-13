@@ -1,6 +1,7 @@
 ### 0.6.2 (Next)
 
 * Your contribution here.
+* [#191](https://github.com/mongoid/mongoid-history/pull/191): Track changes on embed_one - [@mateuspontes](https://github.com/mateuspontes).
 
 ### 0.6.1 (2017/01/04)
 
