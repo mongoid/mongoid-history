@@ -271,8 +271,13 @@ module Mongoid
 
         def track_history_for_action(action)
           if track_history_for_action?(action)
-            current_version = (send(history_trackable_options[:version_field]) || 0) + 1
-            send("#{history_trackable_options[:version_field]}=", current_version)
+            if related_scope
+              current_version = (send(related_scope).send(history_trackable_options[:version_field]) || 0) + 1
+              send(related_scope).send("#{history_trackable_options[:version_field]}=", current_version)
+            else
+              current_version = (send(history_trackable_options[:version_field]) || 0) + 1
+              send("#{history_trackable_options[:version_field]}=", current_version)
+            end
             self.class.tracker_class.create!(history_tracker_attributes(action.to_sym).merge(version: current_version, action: action.to_s, trackable: self))
           end
           clear_trackable_memoization
