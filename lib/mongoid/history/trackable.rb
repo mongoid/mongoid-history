@@ -273,7 +273,7 @@ module Mongoid
           if track_history_for_action?(action)
             if related_scope == _parent.class.to_s.underscore.to_sym
               current_version = (send(related_scope).send(history_trackable_options[:version_field]) || 0) + 1
-              send(related_scope).send("#{history_trackable_options[:version_field]}=", current_version)
+              send(related_scope).set(:"#{history_trackable_options[:version_field]}" => current_version)
             else
               current_version = (send(history_trackable_options[:version_field]) || 0) + 1
               send("#{history_trackable_options[:version_field]}=", current_version)
