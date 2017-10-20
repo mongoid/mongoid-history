@@ -21,6 +21,7 @@ end
 
 group :development, :test do
   gem 'bundler'
+  gem 'pry'
   gem 'rake', '< 11.0'
 end
 
