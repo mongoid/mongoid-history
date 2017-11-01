@@ -2,6 +2,8 @@
 
 * Your contribution here.
 
+* [#196](https://github.com/mongoid/mongoid-history/pull/196): Fix bug causing history tracks to get mixed up between multiple trackers when using multiple trackers - [@ojbucao](https://github.com/ojbucao).
+
 ### 0.6.1 (2017/01/04)
 
 * [#182](https://github.com/mongoid/mongoid-history/pull/182): No-op on repeated calls to destroy - [@msaffitz](https://github.com/msaffitz).

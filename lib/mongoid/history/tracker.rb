@@ -19,7 +19,7 @@ module Mongoid
         index(scope: 1)
         index(association_chain: 1)
 
-        Mongoid::History.tracker_class_name = name.tableize.singularize.to_sym
+        Mongoid::History.tracker_class_name ||= name.tableize.singularize.to_sym
       end
 
       def undo!(modifier = nil)

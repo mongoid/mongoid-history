@@ -37,8 +37,8 @@ end
 **Set default tracker class name (Optional)**
 
 Mongoid::History will use the first loaded class to include Mongoid::History::Tracker as the
-default history tracker. If you are using multiple Tracker classes and would like to set
-a global default you may do so in a Rails initializer:
+default history tracker. If you are using multiple Tracker classes, you should set a global
+default in a Rails initializer:
 
 ```ruby
 # config/initializers/mongoid_history.rb
@@ -508,6 +508,46 @@ end
 ```
 
 For more examples, check out [spec/integration/integration_spec.rb](spec/integration/integration_spec.rb).
+
+** Multiple Trackers **
+
+You can have different trackers for different classes like so.
+
+```
+class First
+  include Mongoid::Document
+  include Mongoid::History::Trackable
+
+  field :text, type: String
+  track_history on: [:text],
+                tracker_class_name: :first_history_tracker
+end
+
+class Second
+  include Mongoid::Document
+  include Mongoid::History::Trackable
+
+  field :text, type: String
+  track_history on: [:text],
+                tracker_class_name: :second_history_tracker
+end
+
+class FirstHistoryTracker
+  include Mongoid::History::Tracker
+end
+
+class SecondHistoryTracker
+  include Mongoid::History::Tracker
+end
+```
+
+Note that if you are using a tracker for an embedded object that is different
+from the parent's tracker, redos and undos will not work. You have to use the
+same tracker for these to work across embedded relationships.
+
+If you are using multiple trackers and the `tracker_class_name` parameter is
+not specified, Mongoid::History will use the default tracker configured in the
+initializer file or whatever the first tracker was loaded.
 
 
 **Thread Safety**
