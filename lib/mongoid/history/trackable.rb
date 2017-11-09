@@ -287,7 +287,7 @@ module Mongoid
         end
 
         def untrack_history_for_action(action)
-          return unless track_history_for_action?(action) || @last_track.nil?
+          return unless track_history_for_action?(action) && !@last_track.nil?
           current_version = (send(history_trackable_options[:version_field]) || 0)
           send("#{history_trackable_options[:version_field]}=", current_version - 1)
           @last_track.destroy
