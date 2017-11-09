@@ -26,7 +26,11 @@ describe Mongoid::History::Tracker do
 
     class Prompt < Element
     end
+
+    @persisted_history_options = Mongoid::History.trackable_class_options
   end
+
+  before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
 
   it 'does not track delete when parent class validation fails' do
     prompt = Prompt.new(title: 'first')
@@ -37,12 +41,21 @@ describe Mongoid::History::Tracker do
     end.to change(Tracker, :count).by(0)
   end
 
-  it 'does not track delete when restrict dependency fails' do
+  it 'does not track delete when parent class restrict dependency fails' do
     prompt = Prompt.new(title: 'first')
     prompt.items << Item.new
     expect { prompt.save! }.to change(Tracker, :count).by(1)
     expect do
       expect { prompt.destroy }.to raise_error(Mongoid::Errors::DeleteRestriction)
+    end.to change(Tracker, :count).by(0)
+  end
+
+  it 'does not track delete when restrict dependency fails' do
+    elem = Element.new(title: 'first')
+    elem.items << Item.new
+    expect { elem.save! }.to change(Tracker, :count).by(1)
+    expect do
+      expect { elem.destroy }.to raise_error(Mongoid::Errors::DeleteRestriction)
     end.to change(Tracker, :count).by(0)
   end
 end
