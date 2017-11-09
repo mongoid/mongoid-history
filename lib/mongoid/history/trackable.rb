@@ -24,7 +24,7 @@ module Mongoid
 
           before_update :track_update if options[:track_update]
           before_create :track_create if options[:track_create]
-          before_destroy :track_destroy if options[:track_destroy]
+          around_destroy :track_destroy if options[:track_destroy]
 
           Mongoid::History.trackable_class_options ||= {}
           Mongoid::History.trackable_class_options[options_parser.scope] = options
@@ -242,6 +242,14 @@ module Mongoid
 
         def track_destroy
           track_history_for_action(:destroy) unless destroyed?
+
+          begin
+            yield
+          rescue => e
+            untrack_history_for_action(:destroy)
+            @last_track = nil
+            raise e
+          end
         end
 
         def clear_trackable_memoization
@@ -273,9 +281,16 @@ module Mongoid
           if track_history_for_action?(action)
             current_version = (send(history_trackable_options[:version_field]) || 0) + 1
             send("#{history_trackable_options[:version_field]}=", current_version)
-            self.class.tracker_class.create!(history_tracker_attributes(action.to_sym).merge(version: current_version, action: action.to_s, trackable: self))
+            @last_track = self.class.tracker_class.create!(history_tracker_attributes(action.to_sym).merge(version: current_version, action: action.to_s, trackable: self))
           end
           clear_trackable_memoization
+        end
+
+        def untrack_history_for_action(action)
+          return unless track_history_for_action?(action) && !@last_track.nil?
+          current_version = (send(history_trackable_options[:version_field]) || 0)
+          send("#{history_trackable_options[:version_field]}=", current_version - 1)
+          @last_track.destroy
         end
       end
 
