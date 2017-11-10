@@ -22,9 +22,9 @@ module Mongoid
           delegate :history_trackable_options, to: 'self.class'
           delegate :track_history?, to: 'self.class'
 
-          before_update :track_update if options[:track_update]
-          before_create :track_create if options[:track_create]
-          before_destroy :track_destroy if options[:track_destroy]
+          around_update :track_update if options[:track_update]
+          around_create :track_create if options[:track_create]
+          around_destroy :track_destroy if options[:track_destroy]
 
           Mongoid::History.trackable_class_options ||= {}
           Mongoid::History.trackable_class_options[options_parser.scope] = options
@@ -232,16 +232,16 @@ module Mongoid
           @history_tracker_attributes
         end
 
-        def track_create
-          track_history_for_action(:create)
+        def track_create(&block)
+          track_history_for_action(:create, &block)
         end
 
-        def track_update
-          track_history_for_action(:update)
+        def track_update(&block)
+          track_history_for_action(:update, &block)
         end
 
-        def track_destroy
-          track_history_for_action(:destroy) unless destroyed?
+        def track_destroy(&block)
+          track_history_for_action(:destroy, &block) unless destroyed?
         end
 
         def clear_trackable_memoization
@@ -273,9 +273,20 @@ module Mongoid
           if track_history_for_action?(action)
             current_version = (send(history_trackable_options[:version_field]) || 0) + 1
             send("#{history_trackable_options[:version_field]}=", current_version)
-            self.class.tracker_class.create!(history_tracker_attributes(action.to_sym).merge(version: current_version, action: action.to_s, trackable: self))
+            last_track = self.class.tracker_class.create!(history_tracker_attributes(action.to_sym).merge(version: current_version, action: action.to_s, trackable: self))
           end
+
           clear_trackable_memoization
+
+          begin
+            yield
+          rescue => e
+            if track_history_for_action?(action)
+              send("#{history_trackable_options[:version_field]}=", current_version - 1)
+              last_track.destroy
+            end
+            raise e
+          end
         end
       end
 
