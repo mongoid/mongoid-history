@@ -617,9 +617,9 @@ describe Mongoid::History::Trackable do
     end
 
     it 'should not create history when error raised' do
-      expect(m).to receive(:destroy!).and_raise(StandardError)
+      expect(m).to receive(:destroy).and_raise(StandardError)
       expect do
-        expect { m.destroy! }.to raise_error(StandardError)
+        expect { m.destroy }.to raise_error(StandardError)
       end.to change(Tracker, :count).by(0)
     end
   end
