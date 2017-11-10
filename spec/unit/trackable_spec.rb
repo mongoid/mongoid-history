@@ -613,7 +613,7 @@ describe Mongoid::History::Trackable do
     let(:m) { MyModel.create!(foo: 'bar') }
 
     it 'should create history' do
-      expect { m.destroy! }.to change(Tracker, :count).by(1)
+      expect { m.destroy }.to change(Tracker, :count).by(1)
     end
 
     it 'should not create history when error raised' do
