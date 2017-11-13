@@ -583,4 +583,63 @@ describe Mongoid::History::Trackable do
       Object.send(:remove_const, :MyTrackerClass)
     end
   end
+
+  describe '#track_update' do
+    before :all do
+      MyModel.track_history(on: :foo, track_update: true)
+      @persisted_history_options = Mongoid::History.trackable_class_options
+    end
+    before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
+    let(:m) { MyModel.create!(foo: 'bar') }
+
+    it 'should create history' do
+      expect { m.update_attributes!(foo: 'bar2') }.to change(Tracker, :count).by(1)
+    end
+
+    it 'should not create history when error raised' do
+      expect(m).to receive(:update_attributes!).and_raise(StandardError)
+      expect do
+        expect { m.update_attributes!(foo: 'bar2') }.to raise_error(StandardError)
+      end.to change(Tracker, :count).by(0)
+    end
+  end
+
+  describe '#track_destroy' do
+    before :all do
+      MyModel.track_history(on: :foo, track_destroy: true)
+      @persisted_history_options = Mongoid::History.trackable_class_options
+    end
+    before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
+    let(:m) { MyModel.create!(foo: 'bar') }
+
+    it 'should create history' do
+      expect { m.destroy }.to change(Tracker, :count).by(1)
+    end
+
+    it 'should not create history when error raised' do
+      expect(m).to receive(:destroy).and_raise(StandardError)
+      expect do
+        expect { m.destroy }.to raise_error(StandardError)
+      end.to change(Tracker, :count).by(0)
+    end
+  end
+
+  describe '#track_create' do
+    before :all do
+      MyModel.track_history(on: :foo, track_create: true)
+      @persisted_history_options = Mongoid::History.trackable_class_options
+    end
+    before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
+
+    it 'should create history' do
+      expect { MyModel.create!(foo: 'bar') }.to change(Tracker, :count).by(1)
+    end
+
+    it 'should not create history when error raised' do
+      expect(MyModel).to receive(:create!).and_raise(StandardError)
+      expect do
+        expect { MyModel.create!(foo: 'bar') }.to raise_error(StandardError)
+      end.to change(Tracker, :count).by(0)
+    end
+  end
 end

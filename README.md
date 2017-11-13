@@ -509,7 +509,7 @@ end
 
 For more examples, check out [spec/integration/integration_spec.rb](spec/integration/integration_spec.rb).
 
-** Multiple Trackers **
+**Multiple Trackers**
 
 You can have different trackers for different classes like so.
 
@@ -549,6 +549,17 @@ If you are using multiple trackers and the `tracker_class_name` parameter is
 not specified, Mongoid::History will use the default tracker configured in the
 initializer file or whatever the first tracker was loaded.
 
+
+**Dependent Restrict Associations**
+
+When `dependent: :restrict` is used on an association, a call to `destroy` on
+the model will raise `Mongoid::Errors::DeleteRestriction` when the dependency
+is violated. Just be aware that this gem will create a history track document
+before the `destroy` call and then remove if an error is raised. This applies
+to all persistence calls: create, update and destroy.
+
+See [spec/integration/validation_failure_spec.rb](spec/integration/validation_failure_spec.rb)
+for examples.
 
 **Thread Safety**
 
