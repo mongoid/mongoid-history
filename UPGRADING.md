@@ -1,4 +1,4 @@
-### Upgrading to 0.6.2
+### Upgrading to 0.7.0
 
 #### Remove history track when create, update or destroy raises an error
 

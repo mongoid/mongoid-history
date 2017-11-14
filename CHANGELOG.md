@@ -1,6 +1,4 @@
-### 0.6.2 (Next)
-
-* Your contribution here.
+### 0.7.0 (2017/11/14)
 
 * [#202](https://github.com/mongoid/mongoid-history/pull/202): Do not create tracker on persistence error - [@mikwat](https://github.com/mikwat).
 * [#196](https://github.com/mongoid/mongoid-history/pull/196): Fix bug causing history tracks to get mixed up between multiple trackers when using multiple trackers - [@ojbucao](https://github.com/ojbucao).
