@@ -1,3 +1,8 @@
+Next Release
+============
+
+* Your contribution here.
+
 ### 0.7.0 (2017/11/14)
 
 * [#202](https://github.com/mongoid/mongoid-history/pull/202): Do not create tracker on persistence error - [@mikwat](https://github.com/mikwat).
