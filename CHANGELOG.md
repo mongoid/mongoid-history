@@ -1,5 +1,4 @@
-Next Release
-============
+### 0.7.1 (Next)
 
 * Your contribution here.
 
