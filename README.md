@@ -25,12 +25,12 @@ Usage
 
 **Create a history tracker**
 
-Create a new class to track histories. All histories are stored in this tracker. The name of the class can be anything you like. The only requirement is that it includes `Mongoid::History::Tracker`
+Create a new class to track histories. All histories are stored in this tracker. The name of the class can be anything you like. The only requirement is that it includes `Mongoid::History::Trackable`
 
 ```ruby
 # app/models/history_tracker.rb
 class HistoryTracker
-  include Mongoid::History::Tracker
+  include Mongoid::History::Trackable
 end
 ```
 
