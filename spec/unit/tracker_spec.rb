@@ -24,22 +24,18 @@ describe Mongoid::History::Tracker do
 
   describe '#tracked_edits' do
     before(:all) do
-      TrackerOne = Class.new do
-        def self.name
-          'TrackerOne'
-        end
-
+      class TrackerOne
         include Mongoid::History::Tracker
       end
 
-      ModelOne = Class.new do
+      class ModelOne
         include Mongoid::Document
         include Mongoid::History::Trackable
         store_in collection: :model_ones
         embeds_many :emb_ones, inverse_class_name: 'EmbOne'
       end
 
-      EmbOne = Class.new do
+      class EmbOne
         include Mongoid::Document
         field :em_foo
         embedded_in :model_one

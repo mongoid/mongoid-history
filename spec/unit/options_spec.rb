@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Mongoid::History::Options do
   before :all do
-    ModelOne = Class.new do
+    class ModelOne
       include Mongoid::Document
       include Mongoid::History::Trackable
       store_in collection: :model_ones
@@ -15,27 +15,27 @@ describe Mongoid::History::Options do
       track_history
     end
 
-    EmbOne = Class.new do
+    class EmbOne
       include Mongoid::Document
       field :f_em_foo
       field :fmb, as: :f_em_bar
       embedded_in :model_one
     end
 
-    EmbTwo = Class.new do
+    class EmbTwo
       include Mongoid::Document
       field :f_em_baz
       embedded_in :model_one
     end
 
-    EmbThree = Class.new do
+    class EmbThree
       include Mongoid::Document
       field :f_em_foo
       field :fmb, as: :f_em_bar
       embedded_in :model_one
     end
 
-    EmbFour = Class.new do
+    class EmbFour
       include Mongoid::Document
       field :f_em_baz
       embedded_in :model_one

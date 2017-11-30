@@ -1,8 +1,19 @@
 require 'spec_helper'
 
 describe Mongoid::History::Tracker do
-  before :all do
-    class SpecModel
+  it 'should not track fields when track_history not called' do
+    class NotModel
+      include Mongoid::Document
+      include Mongoid::History::Trackable
+
+      field :foo
+    end
+
+    expect(NotModel.respond_to?(:tracked?)).to be false
+  end
+
+  it 'should track fields when track_history called inside class and before fields' do
+    class InsideBeforeModel
       include Mongoid::Document
       include Mongoid::History::Trackable
 
@@ -10,9 +21,35 @@ describe Mongoid::History::Tracker do
 
       field :foo
     end
+
+    expect(InsideBeforeModel.tracked?(:foo)).to be true
+    expect(InsideBeforeModel.instance_variable_get(:@parse_count)).to eq 1
   end
 
-  it 'should track all fields when field added after track_history' do
-    expect(SpecModel.tracked?(:foo)).to be true
+  it 'should track fields when track_history called inside class and after fields' do
+    class InsideAfterModel
+      include Mongoid::Document
+      include Mongoid::History::Trackable
+
+      field :foo
+
+      track_history on: :fields
+    end
+
+    expect(InsideAfterModel.tracked?(:foo)).to be true
+    expect(InsideAfterModel.instance_variable_get(:@parse_count)).to eq 1
+  end
+
+  it 'should track fields when track_history called outside class' do
+    class OutsideModel
+      include Mongoid::Document
+      include Mongoid::History::Trackable
+
+      field :foo
+    end
+
+    OutsideModel.track_history on: :fields
+    expect(OutsideModel.tracked?(:foo)).to be true
+    expect(OutsideModel.instance_variable_get(:@parse_count)).to eq 1
   end
 end
