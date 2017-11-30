@@ -4,29 +4,34 @@ module Mongoid
       extend ActiveSupport::Concern
 
       def self.included(mod)
-        # re-parse options at end of class definition
         TracePoint.trace(:end) do |tp|
-          if mod == tp.self && mod.track_history_options
-            options_parser = Mongoid::History::Options.new(mod)
-            options = options_parser.parse(mod.track_history_options)
-            Mongoid::History.trackable_class_options[options_parser.scope] = options
+          if mod == tp.self
+            mod.end_tracepoint_reached = true
+            mod.make_trackable
           end
         end
       end
 
       module ClassMethods
-        def track_history_options
-          @track_history_options
-        end
+        attr_accessor :end_tracepoint_reached
 
         def track_history(options = {})
-          # save options so they can be re-parsed at end of class definition
           @track_history_options = options
+
+          return unless @end_tracepoint_reached
+
+          make_trackable
+        end
+
+        def make_trackable
+          return unless @track_history_options
 
           extend EmbeddedMethods
 
+          @parse_count ||= 0
+          @parse_count += 1
           options_parser = Mongoid::History::Options.new(self)
-          options = options_parser.parse(options)
+          options = options_parser.parse(@track_history_options)
 
           field options[:version_field].to_sym, type: Integer
 
