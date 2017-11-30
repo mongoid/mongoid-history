@@ -1,22 +1,24 @@
 require 'spec_helper'
 
-class MyModel
-  include Mongoid::Document
-  include Mongoid::History::Trackable
-  field :foo
-end
-
-class MyDynamicModel
-  include Mongoid::Document
-  include Mongoid::History::Trackable
-  include Mongoid::Attributes::Dynamic unless Mongoid::Compatibility::Version.mongoid3?
-end
-
-class HistoryTracker
-  include Mongoid::History::Tracker
-end
-
 describe Mongoid::History::Trackable do
+  before(:all) do
+    class MyModel
+      include Mongoid::Document
+      include Mongoid::History::Trackable
+      field :foo
+    end
+
+    class MyDynamicModel
+      include Mongoid::Document
+      include Mongoid::History::Trackable
+      include Mongoid::Attributes::Dynamic unless Mongoid::Compatibility::Version.mongoid3?
+    end
+
+    class HistoryTracker
+      include Mongoid::History::Tracker
+    end
+  end
+
   it 'should have #track_history' do
     expect(MyModel).to respond_to :track_history
   end
@@ -154,7 +156,7 @@ describe Mongoid::History::Trackable do
 
     describe '#field_format' do
       before :all do
-        ModelOne = Class.new do
+        class ModelOne
           include Mongoid::Document
           include Mongoid::History::Trackable
           field :foo
@@ -310,18 +312,6 @@ describe Mongoid::History::Trackable do
     end
 
     describe ':changes_method' do
-      let(:custom_tracker) do
-        CustomTracker = Class.new(MyModel) do
-          field :key
-
-          track_history on: :key, changes_method: :my_changes, track_create: true
-
-          def my_changes
-            changes.merge('key' => "Save history-#{key}")
-          end
-        end
-      end
-
       it 'should default to :changes' do
         m = MyModel.create
         expect(m).to receive(:changes).exactly(3).times.and_call_original
@@ -331,6 +321,8 @@ describe Mongoid::History::Trackable do
 
       it 'should allow an alternate method to be specified' do
         class MyModel3 < MyModel
+          include Mongoid::Document
+          include Mongoid::History::Trackable
           track_history changes_method: :my_changes
 
           def my_changes
@@ -345,7 +337,20 @@ describe Mongoid::History::Trackable do
       end
 
       it 'should allow an alternate method to be specified on object creation' do
-        m = custom_tracker.create(key: 'on object creation')
+        class CustomTracker < MyModel
+          include Mongoid::Document
+          include Mongoid::History::Trackable
+
+          field :key
+
+          track_history on: :key, changes_method: :my_changes, track_create: true
+
+          def my_changes
+            changes.merge('key' => "Save history-#{key}")
+          end
+        end
+
+        m = CustomTracker.create(key: 'on object creation')
         history_track = m.history_tracks.last
         expect(history_track.modified['key']).to eq('Save history-on object creation')
       end
@@ -493,7 +498,7 @@ describe Mongoid::History::Trackable do
 
     describe '#modified_attributes_for_update' do
       before(:all) do
-        ModelOne = Class.new do
+        class ModelOne
           include Mongoid::Document
           include Mongoid::History::Trackable
           store_in collection: :model_ones
@@ -501,7 +506,7 @@ describe Mongoid::History::Trackable do
           embeds_many :emb_ones, inverse_class_name: 'EmbOne'
         end
 
-        EmbOne = Class.new do
+        class EmbOne
           include Mongoid::Document
           include Mongoid::History::Trackable
           field :em_foo

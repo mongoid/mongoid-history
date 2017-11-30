@@ -4,7 +4,7 @@ describe Mongoid::History::Trackable do
   describe 'EmbeddedMethods' do
     describe 'embeds_one_class' do
       before :all do
-        ModelOne = Class.new do
+        class ModelOne
           include Mongoid::Document
           include Mongoid::History::Trackable
           embeds_one :emb_one, inverse_class_name: 'EmbOne'
@@ -12,12 +12,12 @@ describe Mongoid::History::Trackable do
           track_history
         end
 
-        EmbOne = Class.new do
+        class EmbOne
           include Mongoid::Document
           embedded_in :model_one
         end
 
-        EmbTwo = Class.new do
+        class EmbTwo
           include Mongoid::Document
           embedded_in :model_one
         end
@@ -36,7 +36,7 @@ describe Mongoid::History::Trackable do
 
     describe 'embeds_many_class' do
       before :all do
-        ModelOne = Class.new do
+        class ModelOne
           include Mongoid::Document
           include Mongoid::History::Trackable
           embeds_many :emb_ones, inverse_class_name: 'EmbOne'
@@ -44,12 +44,12 @@ describe Mongoid::History::Trackable do
           track_history
         end
 
-        EmbOne = Class.new do
+        class EmbOne
           include Mongoid::Document
           embedded_in :model_one
         end
 
-        EmbTwo = Class.new do
+        class EmbTwo
           include Mongoid::Document
           embedded_in :model_one
         end

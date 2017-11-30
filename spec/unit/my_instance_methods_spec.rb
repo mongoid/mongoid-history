@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Mongoid::History::Trackable do
   describe 'MyInstanceMethods' do
     before :all do
-      ModelOne = Class.new do
+      class ModelOne
         include Mongoid::Document
         include Mongoid::History::Trackable
         store_in collection: :model_ones
@@ -15,7 +15,7 @@ describe Mongoid::History::Trackable do
         embeds_many :emb_fours, store_as: :emfs, inverse_class_name: 'EmbFour'
       end
 
-      EmbOne = Class.new do
+      class EmbOne
         include Mongoid::Document
         include Mongoid::History::Trackable
         field :f_em_foo
@@ -23,14 +23,14 @@ describe Mongoid::History::Trackable do
         embedded_in :model_one
       end
 
-      EmbTwo = Class.new do
+      class EmbTwo
         include Mongoid::Document
         include Mongoid::History::Trackable
         field :baz
         embedded_in :model_one
       end
 
-      EmbThree = Class.new do
+      class EmbThree
         include Mongoid::Document
         include Mongoid::History::Trackable
         field :f_em_foo
@@ -38,7 +38,7 @@ describe Mongoid::History::Trackable do
         embedded_in :model_one
       end
 
-      EmbFour = Class.new do
+      class EmbFour
         include Mongoid::Document
         include Mongoid::History::Trackable
         field :baz
@@ -111,7 +111,7 @@ describe Mongoid::History::Trackable do
 
       describe 'embeds_one' do
         before(:all) do
-          Mail = Class.new do
+          class Mail
             include Mongoid::Document
             include Mongoid::History::Trackable
             store_in collection: :mails
@@ -119,7 +119,7 @@ describe Mongoid::History::Trackable do
             embeds_one :mail_subject, inverse_class_name: 'MailSubject'
           end
 
-          MailSubject = Class.new do
+          class MailSubject
             include Mongoid::Document
             field :content
             embedded_in :mail
@@ -164,14 +164,14 @@ describe Mongoid::History::Trackable do
 
       describe 'paranoia' do
         before(:all) do
-          ModelParanoia = Class.new do
+          class ModelParanoia
             include Mongoid::Document
             include Mongoid::History::Trackable
             store_in collection: :model_paranoias
             embeds_many :emb_para_ones, inverse_class_name: 'EmbParaOne'
           end
 
-          EmbParaOne = Class.new do
+          class EmbParaOne
             include Mongoid::Document
             field :em_foo
             field :deleted_at
@@ -287,7 +287,7 @@ describe Mongoid::History::Trackable do
 
       describe 'embeds_one' do
         before(:all) do
-          Email = Class.new do
+          class Email
             include Mongoid::Document
             include Mongoid::History::Trackable
             store_in collection: :emails
@@ -295,7 +295,7 @@ describe Mongoid::History::Trackable do
             embeds_one :email_subject, inverse_class_name: 'EmailSubject'
           end
 
-          EmailSubject = Class.new do
+          class EmailSubject
             include Mongoid::Document
             include Mongoid::History::Trackable
             field :content
@@ -346,14 +346,14 @@ describe Mongoid::History::Trackable do
         context 'when embeds_one has alias' do
           before(:all) do
             # Here i need class name constant in trackable.rb. So, not using `let` to define classes
-            ModelTwo = Class.new do
+            class ModelTwo
               include Mongoid::Document
               include Mongoid::History::Trackable
               store_in collection: :model_twos
               embeds_one :emb_two_one, inverse_class_name: 'EmbTwoOne'
             end
 
-            EmbTwoOne = Class.new do
+            class EmbTwoOne
               include Mongoid::Document
               include Mongoid::History::Trackable
               field :foo
@@ -388,14 +388,14 @@ describe Mongoid::History::Trackable do
         context 'when embeds_many has alias' do
           before(:all) do
             # Here i need class name constant in trackable.rb. So, not using `let` to define classes
-            ModelTwo = Class.new do
+            class ModelTwo
               include Mongoid::Document
               include Mongoid::History::Trackable
               store_in collection: :model_twos
               embeds_many :emb_two_ones, inverse_class_name: 'EmbTwoOne'
             end
 
-            EmbTwoOne = Class.new do
+            class EmbTwoOne
               include Mongoid::Document
               include Mongoid::History::Trackable
               field :foo

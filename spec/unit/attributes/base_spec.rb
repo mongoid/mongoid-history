@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Mongoid::History::Attributes::Base do
   let(:model_one) do
-    Class.new do
+    klass = Class.new do
       include Mongoid::Document
       include Mongoid::History::Trackable
       field :foo
@@ -11,6 +11,8 @@ describe Mongoid::History::Attributes::Base do
         'ModelOne'
       end
     end
+    klass.end_tracepoint_reached = true
+    klass
   end
 
   before :all do
