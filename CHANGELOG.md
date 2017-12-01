@@ -1,6 +1,7 @@
 ### 0.7.1 (Next)
 
 * Your contribution here.
+* [#206](https://github.com/mongoid/mongoid-history/pull/206): Do not track unmodified relations - [@johnnyshields](https://github.com/johnnyshields).
 
 ### 0.7.0 (2017/11/14)
 
