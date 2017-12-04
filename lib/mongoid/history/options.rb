@@ -3,27 +3,30 @@ module Mongoid
     class Options
       attr_reader :trackable, :options
 
-      def initialize(trackable)
+      def initialize(trackable, opts = {})
         @trackable = trackable
+        @options = default_options.merge(opts)
       end
 
       def scope
         trackable.collection_name.to_s.singularize.to_sym
       end
 
-      def parse(options = {})
-        @options = default_options.merge(options)
-        prepare_skipped_fields
-        prepare_formatted_fields
-        parse_tracked_fields_and_relations
-        @options
+      def prepared
+        @prepared ||= begin
+          prepare_skipped_fields
+          prepare_formatted_fields
+          parse_tracked_fields_and_relations
+          options
+        end
       end
 
       private
 
       def default_options
         @default_options ||=
-          { on: :all,
+          {
+            on: :all,
             except: %i[created_at updated_at],
             tracker_class_name: nil,
             modifier_field: :modifier,
@@ -33,7 +36,8 @@ module Mongoid
             track_create: false,
             track_update: true,
             track_destroy: false,
-            format: nil }
+            format: nil
+          }
       end
 
       # Sets the :except attributes and relations in `options` to be an [ Array <String> ]
