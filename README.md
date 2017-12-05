@@ -429,6 +429,18 @@ Or perhaps you are namespacing to a module:
 Mongoid::History.modifier_class_name = 'CMS::Author'
 ```
 
+**Conditional :if and :unless options**
+
+The `track_history` method supports `:if` and `:unless` options which will skip generating
+the history tracker unless they are satisfied. These options can take either a method
+`Symbol` or a `Proc`. They behave identical to how `:if` and `:unless` behave in Rails model callbacks.
+
+```ruby
+  track_history on: [:ip],
+                if: :should_i_track_history?,
+                unless: ->(obj){ obj.method_to_skip_history }
+```
+
 **Using an alternate changes method**
 
 Sometimes you may wish to provide an alternate method for determining which changes should be tracked.  For example, if you are using embedded documents

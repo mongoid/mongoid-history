@@ -1,6 +1,7 @@
 ### 0.7.1 (Next)
 
 * [#208](https://github.com/mongoid/mongoid-history/pull/208): Fix: history tracks fields declared after `track_history` - [@mikwat](https://github.com/mikwat).
+* [#209](https://github.com/mongoid/mongoid-history/pull/209): `track_history` method support for `:if` and `:unless` options - [@johnnyshields](https://github.com/johnnyshields).
 * Your contribution here.
 
 ### 0.7.0 (2017/11/14)
