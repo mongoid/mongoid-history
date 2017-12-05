@@ -1,6 +1,7 @@
-### 0.7.1 (Next)
+### 0.8.0 (Next)
 
 * Your contribution here.
+* [#207](https://github.com/mongoid/mongoid-history/pull/207): BREAKING CHANGE - Enable tracking create/destroy by default - [@johnnyshields](https://github.com/johnnyshields).
 
 ### 0.7.0 (2017/11/14)
 
