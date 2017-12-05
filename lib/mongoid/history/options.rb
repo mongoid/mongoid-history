@@ -33,9 +33,9 @@ module Mongoid
             version_field: :version,
             changes_method: :changes,
             scope: scope,
-            track_create: false,
+            track_create: true,
             track_update: true,
-            track_destroy: false,
+            track_destroy: true,
             format: nil
           }
       end
