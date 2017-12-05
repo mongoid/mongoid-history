@@ -7,14 +7,13 @@ module Mongoid
         def track_history(options = {})
           extend EmbeddedMethods
 
-          options_parser = Mongoid::History::Options.new(self)
-          options = options_parser.parse(options)
+          history_options = Mongoid::History::Options.new(self, options)
 
-          field options[:version_field].to_sym, type: Integer
+          field history_options.options[:version_field].to_sym, type: Integer
 
           belongs_to_modifier_options = { class_name: Mongoid::History.modifier_class_name }
-          belongs_to_modifier_options[:inverse_of] = options[:modifier_field_inverse_of] if options.key?(:modifier_field_inverse_of)
-          belongs_to options[:modifier_field].to_sym, belongs_to_modifier_options
+          belongs_to_modifier_options[:inverse_of] = options[:modifier_field_inverse_of] if history_options.options.key?(:modifier_field_inverse_of)
+          belongs_to history_options.options[:modifier_field].to_sym, belongs_to_modifier_options
 
           include MyInstanceMethods
           extend SingletonMethods
@@ -22,12 +21,12 @@ module Mongoid
           delegate :history_trackable_options, to: 'self.class'
           delegate :track_history?, to: 'self.class'
 
-          around_update :track_update if options[:track_update]
-          around_create :track_create if options[:track_create]
-          around_destroy :track_destroy if options[:track_destroy]
+          around_update :track_update if history_options.options[:track_update]
+          around_create :track_create if history_options.options[:track_create]
+          around_destroy :track_destroy if history_options.options[:track_destroy]
 
           Mongoid::History.trackable_class_options ||= {}
-          Mongoid::History.trackable_class_options[options_parser.scope] = options
+          Mongoid::History.trackable_class_options[history_options.scope] = history_options
         end
 
         def history_settings(options = {})
@@ -494,7 +493,7 @@ module Mongoid
         end
 
         def history_trackable_options
-          @history_trackable_options ||= Mongoid::History.trackable_class_options[trackable_scope]
+          @history_trackable_options ||= Mongoid::History.trackable_class_options[trackable_scope].prepared
         end
 
         def clear_trackable_memoization

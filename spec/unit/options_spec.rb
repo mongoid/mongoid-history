@@ -42,7 +42,8 @@ describe Mongoid::History::Options do
     end
   end
 
-  let(:service) { described_class.new(ModelOne) }
+  let(:options) { {} }
+  let(:service) { described_class.new(ModelOne, options) }
 
   subject { service }
 
@@ -77,7 +78,7 @@ describe Mongoid::History::Options do
 
     describe '#prepare_skipped_fields' do
       let(:options) { { except: value } }
-      subject { service.parse(options) }
+      subject { service.prepared }
 
       context 'with field' do
         let(:value) { :foo }
@@ -107,7 +108,7 @@ describe Mongoid::History::Options do
 
     describe '#prepare_formatted_fields' do
       let(:options) { { format: value } }
-      subject { service.parse(options) }
+      subject { service.prepared }
 
       context 'with non-hash' do
         let(:value) { :foo }
@@ -143,11 +144,11 @@ describe Mongoid::History::Options do
             relations: { embeds_one: {}, embeds_many: {} },
             format: {} }
         end
-        it { expect(service.parse).to eq expected_options }
+        it { expect(service.prepared).to eq expected_options }
       end
 
       context 'when options passed' do
-        subject { service.parse(options) }
+        subject { service.prepared }
 
         describe '@options' do
           let(:options) { { on: value } }

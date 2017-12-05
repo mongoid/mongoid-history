@@ -53,7 +53,7 @@ describe Mongoid::History::Trackable do
     let(:reserved_fields) { %w[_id version modifier_id] }
 
     it 'should have default options' do
-      expect(Mongoid::History.trackable_class_options[:my_model]).to eq(expected_option)
+      expect(Mongoid::History.trackable_class_options[:my_model].prepared).to eq(expected_option)
     end
 
     it 'should define callback function #track_update' do
@@ -191,7 +191,7 @@ describe Mongoid::History::Trackable do
       end
 
       it 'should have default options' do
-        expect(Mongoid::History.trackable_class_options[:my_model]).to eq(expected_option)
+        expect(Mongoid::History.trackable_class_options[:my_model].prepared).to eq(expected_option)
       end
 
       it 'should define #history_trackable_options' do

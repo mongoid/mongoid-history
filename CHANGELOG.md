@@ -1,5 +1,6 @@
 ### 0.8.0 (Next)
 
+* [#208](https://github.com/mongoid/mongoid-history/pull/208): Fix: history tracks fields declared after `track_history` - [@mikwat](https://github.com/mikwat).
 * Your contribution here.
 * [#207](https://github.com/mongoid/mongoid-history/pull/207): BREAKING CHANGE - Enable tracking create/destroy by default - [@johnnyshields](https://github.com/johnnyshields).
 
