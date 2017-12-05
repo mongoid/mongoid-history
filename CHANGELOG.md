@@ -2,6 +2,7 @@
 
 * [#208](https://github.com/mongoid/mongoid-history/pull/208): Fix: history tracks fields declared after `track_history` - [@mikwat](https://github.com/mikwat).
 * Your contribution here.
+* [#206](https://github.com/mongoid/mongoid-history/pull/206): Do not track unmodified relations - [@johnnyshields](https://github.com/johnnyshields).
 
 ### 0.7.0 (2017/11/14)
 
