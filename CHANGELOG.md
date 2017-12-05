@@ -4,6 +4,7 @@
 * [#210](https://github.com/mongoid/mongoid-history/pull/210): Do not track unmodified embedded relations - [@jagdeepsingh](https://github.com/jagdeepsingh).
 * [#205](https://github.com/mongoid/mongoid-history/pull/205): Allow modifier field to be optional - [@yads](https://github.com/yads).
 * [#211](https://github.com/mongoid/mongoid-history/pull/211): Enable tracking create/destroy by default - [@jagdeepsingh](https://github.com/jagdeepsingh).
+* [#209](https://github.com/mongoid/mongoid-history/pull/209): `track_history` method support for `:if` and `:unless` options - [@johnnyshields](https://github.com/johnnyshields).
 * Your contribution here.
 
 ### 0.7.0 (2017/11/14)
