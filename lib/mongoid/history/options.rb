@@ -25,8 +25,7 @@ module Mongoid
 
       def default_options
         @default_options ||=
-          {
-            on: :all,
+          { on: :all,
             except: %i[created_at updated_at],
             tracker_class_name: nil,
             modifier_field: :modifier,

@@ -28,7 +28,7 @@ describe Mongoid::History::Attributes::Destroy do
         obj_one.save!
       end
       let(:obj_one) { model_one.new(foo: 'Foo', bar: 'Bar') }
-      it { is_expected.to eq('_id' => [obj_one._id, nil], 'foo' => ['Foo', nil]) }
+      it { is_expected.to eq('_id' => [obj_one._id, nil], 'foo' => ['Foo', nil], 'version' => [1, nil]) }
     end
 
     describe '#insert_embeds_one_changes' do
