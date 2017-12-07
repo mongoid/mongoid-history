@@ -11,9 +11,12 @@ module Mongoid
 
           field history_options.options[:version_field].to_sym, type: Integer
 
-          belongs_to_modifier_options = { class_name: Mongoid::History.modifier_class_name }
-          belongs_to_modifier_options[:inverse_of] = options[:modifier_field_inverse_of] if history_options.options.key?(:modifier_field_inverse_of)
-          belongs_to history_options.options[:modifier_field].to_sym, belongs_to_modifier_options
+          unless history_options.options[:modifier_field].nil?
+            belongs_to_modifier_options = { class_name: Mongoid::History.modifier_class_name }
+            belongs_to_modifier_options[:inverse_of] = history_options.options[:modifier_field_inverse_of] if history_options.options.key?(:modifier_field_inverse_of)
+            belongs_to_modifier_options[:optional] = true if history_options.options[:modifier_field_optional] && Mongoid::Compatibility::Version.mongoid6_or_newer?
+            belongs_to history_options.options[:modifier_field].to_sym, belongs_to_modifier_options
+          end
 
           include MyInstanceMethods
           extend SingletonMethods
@@ -218,11 +221,12 @@ module Mongoid
         def history_tracker_attributes(action)
           return @history_tracker_attributes if @history_tracker_attributes
 
+          modifier_field = history_trackable_options[:modifier_field]
           @history_tracker_attributes = {
             association_chain: traverse_association_chain,
-            scope: related_scope,
-            modifier: send(history_trackable_options[:modifier_field])
+            scope: related_scope
           }
+          @history_tracker_attributes[:modifier] = send(modifier_field) if modifier_field
 
           original, modified = transform_changes(modified_attributes_for_action(action))
 
@@ -424,7 +428,12 @@ module Mongoid
         #
         # @return [ Array < String > ] the list of reserved database field names
         def reserved_tracked_fields
-          @reserved_tracked_fields ||= ['_id', history_trackable_options[:version_field].to_s, "#{history_trackable_options[:modifier_field]}_id"]
+          @reserved_tracked_fields ||= begin
+                                         fields = ['_id', history_trackable_options[:version_field].to_s]
+                                         modifier_field = history_trackable_options[:modifier_field]
+                                         fields << "#{modifier_field}_id" if modifier_field
+                                         fields
+                                       end
         end
 
         def field_formats

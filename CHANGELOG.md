@@ -3,6 +3,7 @@
 * [#208](https://github.com/mongoid/mongoid-history/pull/208): Fix: history tracks fields declared after `track_history` - [@mikwat](https://github.com/mikwat).
 * [#210](https://github.com/mongoid/mongoid-history/pull/210): Do not track unmodified embedded relations - [@jagdeepsingh](https://github.com/jagdeepsingh).
 * Your contribution here.
+* [#205](https://github.com/mongoid/mongoid-history/pull/205): Allow modifier field to be optional - [@yads](https://github.com/yads).
 
 ### 0.7.0 (2017/11/14)
 

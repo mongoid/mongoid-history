@@ -28,9 +28,16 @@ describe Mongoid::History::Trackable do
   end
 
   describe '#track_history' do
+    class MyModelWithNoModifier
+      include Mongoid::Document
+      include Mongoid::History::Trackable
+      field :foo
+    end
+
     before :all do
       MyModel.track_history
       @persisted_history_options = Mongoid::History.trackable_class_options
+      MyModelWithNoModifier.track_history modifier_field: nil
     end
     before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
     let(:expected_option) do
@@ -72,6 +79,31 @@ describe Mongoid::History::Trackable do
       expect(MyModel.history_trackable_options).to eq(expected_option)
     end
 
+    describe '#modifier' do
+      context 'modifier_field set to nil' do
+        it 'should not have a modifier relationship' do
+          expect(MyModelWithNoModifier.reflect_on_association(:modifier)).to be_nil
+        end
+      end
+
+      context 'modifier_field_optional true' do
+        class MyModelWithOptionalModifier
+          include Mongoid::Document
+          include Mongoid::History::Trackable
+          field :foo
+        end
+
+        it 'marks modifier relationship optional' do
+          MyModelWithOptionalModifier.track_history modifier_field_optional: true
+          if Mongoid::Compatibility::Version.mongoid6_or_newer?
+            expect(MyModelWithOptionalModifier.reflect_on_association(:modifier)[:optional]).to be true
+          else
+            expect(MyModelWithOptionalModifier.reflect_on_association(:modifier)).not_to be_nil
+          end
+        end
+      end
+    end
+
     describe '#tracked_fields' do
       it 'should return the tracked field list' do
         expect(MyModel.tracked_fields).to eq(regular_fields)
@@ -81,6 +113,10 @@ describe Mongoid::History::Trackable do
     describe '#reserved_tracked_fields' do
       it 'should return the protected field list' do
         expect(MyModel.reserved_tracked_fields).to eq(reserved_fields)
+      end
+
+      it 'should not include modifier_field if not specified' do
+        expect(MyModelWithNoModifier.reserved_tracked_fields).not_to include('modifier')
       end
     end
 
@@ -628,11 +664,18 @@ describe Mongoid::History::Trackable do
     before :all do
       MyModel.track_history(on: :foo, track_create: true)
       @persisted_history_options = Mongoid::History.trackable_class_options
+      MyModelWithNoModifier.track_history modifier_field: nil
     end
     before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
 
     it 'should create history' do
       expect { MyModel.create!(foo: 'bar') }.to change(Tracker, :count).by(1)
+    end
+
+    context 'no modifier_field' do
+      it 'should create history' do
+        expect { MyModelWithNoModifier.create!(foo: 'bar').to change(Tracker, :count).by(1) }
+      end
     end
 
     it 'should not create history when error raised' do
