@@ -68,9 +68,9 @@ describe Mongoid::History::Options do
           version_field: :version,
           changes_method: :changes,
           scope: :model_one,
-          track_create: false,
+          track_create: true,
           track_update: true,
-          track_destroy: false,
+          track_destroy: true,
           format: nil }
       end
       it { expect(service.send(:default_options)).to eq expected_options }
@@ -136,9 +136,9 @@ describe Mongoid::History::Options do
             version_field: :version,
             changes_method: :changes,
             scope: :model_one,
-            track_create: false,
+            track_create: true,
             track_update: true,
-            track_destroy: false,
+            track_destroy: true,
             fields: %w[foo b],
             dynamic: [],
             relations: { embeds_one: {}, embeds_many: {} },

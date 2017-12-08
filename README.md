@@ -70,9 +70,9 @@ class Post
                   :modifier_field_inverse_of => :nil, # adds an ":inverse_of" option to the "belongs_to :modifier" relation, default is not set
                   :modifier_field_optional => true, # marks the modifier relationship as optional (requires Mongoid 6 or higher)
                   :version_field => :version,   # adds "field :version, :type => Integer" to track current version, default is :version
-                  :track_create   =>  false,    # track document creation, default is false
-                  :track_update   =>  true,     # track document updates, default is true
-                  :track_destroy  =>  false     # track document destruction, default is false
+                  :track_create  => true,       # track document creation, default is true
+                  :track_update  => true,       # track document updates, default is true
+                  :track_destroy => true        # track document destruction, default is true
 end
 
 class Comment

@@ -25,19 +25,17 @@ module Mongoid
 
       def default_options
         @default_options ||=
-          {
-            on: :all,
+          { on: :all,
             except: %i[created_at updated_at],
             tracker_class_name: nil,
             modifier_field: :modifier,
             version_field: :version,
             changes_method: :changes,
             scope: scope,
-            track_create: false,
+            track_create: true,
             track_update: true,
-            track_destroy: false,
-            format: nil
-          }
+            track_destroy: true,
+            format: nil }
       end
 
       # Sets the :except attributes and relations in `options` to be an [ Array <String> ]

@@ -122,6 +122,7 @@ describe Mongoid::History do
 
     describe 'on destruction' do
       it 'should have two history track records in post' do
+        post # This will create history track records for creation
         expect do
           post.destroy
         end.to change(Tracker, :count).by(1)
@@ -147,12 +148,14 @@ describe Mongoid::History do
 
     describe 'on update non-embedded' do
       it 'should create a history track if changed attributes match tracked attributes' do
+        post # This will create history track records for creation
         expect do
           post.update_attributes(title: 'Another Test')
         end.to change(Tracker, :count).by(1)
       end
 
       it 'should not create a history track if changed attributes do not match tracked attributes' do
+        post # This will create history track records for creation
         expect do
           post.update_attributes(rating: 'untracked')
         end.to change(Tracker, :count).by(0)
@@ -188,8 +191,9 @@ describe Mongoid::History do
       end
 
       it 'should assign version on post' do
+        expect(post.version).to eq(1) # Created
         post.update_attributes(title: 'Another Test')
-        expect(post.version).to eq(1)
+        expect(post.version).to eq(2) # Updated
       end
 
       it 'should assign scope' do
@@ -205,16 +209,16 @@ describe Mongoid::History do
       it 'should exclude defined options' do
         name = user.name
         user.update_attributes(name: 'Aaron2', email: 'aaronsnewemail@randomemail.com')
-        expect(user.history_tracks.first.original.keys).to eq(['n'])
-        expect(user.history_tracks.first.original['n']).to eq(name)
-        expect(user.history_tracks.first.modified.keys).to eq(['n'])
-        expect(user.history_tracks.first.modified['n']).to eq(user.name)
+        expect(user.history_tracks.last.original.keys).to eq(['n'])
+        expect(user.history_tracks.last.original['n']).to eq(name)
+        expect(user.history_tracks.last.modified.keys).to eq(['n'])
+        expect(user.history_tracks.last.modified['n']).to eq(user.name)
       end
 
       it 'should undo field changes' do
         name = user.name
         user.update_attributes(name: 'Aaron2', email: 'aaronsnewemail@randomemail.com')
-        user.history_tracks.first.undo! nil
+        user.history_tracks.last.undo! nil
         expect(user.reload.name).to eq(name)
       end
 
@@ -223,21 +227,21 @@ describe Mongoid::History do
         expect(post.reload.title).to be_nil
         post.update_attributes(title: 'Aaron2')
         expect(post.reload.title).to eq('Aaron2')
-        post.history_tracks.first.undo! nil
+        post.history_tracks.last.undo! nil
         expect(post.reload.title).to be_nil
       end
 
       it 'should track array changes' do
         aliases = user.aliases
         user.update_attributes(aliases: %w[bob joe])
-        expect(user.history_tracks.first.original['aliases']).to eq(aliases)
-        expect(user.history_tracks.first.modified['aliases']).to eq(user.aliases)
+        expect(user.history_tracks.last.original['aliases']).to eq(aliases)
+        expect(user.history_tracks.last.modified['aliases']).to eq(user.aliases)
       end
 
       it 'should undo array changes' do
         aliases = user.aliases
         user.update_attributes(aliases: %w[bob joe])
-        user.history_tracks.first.undo! nil
+        user.history_tracks.last.undo! nil
         expect(user.reload.aliases).to eq(aliases)
       end
     end
@@ -259,7 +263,7 @@ describe Mongoid::History do
         end
       end
       context 'update action' do
-        subject { user.history_tracks.first.tracked_changes }
+        subject { user.history_tracks.last.tracked_changes }
         before do
           user.update_attributes(name: 'Aaron2', email: nil, country: '',  city: nil, phone: '867-5309', aliases: ['', 'bill', 'james'])
         end
@@ -305,7 +309,7 @@ describe Mongoid::History do
         end
       end
       context 'update action' do
-        subject { user.history_tracks.first.tracked_edits }
+        subject { user.history_tracks.last.tracked_edits }
         before do
           user.update_attributes(name: 'Aaron2', email: nil, country: '', city: nil, phone: '867-5309', aliases: ['', 'bill', 'james'])
         end
@@ -348,12 +352,14 @@ describe Mongoid::History do
 
     describe 'on update non-embedded twice' do
       it 'should assign version on post' do
+        expect(post.version).to eq(1)
         post.update_attributes(title: 'Test2')
         post.update_attributes(title: 'Test3')
-        expect(post.version).to eq(2)
+        expect(post.version).to eq(3)
       end
 
       it 'should create a history track if changed attributes match tracked attributes' do
+        post # Created
         expect do
           post.update_attributes(title: 'Test2')
           post.update_attributes(title: 'Test3')
@@ -369,7 +375,7 @@ describe Mongoid::History do
       it 'should assign modified fields' do
         post.update_attributes(title: 'Test2')
         post.update_attributes(title: 'Test3')
-        expect(post.history_tracks.where(version: 2).first.modified).to eq(
+        expect(post.history_tracks.where(version: 3).first.modified).to eq(
           'title' => 'Test3'
         )
       end
@@ -377,7 +383,7 @@ describe Mongoid::History do
       it 'should assign original fields' do
         post.update_attributes(title: 'Test2')
         post.update_attributes(title: 'Test3')
-        expect(post.history_tracks.where(version: 2).first.original).to eq(
+        expect(post.history_tracks.where(version: 3).first.original).to eq(
           'title' => 'Test2'
         )
       end
@@ -504,7 +510,7 @@ describe Mongoid::History do
       it 'should be possible to create with redo after undo create embedded from parent' do
         comment # initialize
         post.comments.create!(title: 'The second one')
-        track = post.history_tracks.last
+        track = post.history_tracks[2]
         track.undo!(user)
         track.redo!(user)
         post.reload
@@ -552,14 +558,14 @@ describe Mongoid::History do
     describe 'non-embedded' do
       it 'should undo changes' do
         post.update_attributes(title: 'Test2')
-        post.history_tracks.where(version: 1).last.undo!(user)
+        post.history_tracks.where(version: 2).last.undo!(user)
         post.reload
         expect(post.title).to eq('Test')
       end
 
       it 'should undo destruction' do
         post.destroy
-        post.history_tracks.where(version: 1).last.undo!(user)
+        post.history_tracks.where(version: 2).last.undo!(user)
         expect(Post.find(post.id).title).to eq('Test')
       end
 
@@ -568,12 +574,12 @@ describe Mongoid::History do
         post.update_attributes(title: 'Test2')
         post.history_tracks.last.undo!(user)
         post.reload
-        expect(post.history_tracks.count).to eq(3)
+        expect(post.history_tracks.count).to eq(4)
       end
 
       it 'should assign user as the modifier of the newly created history track' do
         post.update_attributes(title: 'Test2')
-        post.history_tracks.where(version: 1).last.undo!(user)
+        post.history_tracks.where(version: 2).last.undo!(user)
         post.reload
         expect(post.history_tracks.where(version: 2).last.modifier).to eq(user)
       end
@@ -590,7 +596,7 @@ describe Mongoid::History do
 
       it 'should be destroyed after undo and redo' do
         post.destroy
-        track = post.history_tracks.where(version: 1).last
+        track = post.history_tracks.where(version: 2).last
         track.undo!(user)
         track.redo!(user)
         expect(Post.where(_id: post.id).first).to be_nil
