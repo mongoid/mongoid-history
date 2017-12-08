@@ -627,10 +627,9 @@ describe Mongoid::History::Trackable do
       @persisted_history_options = Mongoid::History.trackable_class_options
     end
     before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
-    let(:m) { MyModel.create!(foo: 'bar') }
+    let!(:m) { MyModel.create!(foo: 'bar') }
 
     it 'should create history' do
-      m   # Created
       expect { m.update_attributes!(foo: 'bar2') }.to change(Tracker, :count).by(1)
     end
 
@@ -648,10 +647,9 @@ describe Mongoid::History::Trackable do
       @persisted_history_options = Mongoid::History.trackable_class_options
     end
     before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
-    let(:m) { MyModel.create!(foo: 'bar') }
+    let!(:m) { MyModel.create!(foo: 'bar') }
 
     it 'should create history' do
-      m   # Created
       expect { m.destroy }.to change(Tracker, :count).by(1)
     end
 
