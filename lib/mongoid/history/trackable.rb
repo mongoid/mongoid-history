@@ -24,9 +24,10 @@ module Mongoid
           delegate :history_trackable_options, to: 'self.class'
           delegate :track_history?, to: 'self.class'
 
-          around_update :track_update if history_options.options[:track_update]
-          around_create :track_create if history_options.options[:track_create]
-          around_destroy :track_destroy if history_options.options[:track_destroy]
+          callback_options = history_options.options.slice(:if, :unless)
+          around_update :track_update, callback_options if history_options.options[:track_update]
+          around_create :track_create, callback_options if history_options.options[:track_create]
+          around_destroy :track_destroy, callback_options if history_options.options[:track_destroy]
 
           Mongoid::History.trackable_class_options ||= {}
           Mongoid::History.trackable_class_options[history_options.scope] = history_options
