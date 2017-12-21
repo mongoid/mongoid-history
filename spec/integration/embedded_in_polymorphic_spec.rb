@@ -68,7 +68,7 @@ describe Mongoid::History::Tracker do
                     track_create: true, # track document creation, default is false
                     track_update: true, # track document updates, default is true
                     track_destroy: false, # track document destruction, default is false
-                    scope: [:real_state, :company]
+                    scope: %i[real_state company]
     end
 
     class User

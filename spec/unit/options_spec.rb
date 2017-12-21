@@ -42,7 +42,8 @@ describe Mongoid::History::Options do
     end
   end
 
-  let(:service) { described_class.new(ModelOne) }
+  let(:options) { {} }
+  let(:service) { described_class.new(ModelOne, options) }
 
   subject { service }
 
@@ -61,15 +62,15 @@ describe Mongoid::History::Options do
     describe '#default_options' do
       let(:expected_options) do
         { on: :all,
-          except: [:created_at, :updated_at],
+          except: %i[created_at updated_at],
           tracker_class_name: nil,
           modifier_field: :modifier,
           version_field: :version,
           changes_method: :changes,
           scope: :model_one,
-          track_create: false,
+          track_create: true,
           track_update: true,
-          track_destroy: false,
+          track_destroy: true,
           format: nil }
       end
       it { expect(service.send(:default_options)).to eq expected_options }
@@ -77,37 +78,37 @@ describe Mongoid::History::Options do
 
     describe '#prepare_skipped_fields' do
       let(:options) { { except: value } }
-      subject { service.parse(options) }
+      subject { service.prepared }
 
       context 'with field' do
         let(:value) { :foo }
-        it { expect(subject[:except]).to eq %w(foo) }
+        it { expect(subject[:except]).to eq %w[foo] }
       end
 
       context 'with array of fields' do
-        let(:value) { %i(foo) }
-        it { expect(subject[:except]).to eq %w(foo) }
+        let(:value) { %i[foo] }
+        it { expect(subject[:except]).to eq %w[foo] }
       end
 
       context 'with field alias' do
-        let(:value) { %i(foo bar) }
-        it { expect(subject[:except]).to eq %w(foo b) }
+        let(:value) { %i[foo bar] }
+        it { expect(subject[:except]).to eq %w[foo b] }
       end
 
       context 'with duplicate values' do
-        let(:value) { %i(foo bar b) }
-        it { expect(subject[:except]).to eq %w(foo b) }
+        let(:value) { %i[foo bar b] }
+        it { expect(subject[:except]).to eq %w[foo b] }
       end
 
       context 'with blank values' do
-        let(:value) { %i(foo) | [nil] }
-        it { expect(subject[:except]).to eq %w(foo) }
+        let(:value) { %i[foo] | [nil] }
+        it { expect(subject[:except]).to eq %w[foo] }
       end
     end
 
     describe '#prepare_formatted_fields' do
       let(:options) { { format: value } }
-      subject { service.parse(options) }
+      subject { service.prepared }
 
       context 'with non-hash' do
         let(:value) { :foo }
@@ -128,140 +129,140 @@ describe Mongoid::History::Options do
     describe '#parse_tracked_fields_and_relations' do
       context 'when options not passed' do
         let(:expected_options) do
-          { on: %i(foo b),
-            except: %w(created_at updated_at),
+          { on: %i[foo b],
+            except: %w[created_at updated_at],
             tracker_class_name: nil,
             modifier_field: :modifier,
             version_field: :version,
             changes_method: :changes,
             scope: :model_one,
-            track_create: false,
+            track_create: true,
             track_update: true,
-            track_destroy: false,
-            fields: %w(foo b),
+            track_destroy: true,
+            fields: %w[foo b],
             dynamic: [],
             relations: { embeds_one: {}, embeds_many: {} },
             format: {} }
         end
-        it { expect(service.parse).to eq expected_options }
+        it { expect(service.prepared).to eq expected_options }
       end
 
       context 'when options passed' do
-        subject { service.parse(options) }
+        subject { service.prepared }
 
         describe '@options' do
           let(:options) { { on: value } }
 
           context 'with field' do
             let(:value) { :foo }
-            it { expect(subject[:on]).to eq %i(foo) }
-            it { expect(subject[:fields]).to eq %w(foo) }
+            it { expect(subject[:on]).to eq %i[foo] }
+            it { expect(subject[:fields]).to eq %w[foo] }
           end
 
           context 'with array of fields' do
-            let(:value) { %i(foo) }
-            it { expect(subject[:on]).to eq %i(foo) }
-            it { expect(subject[:fields]).to eq %w(foo) }
+            let(:value) { %i[foo] }
+            it { expect(subject[:on]).to eq %i[foo] }
+            it { expect(subject[:fields]).to eq %w[foo] }
           end
 
           context 'with embeds_one relation attributes' do
-            let(:value) { { emb_one: %i(f_em_foo) } }
-            it { expect(subject[:on]).to eq [[:emb_one, %i(f_em_foo)]] }
+            let(:value) { { emb_one: %i[f_em_foo] } }
+            it { expect(subject[:on]).to eq [[:emb_one, %i[f_em_foo]]] }
           end
 
           context 'with fields and embeds_one relation attributes' do
-            let(:value) { [:foo, emb_one: %i(f_em_foo)] }
-            it { expect(subject[:on]).to eq [:foo, emb_one: %i(f_em_foo)] }
+            let(:value) { [:foo, emb_one: %i[f_em_foo]] }
+            it { expect(subject[:on]).to eq [:foo, emb_one: %i[f_em_foo]] }
           end
 
           context 'with :all' do
             let(:value) { :all }
-            it { expect(subject[:on]).to eq %i(foo b) }
+            it { expect(subject[:on]).to eq %i[foo b] }
           end
 
           context 'with :fields' do
             let(:value) { :fields }
-            it { expect(subject[:on]).to eq %i(foo b) }
+            it { expect(subject[:on]).to eq %i[foo b] }
           end
 
           describe '#categorize_tracked_option' do
             context 'with skipped field' do
-              let(:options) { { on: %i(foo bar), except: :foo } }
-              it { expect(subject[:fields]).to eq %w(b) }
+              let(:options) { { on: %i[foo bar], except: :foo } }
+              it { expect(subject[:fields]).to eq %w[b] }
             end
 
             context 'with skipped embeds_one relation' do
-              let(:options) { { on: %i(fields emb_one emb_two), except: :emb_one } }
-              it { expect(subject[:relations][:embeds_one]).to eq('emtw' => %w(_id f_em_baz)) }
+              let(:options) { { on: %i[fields emb_one emb_two], except: :emb_one } }
+              it { expect(subject[:relations][:embeds_one]).to eq('emtw' => %w[_id f_em_baz]) }
             end
 
             context 'with skipped embeds_many relation' do
-              let(:options) { { on: %i(fields emb_threes emb_fours), except: :emb_threes } }
-              it { expect(subject[:relations][:embeds_many]).to eq('emfs' => %w(_id f_em_baz)) }
+              let(:options) { { on: %i[fields emb_threes emb_fours], except: :emb_threes } }
+              it { expect(subject[:relations][:embeds_many]).to eq('emfs' => %w[_id f_em_baz]) }
             end
 
             context 'with reserved field' do
-              let(:options) { { on: %i(_id _type foo deleted_at) } }
-              it { expect(subject[:fields]).to eq %w(foo) }
+              let(:options) { { on: %i[_id _type foo deleted_at] } }
+              it { expect(subject[:fields]).to eq %w[foo] }
             end
 
             context 'when embeds_one attribute passed' do
               let(:options) { { on: { emb_one: :f_em_foo } } }
-              it { expect(subject[:relations][:embeds_one]).to eq('emb_one' => %w(_id f_em_foo)) }
+              it { expect(subject[:relations][:embeds_one]).to eq('emb_one' => %w[_id f_em_foo]) }
             end
 
             context 'when embeds_one attributes array passed' do
-              let(:options) { { on: { emb_one: %i(f_em_foo) } } }
-              it { expect(subject[:relations][:embeds_one]).to eq('emb_one' => %w(_id f_em_foo)) }
+              let(:options) { { on: { emb_one: %i[f_em_foo] } } }
+              it { expect(subject[:relations][:embeds_one]).to eq('emb_one' => %w[_id f_em_foo]) }
             end
 
             context 'when embeds_many attribute passed' do
               let(:options) { { on: { emb_threes: :f_em_foo } } }
-              it { expect(subject[:relations][:embeds_many]).to eq('emb_threes' => %w(_id f_em_foo)) }
+              it { expect(subject[:relations][:embeds_many]).to eq('emb_threes' => %w[_id f_em_foo]) }
             end
 
             context 'when embeds_many attributes array passed' do
-              let(:options) { { on: { emb_threes: %i(f_em_foo) } } }
-              it { expect(subject[:relations][:embeds_many]).to eq('emb_threes' => %w(_id f_em_foo)) }
+              let(:options) { { on: { emb_threes: %i[f_em_foo] } } }
+              it { expect(subject[:relations][:embeds_many]).to eq('emb_threes' => %w[_id f_em_foo]) }
             end
 
             context 'when embeds_one attributes not passed' do
               let(:options) { { on: :emb_one } }
-              it { expect(subject[:relations][:embeds_one]).to eq('emb_one' => %w(_id f_em_foo fmb)) }
+              it { expect(subject[:relations][:embeds_one]).to eq('emb_one' => %w[_id f_em_foo fmb]) }
             end
 
             context 'when embeds_many attributes not passed' do
               let(:options) { { on: :emb_threes } }
-              it { expect(subject[:relations][:embeds_many]).to eq('emb_threes' => %w(_id f_em_foo fmb)) }
+              it { expect(subject[:relations][:embeds_many]).to eq('emb_threes' => %w[_id f_em_foo fmb]) }
             end
 
             context 'when embeds_one attribute alias passed' do
-              let(:options) { { on: { emb_one: %i(f_em_bar) } } }
-              it { expect(subject[:relations][:embeds_one]).to eq('emb_one' => %w(_id fmb)) }
+              let(:options) { { on: { emb_one: %i[f_em_bar] } } }
+              it { expect(subject[:relations][:embeds_one]).to eq('emb_one' => %w[_id fmb]) }
             end
 
             context 'when embeds_many attribute alias passed' do
-              let(:options) { { on: { emb_threes: %i(f_em_bar) } } }
-              it { expect(subject[:relations][:embeds_many]).to eq('emb_threes' => %w(_id fmb)) }
+              let(:options) { { on: { emb_threes: %i[f_em_bar] } } }
+              it { expect(subject[:relations][:embeds_many]).to eq('emb_threes' => %w[_id fmb]) }
             end
 
             context 'with field alias' do
               let(:options) { { on: :bar } }
-              it { expect(subject[:fields]).to eq %w(b) }
+              it { expect(subject[:fields]).to eq %w[b] }
             end
 
             context 'with dynamic field name' do
               let(:options) { { on: :my_field } }
-              it { expect(subject[:dynamic]).to eq %w(my_field) }
+              it { expect(subject[:dynamic]).to eq %w[my_field] }
             end
 
             context 'with relations' do
               let(:options) { { on: :embedded_relations } }
               it do
-                expect(subject[:relations]).to eq(embeds_many: { 'emb_threes' => %w(_id f_em_foo fmb),
-                                                                 'emfs'       => %w(_id f_em_baz) },
-                                                  embeds_one: { 'emb_one'    => %w(_id f_em_foo fmb),
-                                                                'emtw'       => %w(_id f_em_baz) })
+                expect(subject[:relations]).to eq(embeds_many: { 'emb_threes' => %w[_id f_em_foo fmb],
+                                                                 'emfs'       => %w[_id f_em_baz] },
+                                                  embeds_one: { 'emb_one'    => %w[_id f_em_foo fmb],
+                                                                'emtw'       => %w[_id f_em_baz] })
               end
             end
           end
@@ -308,8 +309,8 @@ describe Mongoid::History::Options do
         end
 
         describe '#remove_reserved_fields' do
-          let(:options) { { on: [:_id, :_type, :foo, :version, :modifier_id] } }
-          it { expect(subject[:fields]).to eq %w(foo) }
+          let(:options) { { on: %i[_id _type foo version modifier_id] } }
+          it { expect(subject[:fields]).to eq %w[foo] }
           it { expect(subject[:dynamic]).to eq [] }
         end
       end

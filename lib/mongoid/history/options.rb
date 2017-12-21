@@ -3,20 +3,22 @@ module Mongoid
     class Options
       attr_reader :trackable, :options
 
-      def initialize(trackable)
+      def initialize(trackable, opts = {})
         @trackable = trackable
+        @options = default_options.merge(opts)
       end
 
       def scope
         trackable.collection_name.to_s.singularize.to_sym
       end
 
-      def parse(options = {})
-        @options = default_options.merge(options)
-        prepare_skipped_fields
-        prepare_formatted_fields
-        parse_tracked_fields_and_relations
-        @options
+      def prepared
+        @prepared ||= begin
+          prepare_skipped_fields
+          prepare_formatted_fields
+          parse_tracked_fields_and_relations
+          options
+        end
       end
 
       private
@@ -24,15 +26,15 @@ module Mongoid
       def default_options
         @default_options ||=
           { on: :all,
-            except: [:created_at, :updated_at],
+            except: %i[created_at updated_at],
             tracker_class_name: nil,
             modifier_field: :modifier,
             version_field: :version,
             changes_method: :changes,
             scope: scope,
-            track_create: false,
+            track_create: true,
             track_update: true,
-            track_destroy: false,
+            track_destroy: true,
             format: nil }
       end
 
@@ -156,7 +158,7 @@ module Mongoid
         @options[:relations][:embeds_one][field] = if field_options.blank?
                                                      relation_class.fields.keys
                                                    else
-                                                     %w(_id) | field_options.map { |opt| relation_class.database_field_name(opt) }
+                                                     %w[_id] | field_options.map { |opt| relation_class.database_field_name(opt) }
                                                    end
       end
 
@@ -165,7 +167,7 @@ module Mongoid
         @options[:relations][:embeds_many][field] = if field_options.blank?
                                                       relation_class.fields.keys
                                                     else
-                                                      %w(_id) | field_options.map { |opt| relation_class.database_field_name(opt) }
+                                                      %w[_id] | field_options.map { |opt| relation_class.database_field_name(opt) }
                                                     end
       end
 

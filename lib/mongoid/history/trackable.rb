@@ -7,14 +7,16 @@ module Mongoid
         def track_history(options = {})
           extend EmbeddedMethods
 
-          options_parser = Mongoid::History::Options.new(self)
-          options = options_parser.parse(options)
+          history_options = Mongoid::History::Options.new(self, options)
 
-          field options[:version_field].to_sym, type: Integer
+          field history_options.options[:version_field].to_sym, type: Integer
 
-          belongs_to_modifier_options = { class_name: Mongoid::History.modifier_class_name }
-          belongs_to_modifier_options[:inverse_of] = options[:modifier_field_inverse_of] if options.key?(:modifier_field_inverse_of)
-          belongs_to options[:modifier_field].to_sym, belongs_to_modifier_options
+          unless history_options.options[:modifier_field].nil?
+            belongs_to_modifier_options = { class_name: Mongoid::History.modifier_class_name }
+            belongs_to_modifier_options[:inverse_of] = history_options.options[:modifier_field_inverse_of] if history_options.options.key?(:modifier_field_inverse_of)
+            belongs_to_modifier_options[:optional] = true if history_options.options[:modifier_field_optional] && Mongoid::Compatibility::Version.mongoid6_or_newer?
+            belongs_to history_options.options[:modifier_field].to_sym, belongs_to_modifier_options
+          end
 
           include MyInstanceMethods
           extend SingletonMethods
@@ -22,12 +24,13 @@ module Mongoid
           delegate :history_trackable_options, to: 'self.class'
           delegate :track_history?, to: 'self.class'
 
-          before_update :track_update if options[:track_update]
-          before_create :track_create if options[:track_create]
-          before_destroy :track_destroy if options[:track_destroy]
+          callback_options = history_options.options.slice(:if, :unless)
+          around_update :track_update, callback_options if history_options.options[:track_update]
+          around_create :track_create, callback_options if history_options.options[:track_create]
+          around_destroy :track_destroy, callback_options if history_options.options[:track_destroy]
 
           Mongoid::History.trackable_class_options ||= {}
-          Mongoid::History.trackable_class_options[options_parser.scope] = options
+          Mongoid::History.trackable_class_options[history_options.scope] = history_options
         end
 
         def history_settings(options = {})
@@ -131,7 +134,7 @@ module Mongoid
             elsif options[:last]
               versions = history_tracks.limit(options[:last])
             else
-              fail 'Invalid options, please specify (:from / :to) keys or :last key.'
+              raise 'Invalid options, please specify (:from / :to) keys or :last key.'
             end
           else
             options_or_version = options_or_version.to_a if options_or_version.is_a?(Range)
@@ -178,7 +181,7 @@ module Mongoid
                 relation.class_name == node.metadata.class_name.to_s && relation.name == node.metadata.name
               else
                 relation.class_name == node.relation_metadata.class_name.to_s &&
-                relation.name == node.relation_metadata.name
+                  relation.name == node.relation_metadata.name
               end
             end
           end
@@ -219,11 +222,12 @@ module Mongoid
         def history_tracker_attributes(action)
           return @history_tracker_attributes if @history_tracker_attributes
 
+          modifier_field = history_trackable_options[:modifier_field]
           @history_tracker_attributes = {
             association_chain: traverse_association_chain,
-            scope: related_scope,
-            modifier: send(history_trackable_options[:modifier_field])
+            scope: related_scope
           }
+          @history_tracker_attributes[:modifier] = send(modifier_field) if modifier_field
 
           original, modified = transform_changes(modified_attributes_for_action(action))
 
@@ -232,16 +236,16 @@ module Mongoid
           @history_tracker_attributes
         end
 
-        def track_create
-          track_history_for_action(:create)
+        def track_create(&block)
+          track_history_for_action(:create, &block)
         end
 
-        def track_update
-          track_history_for_action(:update)
+        def track_update(&block)
+          track_history_for_action(:update, &block)
         end
 
-        def track_destroy
-          track_history_for_action(:destroy)
+        def track_destroy(&block)
+          track_history_for_action(:destroy, &block) unless destroyed?
         end
 
         def clear_trackable_memoization
@@ -273,9 +277,20 @@ module Mongoid
           if track_history_for_action?(action)
             current_version = (send(history_trackable_options[:version_field]) || 0) + 1
             send("#{history_trackable_options[:version_field]}=", current_version)
-            self.class.tracker_class.create!(history_tracker_attributes(action.to_sym).merge(version: current_version, action: action.to_s, trackable: self))
+            last_track = self.class.tracker_class.create!(history_tracker_attributes(action.to_sym).merge(version: current_version, action: action.to_s, trackable: self))
           end
+
           clear_trackable_memoization
+
+          begin
+            yield
+          rescue => e
+            if track_history_for_action?(action)
+              send("#{history_trackable_options[:version_field]}=", current_version - 1)
+              last_track.destroy
+            end
+            raise e
+          end
         end
       end
 
@@ -414,7 +429,12 @@ module Mongoid
         #
         # @return [ Array < String > ] the list of reserved database field names
         def reserved_tracked_fields
-          @reserved_tracked_fields ||= ['_id', history_trackable_options[:version_field].to_s, "#{history_trackable_options[:modifier_field]}_id"]
+          @reserved_tracked_fields ||= begin
+                                         fields = ['_id', history_trackable_options[:version_field].to_s]
+                                         modifier_field = history_trackable_options[:modifier_field]
+                                         fields << "#{modifier_field}_id" if modifier_field
+                                         fields
+                                       end
         end
 
         def field_formats
@@ -445,8 +465,8 @@ module Mongoid
         def tracked_embeds_one
           @tracked_embeds_one ||= begin
             reflect_on_all_associations(:embeds_one)
-            .map(&:key)
-            .select { |rel| history_trackable_options[:relations][:embeds_one].include? rel }
+              .map(&:key)
+              .select { |rel| history_trackable_options[:relations][:embeds_one].include? rel }
           end
         end
 
@@ -469,8 +489,8 @@ module Mongoid
         def tracked_embeds_many
           @tracked_embeds_many ||= begin
             reflect_on_all_associations(:embeds_many)
-            .map(&:key)
-            .select { |rel| history_trackable_options[:relations][:embeds_many].include? rel }
+              .map(&:key)
+              .select { |rel| history_trackable_options[:relations][:embeds_many].include? rel }
           end
         end
 
@@ -483,7 +503,7 @@ module Mongoid
         end
 
         def history_trackable_options
-          @history_trackable_options ||= Mongoid::History.trackable_class_options[trackable_scope]
+          @history_trackable_options ||= Mongoid::History.trackable_class_options[trackable_scope].prepared
         end
 
         def clear_trackable_memoization

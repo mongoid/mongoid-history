@@ -14,12 +14,16 @@ module Mongoid
         field :version,                 type: Integer
         field :action,                  type: String
         field :scope,                   type: String
-        belongs_to :modifier, class_name: Mongoid::History.modifier_class_name
+        modifier_options = {
+          class_name: Mongoid::History.modifier_class_name
+        }
+        modifier_options[:optional] = true if Mongoid::Compatibility::Version.mongoid6_or_newer?
+        belongs_to :modifier, modifier_options
 
         index(scope: 1)
         index(association_chain: 1)
 
-        Mongoid::History.tracker_class_name = name.tableize.singularize.to_sym
+        Mongoid::History.tracker_class_name ||= name.tableize.singularize.to_sym
       end
 
       def undo!(modifier = nil)
@@ -50,7 +54,7 @@ module Mongoid
         undo_hash = affected.easy_unmerge(modified)
         undo_hash.easy_merge!(original)
         modifier_field = trackable.history_trackable_options[:modifier_field]
-        undo_hash[modifier_field] = modifier
+        undo_hash[modifier_field] = modifier if modifier_field
         (modified.keys - undo_hash.keys).each do |k|
           undo_hash[k] = nil
         end
@@ -61,7 +65,7 @@ module Mongoid
         redo_hash = affected.easy_unmerge(original)
         redo_hash.easy_merge!(modified)
         modifier_field = trackable.history_trackable_options[:modifier_field]
-        redo_hash[modifier_field] = modifier
+        redo_hash[modifier_field] = modifier if modifier_field
         localize_keys(redo_hash)
       end
 
@@ -180,7 +184,7 @@ module Mongoid
         elsif trackable_parent.class.embeds_many?(name)
           trackable_parent.get_embedded(name).create!(localize_keys(original))
         else
-          fail 'This should never happen. Please report bug!'
+          raise 'This should never happen. Please report bug!'
         end
       end
 
@@ -205,7 +209,7 @@ module Mongoid
                 elsif doc.class.embeds_many?(name)
                   doc.get_embedded(name).unscoped.where(_id: node['id']).first
                 else
-                  fail 'This should never happen. Please report bug.'
+                  raise 'This should never happen. Please report bug.'
                 end
           documents << doc
           break if chain.empty?
@@ -215,9 +219,11 @@ module Mongoid
 
       def localize_keys(hash)
         klass = association_chain.first['name'].constantize
-        klass.localized_fields.keys.each do |name|
-          hash["#{name}_translations"] = hash.delete(name) if hash[name].present?
-        end if klass.respond_to?(:localized_fields)
+        if klass.respond_to?(:localized_fields)
+          klass.localized_fields.keys.each do |name|
+            hash["#{name}_translations"] = hash.delete(name) if hash[name].present?
+          end
+        end
         hash
       end
 

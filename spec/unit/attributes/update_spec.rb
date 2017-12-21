@@ -110,6 +110,44 @@ describe Mongoid::History::Attributes::Update do
           Object.send(:remove_const, :EmbOne)
         end
       end
+
+      context 'when original and modified value same' do
+        before(:all) do
+          class DummyUpdateModel
+            include Mongoid::Document
+            include Mongoid::History::Trackable
+            store_in collection: :dummy_update_models
+            embeds_one :dummy_embedded_model
+            track_history on: :fields
+          end
+
+          class DummyEmbeddedModel
+            include Mongoid::Document
+            field :em_foo
+            field :em_bar
+            embedded_in :dummy_update_model
+          end
+        end
+
+        before(:each) do
+          DummyUpdateModel.clear_trackable_memoization
+          allow(base).to receive(:changes) { changes }
+          DummyUpdateModel.track_history on: :dummy_embedded_model
+        end
+
+        let(:obj_one) { DummyUpdateModel.new }
+        let(:base) { described_class.new(obj_one) }
+        let(:changes) do
+          { 'dummy_embedded_model' => [{ 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' }, { 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' }] }
+        end
+        subject { base.attributes }
+        it { expect(subject.keys).to_not include 'dummy_embedded_model' }
+
+        after(:all) do
+          Object.send(:remove_const, :DummyUpdateModel)
+          Object.send(:remove_const, :DummyEmbeddedModel)
+        end
+      end
     end
 
     describe '#insert_embeds_many_changes' do
@@ -199,11 +237,84 @@ describe Mongoid::History::Attributes::Update do
         it 'should save audit history under relation alias' do
           expect(subject['eons']).to eq [[{ 'em_foo' => 'Em-Foo' }], [{ 'em_foo' => 'Em-Foo-new', 'em_bar' => 'Em-Bar-new' }]]
         end
+
+        after(:all) do
+          Object.send(:remove_const, :ModelOne)
+          Object.send(:remove_const, :EmbOne)
+        end
       end
 
+      context 'when original and modified value same' do
+        before(:all) do
+          class ModelOne
+            include Mongoid::Document
+            include Mongoid::History::Trackable
+            store_in collection: :model_ones
+            embeds_many :emb_ones
+            track_history on: :fields
+          end
+
+          class EmbOne
+            include Mongoid::Document
+            field :em_foo
+            field :em_bar
+            embedded_in :model_one
+          end
+        end
+
+        before(:each) do
+          ModelOne.clear_trackable_memoization
+          allow(base).to receive(:changes) { changes }
+          ModelOne.track_history on: :emb_ones
+        end
+
+        let(:obj_one) { ModelOne.new }
+        let(:base) { described_class.new(obj_one) }
+        let(:changes) do
+          { 'emb_ones' => [[{ 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' }], [{ 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' }]] }
+        end
+        subject { base.attributes }
+        it { expect(subject.keys).to_not include 'emb_ones' }
+
+        after(:all) do
+          Object.send(:remove_const, :ModelOne)
+          Object.send(:remove_const, :EmbOne)
+        end
+      end
+    end
+
+    context 'when original and modified values blank' do
+      before(:all) do
+        class DummyParent
+          include Mongoid::Document
+          include Mongoid::History::Trackable
+          store_in collection: :dummy_parents
+          has_and_belongs_to_many :other_dummy_parents
+          track_history on: :fields
+        end
+
+        class OtherDummyParent
+          include Mongoid::Document
+          has_and_belongs_to_many :dummy_parents
+        end
+      end
+
+      before(:each) do
+        DummyParent.clear_trackable_memoization
+        allow(base).to receive(:changes) { changes }
+        DummyParent.track_history on: :other_dummy_parent_ids
+      end
+
+      let(:base) { described_class.new(DummyParent.new) }
+      let(:changes) do
+        { 'other_dummy_parent_ids' => [nil, []] }
+      end
+      subject { base.attributes }
+      it { expect(subject.keys).to_not include 'other_dummy_parent_ids' }
+
       after(:all) do
-        Object.send(:remove_const, :ModelOne)
-        Object.send(:remove_const, :EmbOne)
+        Object.send(:remove_const, :DummyParent)
+        Object.send(:remove_const, :OtherDummyParent)
       end
     end
   end

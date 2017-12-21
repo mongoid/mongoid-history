@@ -31,7 +31,7 @@ describe Mongoid::History::Trackable do
         embedded_in :my_trackable_model
       end
 
-      MyTrackableModel.track_history(on: [:foo, :my_embed_one_model, :my_embed_many_models, :my_dynamic_field])
+      MyTrackableModel.track_history(on: %i[foo my_embed_one_model my_embed_many_models my_dynamic_field])
     end
 
     describe '#tracked?' do
@@ -143,7 +143,7 @@ describe Mongoid::History::Trackable do
 
     describe '#tracked_fields' do
       it 'should include fields and dynamic fields' do
-        expect(MyTrackableModel.tracked_fields).to eq %w(foo my_dynamic_field)
+        expect(MyTrackableModel.tracked_fields).to eq %w[foo my_dynamic_field]
       end
     end
 
@@ -199,17 +199,17 @@ describe Mongoid::History::Trackable do
 
       context 'when relation tracked' do
         before(:each) { ModelOne.track_history(on: :emb_one) }
-        it { expect(ModelOne.tracked_embeds_one_attributes('emb_one')).to eq %w(_id em_foo em_bar) }
+        it { expect(ModelOne.tracked_embeds_one_attributes('emb_one')).to eq %w[_id em_foo em_bar] }
       end
 
       context 'when relation tracked with alias' do
         before(:each) { ModelOne.track_history(on: :emb_two) }
-        it { expect(ModelOne.tracked_embeds_one_attributes('emb_two')).to eq %w(_id em_bar) }
+        it { expect(ModelOne.tracked_embeds_one_attributes('emb_two')).to eq %w[_id em_bar] }
       end
 
       context 'when relation tracked with attributes' do
         before(:each) { ModelOne.track_history(on: { emb_one: :em_foo }) }
-        it { expect(ModelOne.tracked_embeds_one_attributes('emb_one')).to eq %w(_id em_foo) }
+        it { expect(ModelOne.tracked_embeds_one_attributes('emb_one')).to eq %w[_id em_foo] }
       end
 
       context 'when relation not tracked' do
@@ -268,17 +268,17 @@ describe Mongoid::History::Trackable do
 
       context 'when relation tracked' do
         before(:each) { ModelOne.track_history(on: :emb_ones) }
-        it { expect(ModelOne.tracked_embeds_many_attributes('emb_ones')).to eq %w(_id em_foo em_bar) }
+        it { expect(ModelOne.tracked_embeds_many_attributes('emb_ones')).to eq %w[_id em_foo em_bar] }
       end
 
       context 'when relation tracked with alias' do
         before(:each) { ModelOne.track_history(on: :emb_twos) }
-        it { expect(ModelOne.tracked_embeds_many_attributes('emb_twos')).to eq %w(_id em_bar) }
+        it { expect(ModelOne.tracked_embeds_many_attributes('emb_twos')).to eq %w[_id em_bar] }
       end
 
       context 'when relation tracked with attributes' do
         before(:each) { ModelOne.track_history(on: { emb_ones: :em_foo }) }
-        it { expect(ModelOne.tracked_embeds_many_attributes('emb_ones')).to eq %w(_id em_foo) }
+        it { expect(ModelOne.tracked_embeds_many_attributes('emb_ones')).to eq %w[_id em_foo] }
       end
 
       context 'when relation not tracked' do
@@ -309,12 +309,12 @@ describe Mongoid::History::Trackable do
 
     describe '#clear_trackable_memoization' do
       before do
-        MyTrackableModel.instance_variable_set(:@reserved_tracked_fields, %w(_id _type))
-        MyTrackableModel.instance_variable_set(:@history_trackable_options, on: %w(fields))
+        MyTrackableModel.instance_variable_set(:@reserved_tracked_fields, %w[_id _type])
+        MyTrackableModel.instance_variable_set(:@history_trackable_options, on: %w[fields])
         MyTrackableModel.instance_variable_set(:@trackable_settings, paranoia_field: 'deleted_at')
-        MyTrackableModel.instance_variable_set(:@tracked_fields, %w(foo))
-        MyTrackableModel.instance_variable_set(:@tracked_embeds_one, %w(my_embed_one_model))
-        MyTrackableModel.instance_variable_set(:@tracked_embeds_many, %w(my_embed_many_models))
+        MyTrackableModel.instance_variable_set(:@tracked_fields, %w[foo])
+        MyTrackableModel.instance_variable_set(:@tracked_embeds_one, %w[my_embed_one_model])
+        MyTrackableModel.instance_variable_set(:@tracked_embeds_many, %w[my_embed_many_models])
         MyTrackableModel.clear_trackable_memoization
       end
 

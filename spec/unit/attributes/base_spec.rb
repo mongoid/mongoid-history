@@ -108,7 +108,7 @@ describe Mongoid::History::Attributes::Base do
 
     context 'with permitted attributes' do
       before do
-        model_one.track_history on: { model_two: %i(foo) }
+        model_one.track_history on: { model_two: %i[foo] }
       end
 
       it 'should select only permitted attributes' do
@@ -119,7 +119,7 @@ describe Mongoid::History::Attributes::Base do
 
     context 'with attributes formatted via string' do
       before do
-        model_one.track_history on: { model_two: %i(foo) }, format: { model_two: { foo: '&%s&' } }
+        model_one.track_history on: { model_two: %i[foo] }, format: { model_two: { foo: '&%s&' } }
       end
 
       it 'should select obfuscate permitted attributes' do
@@ -130,7 +130,7 @@ describe Mongoid::History::Attributes::Base do
 
     context 'with attributes formatted via proc' do
       before do
-        model_one.track_history on: { model_two: %i(foo) }, format: { model_two: { foo: ->(v) { v.to_s * 2 } } }
+        model_one.track_history on: { model_two: %i[foo] }, format: { model_two: { foo: ->(v) { v.to_s * 2 } } }
       end
 
       it 'should select obfuscate permitted attributes' do

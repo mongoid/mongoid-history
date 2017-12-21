@@ -28,32 +28,39 @@ describe Mongoid::History::Trackable do
   end
 
   describe '#track_history' do
+    class MyModelWithNoModifier
+      include Mongoid::Document
+      include Mongoid::History::Trackable
+      field :foo
+    end
+
     before :all do
       MyModel.track_history
       @persisted_history_options = Mongoid::History.trackable_class_options
+      MyModelWithNoModifier.track_history modifier_field: nil
     end
     before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
     let(:expected_option) do
-      { on: %i(foo),
-        except: %w(created_at updated_at),
+      { on: %i[foo],
+        except: %w[created_at updated_at],
         tracker_class_name: nil,
         modifier_field: :modifier,
         version_field: :version,
         changes_method: :changes,
         scope: :my_model,
-        track_create: false,
+        track_create: true,
         track_update: true,
-        track_destroy: false,
-        fields: %w(foo),
+        track_destroy: true,
+        fields: %w[foo],
         relations: { embeds_one: {}, embeds_many: {} },
         dynamic: [],
         format: {} }
     end
     let(:regular_fields) { ['foo'] }
-    let(:reserved_fields) { %w(_id version modifier_id) }
+    let(:reserved_fields) { %w[_id version modifier_id] }
 
     it 'should have default options' do
-      expect(Mongoid::History.trackable_class_options[:my_model]).to eq(expected_option)
+      expect(Mongoid::History.trackable_class_options[:my_model].prepared).to eq(expected_option)
     end
 
     it 'should define callback function #track_update' do
@@ -72,6 +79,31 @@ describe Mongoid::History::Trackable do
       expect(MyModel.history_trackable_options).to eq(expected_option)
     end
 
+    describe '#modifier' do
+      context 'modifier_field set to nil' do
+        it 'should not have a modifier relationship' do
+          expect(MyModelWithNoModifier.reflect_on_association(:modifier)).to be_nil
+        end
+      end
+
+      context 'modifier_field_optional true' do
+        class MyModelWithOptionalModifier
+          include Mongoid::Document
+          include Mongoid::History::Trackable
+          field :foo
+        end
+
+        it 'marks modifier relationship optional' do
+          MyModelWithOptionalModifier.track_history modifier_field_optional: true
+          if Mongoid::Compatibility::Version.mongoid6_or_newer?
+            expect(MyModelWithOptionalModifier.reflect_on_association(:modifier)[:optional]).to be true
+          else
+            expect(MyModelWithOptionalModifier.reflect_on_association(:modifier)).not_to be_nil
+          end
+        end
+      end
+    end
+
     describe '#tracked_fields' do
       it 'should return the tracked field list' do
         expect(MyModel.tracked_fields).to eq(regular_fields)
@@ -81,6 +113,10 @@ describe Mongoid::History::Trackable do
     describe '#reserved_tracked_fields' do
       it 'should return the protected field list' do
         expect(MyModel.reserved_tracked_fields).to eq(reserved_fields)
+      end
+
+      it 'should not include modifier_field if not specified' do
+        expect(MyModelWithNoModifier.reserved_tracked_fields).not_to include('modifier')
       end
     end
 
@@ -191,7 +227,7 @@ describe Mongoid::History::Trackable do
       end
 
       it 'should have default options' do
-        expect(Mongoid::History.trackable_class_options[:my_model]).to eq(expected_option)
+        expect(Mongoid::History.trackable_class_options[:my_model].prepared).to eq(expected_option)
       end
 
       it 'should define #history_trackable_options' do
@@ -217,7 +253,7 @@ describe Mongoid::History::Trackable do
           it 'should be rescued if an exception occurs' do
             begin
               MyModel.disable_tracking do
-                fail 'exception'
+                raise 'exception'
               end
             rescue
             end
@@ -260,7 +296,7 @@ describe Mongoid::History::Trackable do
             Mongoid::History.disable do
               begin
                 MyModel.disable_tracking do
-                  fail 'exception'
+                  raise 'exception'
                 end
               rescue
               end
@@ -289,7 +325,7 @@ describe Mongoid::History::Trackable do
           begin
             Mongoid::History.disable do
               MyModel.disable_tracking do
-                fail 'exception'
+                raise 'exception'
               end
             end
           rescue
@@ -559,6 +595,7 @@ describe Mongoid::History::Trackable do
       describe 'fields' do
         context 'when custom method for changes' do
           before(:each) do
+            ModelOne.clear_trackable_memoization
             ModelOne.track_history(on: :foo, changes_method: :my_changes_method)
             allow(ModelOne).to receive(:dynamic_enabled?) { false }
             allow(model_one).to receive(:my_changes_method) { changes }
@@ -581,6 +618,72 @@ describe Mongoid::History::Trackable do
 
     after :all do
       Object.send(:remove_const, :MyTrackerClass)
+    end
+  end
+
+  describe '#track_update' do
+    before :all do
+      MyModel.track_history(on: :foo, track_update: true)
+      @persisted_history_options = Mongoid::History.trackable_class_options
+    end
+    before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
+    let!(:m) { MyModel.create!(foo: 'bar') }
+
+    it 'should create history' do
+      expect { m.update_attributes!(foo: 'bar2') }.to change(Tracker, :count).by(1)
+    end
+
+    it 'should not create history when error raised' do
+      expect(m).to receive(:update_attributes!).and_raise(StandardError)
+      expect do
+        expect { m.update_attributes!(foo: 'bar2') }.to raise_error(StandardError)
+      end.to change(Tracker, :count).by(0)
+    end
+  end
+
+  describe '#track_destroy' do
+    before :all do
+      MyModel.track_history(on: :foo, track_destroy: true)
+      @persisted_history_options = Mongoid::History.trackable_class_options
+    end
+    before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
+    let!(:m) { MyModel.create!(foo: 'bar') }
+
+    it 'should create history' do
+      expect { m.destroy }.to change(Tracker, :count).by(1)
+    end
+
+    it 'should not create history when error raised' do
+      expect(m).to receive(:destroy).and_raise(StandardError)
+      expect do
+        expect { m.destroy }.to raise_error(StandardError)
+      end.to change(Tracker, :count).by(0)
+    end
+  end
+
+  describe '#track_create' do
+    before :all do
+      MyModel.track_history(on: :foo, track_create: true)
+      @persisted_history_options = Mongoid::History.trackable_class_options
+      MyModelWithNoModifier.track_history modifier_field: nil
+    end
+    before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
+
+    it 'should create history' do
+      expect { MyModel.create!(foo: 'bar') }.to change(Tracker, :count).by(1)
+    end
+
+    context 'no modifier_field' do
+      it 'should create history' do
+        expect { MyModelWithNoModifier.create!(foo: 'bar').to change(Tracker, :count).by(1) }
+      end
+    end
+
+    it 'should not create history when error raised' do
+      expect(MyModel).to receive(:create!).and_raise(StandardError)
+      expect do
+        expect { MyModel.create!(foo: 'bar') }.to raise_error(StandardError)
+      end.to change(Tracker, :count).by(0)
     end
   end
 end

@@ -37,8 +37,8 @@ end
 **Set default tracker class name (Optional)**
 
 Mongoid::History will use the first loaded class to include Mongoid::History::Tracker as the
-default history tracker. If you are using multiple Tracker classes and would like to set
-a global default you may do so in a Rails initializer:
+default history tracker. If you are using multiple Tracker classes, you should set a global
+default in a Rails initializer:
 
 ```ruby
 # config/initializers/mongoid_history.rb
@@ -66,12 +66,13 @@ class Post
   # telling Mongoid::History how you want to track changes
   # dynamic fields will be tracked automatically (for MongoId 4.0+ you should include Mongoid::Attributes::Dynamic to your model)
   track_history   :on => [:title, :body],       # track title and body fields only, default is :all
-                  :modifier_field => :modifier, # adds "belongs_to :modifier" to track who made the change, default is :modifier
+                  :modifier_field => :modifier, # adds "belongs_to :modifier" to track who made the change, default is :modifier, set to nil to not create modifier_field
                   :modifier_field_inverse_of => :nil, # adds an ":inverse_of" option to the "belongs_to :modifier" relation, default is not set
+                  :modifier_field_optional => true, # marks the modifier relationship as optional (requires Mongoid 6 or higher)
                   :version_field => :version,   # adds "field :version, :type => Integer" to track current version, default is :version
-                  :track_create   =>  false,    # track document creation, default is false
-                  :track_update   =>  true,     # track document updates, default is true
-                  :track_destroy  =>  false     # track document destruction, default is false
+                  :track_create  => true,       # track document creation, default is true
+                  :track_update  => true,       # track document updates, default is true
+                  :track_destroy => true        # track document destruction, default is true
 end
 
 class Comment
@@ -429,6 +430,18 @@ Or perhaps you are namespacing to a module:
 Mongoid::History.modifier_class_name = 'CMS::Author'
 ```
 
+**Conditional :if and :unless options**
+
+The `track_history` method supports `:if` and `:unless` options which will skip generating
+the history tracker unless they are satisfied. These options can take either a method
+`Symbol` or a `Proc`. They behave identical to how `:if` and `:unless` behave in Rails model callbacks.
+
+```ruby
+  track_history on: [:ip],
+                if: :should_i_track_history?,
+                unless: ->(obj){ obj.method_to_skip_history }
+```
+
 **Using an alternate changes method**
 
 Sometimes you may wish to provide an alternate method for determining which changes should be tracked.  For example, if you are using embedded documents
@@ -509,6 +522,57 @@ end
 
 For more examples, check out [spec/integration/integration_spec.rb](spec/integration/integration_spec.rb).
 
+**Multiple Trackers**
+
+You can have different trackers for different classes like so.
+
+```
+class First
+  include Mongoid::Document
+  include Mongoid::History::Trackable
+
+  field :text, type: String
+  track_history on: [:text],
+                tracker_class_name: :first_history_tracker
+end
+
+class Second
+  include Mongoid::Document
+  include Mongoid::History::Trackable
+
+  field :text, type: String
+  track_history on: [:text],
+                tracker_class_name: :second_history_tracker
+end
+
+class FirstHistoryTracker
+  include Mongoid::History::Tracker
+end
+
+class SecondHistoryTracker
+  include Mongoid::History::Tracker
+end
+```
+
+Note that if you are using a tracker for an embedded object that is different
+from the parent's tracker, redos and undos will not work. You have to use the
+same tracker for these to work across embedded relationships.
+
+If you are using multiple trackers and the `tracker_class_name` parameter is
+not specified, Mongoid::History will use the default tracker configured in the
+initializer file or whatever the first tracker was loaded.
+
+
+**Dependent Restrict Associations**
+
+When `dependent: :restrict` is used on an association, a call to `destroy` on
+the model will raise `Mongoid::Errors::DeleteRestriction` when the dependency
+is violated. Just be aware that this gem will create a history track document
+before the `destroy` call and then remove if an error is raised. This applies
+to all persistence calls: create, update and destroy.
+
+See [spec/integration/validation_failure_spec.rb](spec/integration/validation_failure_spec.rb)
+for examples.
 
 **Thread Safety**
 
