@@ -16,7 +16,6 @@
 ### 0.6.1 (2017/01/04)
 
 * [#182](https://github.com/mongoid/mongoid-history/pull/182): No-op on repeated calls to destroy - [@msaffitz](https://github.com/msaffitz).
->>>>>>> e5a6f7777191b4353f4980ae78672ec039718490
 * [#170](https://github.com/mongoid/mongoid-history/pull/170): Parent repo is now [mongoid/mongoid-history](https://github.com/mongoid/mongoid-history) - [@dblock](https://github.com/dblock).
 * [#171](https://github.com/mongoid/mongoid-history/pull/171): Add field formatting - [@jnfeinstein](https://github.com/jnfeinstein).
 * [#172](https://github.com/mongoid/mongoid-history/pull/172): Add config helper to track all embedded relations - [@jnfeinstein](https://github.com/jnfeinstein).
