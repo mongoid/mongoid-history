@@ -273,7 +273,7 @@ module Mongoid
           track_history? && !(action.to_sym == :update && modified_attributes_for_update.blank?)
         end
 
-        def track_history_for_action(action)
+        def track_history_for_action(action, &block)
           if track_history_for_action?(action)
             current_version = (send(history_trackable_options[:version_field]) || 0) + 1
             send("#{history_trackable_options[:version_field]}=", current_version)
@@ -281,6 +281,8 @@ module Mongoid
           end
 
           clear_trackable_memoization
+
+          return unless block
 
           begin
             yield

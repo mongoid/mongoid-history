@@ -621,6 +621,19 @@ describe Mongoid::History::Trackable do
     end
   end
 
+  describe '#track_history_for_action' do
+    before(:all) { MyModel.track_history }
+    let!(:m) { MyModel.create!(foo: 'bar') }
+
+    it 'should yield block' do
+      expect { |b| m.send(:track_history_for_action, :update, &b) }.to yield_control
+    end
+
+    it 'should not raise error when no block' do
+      expect { m.send(:track_history_for_action, :update) }.not_to raise_error
+    end
+  end
+
   describe '#track_update' do
     before :all do
       MyModel.track_history(on: :foo, track_update: true)
