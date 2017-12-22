@@ -282,6 +282,8 @@ module Mongoid
 
           clear_trackable_memoization
 
+          return unless block_given?
+
           begin
             yield
           rescue => e
