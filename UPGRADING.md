@@ -29,5 +29,6 @@ See [#202](https://github.com/mongoid/mongoid-history/pull/202) for more informa
 
 # Main Changes / Upgrading Notes
 
-* `:all` is just an alias to `:fields` for now, to support existing users of `mongoid-history`. In future, :all
-will track all the fields and relations of trackable class.
+See [#189](https://github.com/mongoid/mongoid-history/pull/189) for more information.
+
+* Currently, the `:all` option behaves identically to `:fields`. Future versions will track all fields and relations of trackable class when using `:all`. 
