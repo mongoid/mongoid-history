@@ -623,7 +623,7 @@ describe Mongoid::History::Trackable do
 
   describe '#track_history_for_action' do
     before(:all) { MyModel.track_history }
-    let!(:m) { MyModel.create!(foo: 'bar') }
+    let(:m) { MyModel.create!(foo: 'bar') }
 
     it 'should yield block' do
       expect { |b| m.send(:track_history_for_action, :update, &b) }.to yield_control
