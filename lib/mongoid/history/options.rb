@@ -78,7 +78,7 @@ module Mongoid
         # when `[:foo, { posts: [:id, :title] }]`, then return as is
         @options[:on] = Array(options[:on])
 
-        @options[:on] = options[:on].map { |opt| (opt == :all) ? :fields : opt }
+        @options[:on] = options[:on].map { |opt| opt == :all ? :fields : opt }
 
         if options[:on].include?(:fields)
           @options[:on] = options[:on].reject { |opt| opt == :fields }
