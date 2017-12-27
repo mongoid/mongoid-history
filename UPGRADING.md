@@ -26,3 +26,9 @@ created before the call will now be deleted. In the past this was a problem for 
 `dependent: :restrict`.
 
 See [#202](https://github.com/mongoid/mongoid-history/pull/202) for more information.
+
+# Main Changes / Upgrading Notes
+
+See [#189](https://github.com/mongoid/mongoid-history/pull/189) for more information.
+
+* Currently, the `:all` option behaves identically to `:fields`. Future versions will track all fields and relations of trackable class when using `:all`. 

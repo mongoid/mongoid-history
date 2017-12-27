@@ -78,13 +78,6 @@ module Mongoid
         # when `[:foo, { posts: [:id, :title] }]`, then return as is
         @options[:on] = Array(options[:on])
 
-        # # :all is just an alias to :fields for now, to support existing users of `mongoid-history`
-        # # In future, :all will track all the fields and relations of trackable class
-        if options[:on].include?(:all)
-          warn "[DEPRECATION] Use :fields instead of :all to track all fields in class #{trackable}.\n\
-            Going forward, :all will track all the fields and relations for the class"
-        end
-
         @options[:on] = options[:on].map { |opt| opt == :all ? :fields : opt }
 
         if options[:on].include?(:fields)

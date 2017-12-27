@@ -1,5 +1,6 @@
 ### 0.8.0 (Next)
 
+* [#180](https://github.com/mongoid/mongoid-history/pull/180): Removed deprecation notice - [@sivagollapalli](https://github.com/sivagollapalli).
 * [#208](https://github.com/mongoid/mongoid-history/pull/208): Fix: history tracks fields declared after `track_history` - [@mikwat](https://github.com/mikwat).
 * [#210](https://github.com/mongoid/mongoid-history/pull/210): Do not track unmodified embedded relations - [@jagdeepsingh](https://github.com/jagdeepsingh).
 * [#205](https://github.com/mongoid/mongoid-history/pull/205): Allow modifier field to be optional - [@yads](https://github.com/yads).
