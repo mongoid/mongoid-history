@@ -268,6 +268,12 @@ module Mongoid
           [original, modified]
         end
 
+        def increment_current_version
+          current_version = (send(history_trackable_options[:version_field]) || 0) + 1
+          send("#{history_trackable_options[:version_field]}=", current_version)
+          current_version
+        end
+
         protected
 
         def track_history_for_action?(action)
@@ -276,8 +282,7 @@ module Mongoid
 
         def track_history_for_action(action)
           if track_history_for_action?(action)
-            current_version = (send(history_trackable_options[:version_field]) || 0) + 1
-            send("#{history_trackable_options[:version_field]}=", current_version)
+            current_version = increment_current_version
             last_track = self.class.tracker_class.create!(history_tracker_attributes(action.to_sym).merge(version: current_version, action: action.to_s, trackable: self))
           end
 
@@ -297,6 +302,8 @@ module Mongoid
 
       module HasAndBelongsToManyMethods
         def track_has_and_belongs_to_many(related)
+          # skip for new records (track_create will capture assignment) and when track updates disabled
+          return true if new_record? || !track_history? || !history_trackable_options[:track_update]
           metadata = reflect_on_all_associations(:has_and_belongs_to_many).find { |m| m.class_name == related.class.name }
 
           related_id = related.id
@@ -310,26 +317,15 @@ module Mongoid
           modified = { metadata.key => modified_ids }
           original = { metadata.key => original_ids }
           action = :update
+          current_version = increment_current_version
           self.class.tracker_class.create!(
             history_tracker_attributes(action.to_sym)
-            .merge(version: increment_and_set_version,
+            .merge(version: current_version,
                    action: action.to_s,
                    original: original,
                    modified: modified,
                    trackable: self)
           )
-        end
-
-        private
-
-        def increment_and_set_version
-          if Mongoid::Compatibility::Version.mongoid3?
-            inc(:version, 1)
-          else
-            current_version = (version || 0) + 1
-            set(version: current_version)
-            current_version
-          end
         end
       end
 
