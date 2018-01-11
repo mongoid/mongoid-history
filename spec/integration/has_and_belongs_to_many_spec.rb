@@ -58,7 +58,7 @@ describe Mongoid::History do
         expect(post.history_tracks.last.modified).to include('tag_ids' => [tag.id, tag2.id])
       end
 
-      it 'should assign empty tag_ids on original' do
+      it 'should assign tag_ids on original' do
         expect(post.history_tracks.last.original).to include('tag_ids' => [tag.id])
       end
     end
