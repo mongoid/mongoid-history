@@ -311,21 +311,30 @@ module Mongoid
                          else
                            original_ids + [related_id]
                          end
+
           modified = { metadata.key => modified_ids }
           original = { metadata.key => original_ids }
-
-          current_version = (version || 0) + 1
-          set(version: current_version)
-
           action = :update
           self.class.tracker_class.create!(
             history_tracker_attributes(action.to_sym)
-            .merge(version: current_version,
+            .merge(version: increment_and_set_version,
                    action: action.to_s,
                    original: original,
                    modified: modified,
                    trackable: self)
           )
+        end
+
+        private
+
+        def increment_and_set_version
+          if Mongoid::Compatibility::Version.mongoid3?
+            inc(:version, 1)
+          else
+            current_version = (version || 0) + 1
+            set(version: current_version)
+            current_version
+          end
         end
       end
 
