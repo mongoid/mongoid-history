@@ -52,7 +52,7 @@ describe Mongoid::History::Trackable do
         track_update: true,
         track_destroy: true,
         fields: %w[foo],
-        relations: { embeds_one: {}, embeds_many: {} },
+        relations: { embeds_one: {}, embeds_many: {}, has_and_belongs_to_many: {} },
         dynamic: [],
         format: {} }
     end

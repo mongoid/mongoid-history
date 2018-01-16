@@ -1,5 +1,6 @@
 ### 0.8.1 (Next)
 
+* [#217](https://github.com/mongoid/mongoid-history/pull/217): Support for tracking `has_and_belongs_to_many` associations - [@dblock](https://github.com/dblock).
 * Your contribution here.
 
 ### 0.8.0 (2018/01/16)

@@ -4,6 +4,13 @@ module Mongoid
       extend ActiveSupport::Concern
 
       module ClassMethods
+        def has_and_belongs_to_many(field, opts = {})
+          super field, {
+            before_add: :track_references,
+            before_remove: :track_references
+          }.merge(opts)
+        end
+
         def track_history(options = {})
           extend RelationMethods
 
@@ -19,7 +26,6 @@ module Mongoid
           end
 
           include MyInstanceMethods
-          include HasAndBelongsToManyMethods
           extend SingletonMethods
 
           delegate :history_trackable_options, to: 'self.class'
@@ -249,6 +255,34 @@ module Mongoid
           track_history_for_action(:destroy, &block) unless destroyed?
         end
 
+        def track_references(related)
+          # skip for new records (track_create will capture assignment) and when track updates disabled
+          return true if new_record? || !track_history? || !history_trackable_options[:track_update]
+          metadata = reflect_on_all_associations(:has_and_belongs_to_many).find { |m| m.class_name == related.class.name }
+
+          related_id = related.id
+          original_ids = send(metadata.key.to_sym)
+          modified_ids = if original_ids.include?(related_id)
+                           original_ids.reject { |id| id == related_id }
+                         else
+                           original_ids + [related_id]
+                         end
+
+          modified = { metadata.key => modified_ids }
+          original = { metadata.key => original_ids }
+          action = :update
+          current_version = increment_current_version
+          self.class.tracker_class.create!(
+            history_tracker_attributes(action.to_sym).merge(
+              version: current_version,
+              action: action.to_s,
+              original: original,
+              modified: modified,
+              trackable: self
+            )
+          )
+        end
+
         def clear_trackable_memoization
           @history_tracker_attributes = nil
           @modified_attributes_for_create = nil
@@ -300,44 +334,6 @@ module Mongoid
         end
       end
 
-      module HasAndBelongsToManyMethods
-        def track_has_and_belongs_to_many(related)
-          metadata = reflect_on_all_associations(:has_and_belongs_to_many).find { |m| m.class_name == related.class.name }
-
-          related_id = related.id
-          original_ids = send(metadata.key.to_sym)
-          modified_ids = if original_ids.include?(related_id)
-                           original_ids.reject { |id| id == related_id }
-                         else
-                           original_ids + [related_id]
-                         end
-
-          modified = { metadata.key => modified_ids }
-          original = { metadata.key => original_ids }
-          action = :update
-          self.class.tracker_class.create!(
-            history_tracker_attributes(action.to_sym)
-            .merge(version: increment_and_set_version,
-                   action: action.to_s,
-                   original: original,
-                   modified: modified,
-                   trackable: self)
-          )
-        end
-
-        private
-
-        def increment_and_set_version
-          if Mongoid::Compatibility::Version.mongoid3?
-            inc(:version, 1)
-          else
-            current_version = (version || 0) + 1
-            set(version: current_version)
-            current_version
-          end
-        end
-      end
-
       module RelationMethods
         # Returns a relation class for the given field.
         #
@@ -365,6 +361,15 @@ module Mongoid
         # @return [ Boolean ] true if there is an Embedded::Many relation for the given embedded field.
         def embeds_many?(field)
           relation_of(field) == Mongoid::Relations::Embedded::Many
+        end
+
+        # Indicates whether there is an Referenced::ManyToMany relation for the given embedded field.
+        #
+        # @param [ String | Symbol ] field The name of the referenced field.
+        #
+        # @return [ Boolean ] true if there is an Referenced::ManyToMany relation for the given referenced field.
+        def has_and_belongs_to_many?(field)
+          relation_of(field) == Mongoid::Relations::Referenced::ManyToMany
         end
 
         # Retrieves the database representation of an embedded field name, in case the :store_as option is used.
@@ -475,6 +480,12 @@ module Mongoid
                                          fields << "#{modifier_field}_id" if modifier_field
                                          fields
                                        end
+        end
+
+        def referenced_relations
+          relations.select do |_, r|
+            r.relation == Mongoid::Relations::Referenced::ManyToMany
+          end
         end
 
         def field_formats

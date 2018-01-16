@@ -2,17 +2,6 @@ require 'spec_helper'
 
 describe Mongoid::History do
   before :all do
-    class Post
-      include Mongoid::Document
-      include Mongoid::Timestamps
-      include Mongoid::History::Trackable
-
-      field :title
-      field :body
-      has_and_belongs_to_many :tags, before_add: :track_has_and_belongs_to_many, before_remove: :track_has_and_belongs_to_many
-      track_history on: %i[all], track_create: false, track_update: false
-    end
-
     class Tag
       include Mongoid::Document
 
@@ -22,6 +11,19 @@ describe Mongoid::History do
   end
 
   describe 'track' do
+    before :all do
+      class Post
+        include Mongoid::Document
+        include Mongoid::Timestamps
+        include Mongoid::History::Trackable
+
+        field :title
+        field :body
+        has_and_belongs_to_many :tags
+        track_history on: %i[fields]
+      end
+    end
+
     let(:tag) { Tag.create! }
 
     describe 'on creation' do
@@ -35,8 +37,8 @@ describe Mongoid::History do
         expect(post.history_tracks.first.modified).to include('tag_ids' => [tag.id])
       end
 
-      it 'should assign empty tag_ids on original' do
-        expect(post.history_tracks.first.original).to include('tag_ids' => [])
+      it 'should be empty on original' do
+        expect(post.history_tracks.first.original).to eq({})
       end
     end
 
@@ -110,10 +112,67 @@ describe Mongoid::History do
         expect(post.history_tracks.last.original).to include('tag_ids' => [])
       end
     end
+
+    after :all do
+      Object.send(:remove_const, :Post)
+    end
+  end
+
+  describe 'not track' do
+    let!(:post) { Post.create! }
+
+    context 'track_update: false' do
+      before :all do
+        class Post
+          include Mongoid::Document
+          include Mongoid::Timestamps
+          include Mongoid::History::Trackable
+
+          field :title
+          field :body
+          has_and_belongs_to_many :tags
+          track_history on: %i[fields], track_update: false
+        end
+      end
+
+      it 'should not create track' do
+        expect { post.tags = [Tag.create!] }.not_to change(Tracker, :count)
+      end
+
+      after :all do
+        Object.send(:remove_const, :Post)
+      end
+    end
+
+    context '#disable_tracking' do
+      before :all do
+        class Post
+          include Mongoid::Document
+          include Mongoid::Timestamps
+          include Mongoid::History::Trackable
+
+          field :title
+          field :body
+          has_and_belongs_to_many :tags
+          track_history on: %i[fields]
+        end
+      end
+
+      it 'should not create track' do
+        expect do
+          Post.disable_tracking do
+            post.tags = [Tag.create!]
+          end
+        end.not_to change(Tracker, :count)
+      end
+
+      after :all do
+        Object.send(:remove_const, :Post)
+      end
+    end
   end
 
   after :all do
-    Object.send(:remove_const, :Post)
     Object.send(:remove_const, :Tag)
   end
 end
