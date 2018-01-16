@@ -1,4 +1,4 @@
-### 0.8.0 (Next)
+### 0.8.0 (2018/01/16)
 
 * [#180](https://github.com/mongoid/mongoid-history/pull/180): Removed deprecation notice - [@sivagollapalli](https://github.com/sivagollapalli).
 * [#208](https://github.com/mongoid/mongoid-history/pull/208): Fix: history tracks fields declared after `track_history` - [@mikwat](https://github.com/mikwat).
@@ -6,7 +6,6 @@
 * [#205](https://github.com/mongoid/mongoid-history/pull/205): Allow modifier field to be optional - [@yads](https://github.com/yads).
 * [#211](https://github.com/mongoid/mongoid-history/pull/211): Enable tracking create/destroy by default - [@jagdeepsingh](https://github.com/jagdeepsingh).
 * [#212](https://github.com/mongoid/mongoid-history/pull/212): `track_history` method support for `:if` and `:unless` options - [@jagdeepsingh](https://github.com/jagdeepsingh).
-* Your contribution here.
 
 ### 0.7.0 (2017/11/14)
 
