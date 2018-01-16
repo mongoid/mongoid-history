@@ -1,3 +1,7 @@
+### 0.8.1 (Next)
+
+* Your contribution here.
+
 ### 0.8.0 (2018/01/16)
 
 * [#180](https://github.com/mongoid/mongoid-history/pull/180): Removed deprecation notice - [@sivagollapalli](https://github.com/sivagollapalli).
