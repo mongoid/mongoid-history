@@ -22,7 +22,7 @@ module Mongoid
 
         def insert_embeds_one_changes
           trackable_class.tracked_embeds_one.each do |rel|
-            rel_class = trackable_class.embeds_one_class(rel)
+            rel_class = trackable_class.relation_class_of(rel)
             paranoia_field = Mongoid::History.trackable_class_settings(rel_class)[:paranoia_field]
             paranoia_field = rel_class.aliased_fields.key(paranoia_field) || paranoia_field
             rel = aliased_fields.key(rel) || rel
@@ -34,7 +34,7 @@ module Mongoid
 
         def insert_embeds_many_changes
           trackable_class.tracked_embeds_many.each do |rel|
-            rel_class = trackable_class.embeds_many_class(rel)
+            rel_class = trackable_class.relation_class_of(rel)
             paranoia_field = Mongoid::History.trackable_class_settings(rel_class)[:paranoia_field]
             paranoia_field = rel_class.aliased_fields.key(paranoia_field) || paranoia_field
             rel = aliased_fields.key(rel) || rel

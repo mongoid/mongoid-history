@@ -57,10 +57,10 @@ module Mongoid
             field = trackable.database_field_name(field)
 
             if format.class == Hash && trackable.embeds_many?(field)
-              relation_class = trackable.embeds_many_class(field)
+              relation_class = trackable.relation_class_of(field)
               formats[field] = format.inject({}) { |a, e| a.merge(relation_class.database_field_name(e.first) => e.last) }
             elsif format.class == Hash && trackable.embeds_one?(field)
-              relation_class = trackable.embeds_one_class(field)
+              relation_class = trackable.relation_class_of(field)
               formats[field] = format.inject({}) { |a, e| a.merge(relation_class.database_field_name(e.first) => e.last) }
             else
               formats[field] = format
@@ -143,9 +143,9 @@ module Mongoid
         field_options = Array(field_options)
 
         if trackable.embeds_one?(field)
-          track_embeds_one(field, field_options)
+          track_relation(field, :embeds_one, field_options)
         elsif trackable.embeds_many?(field)
-          track_embeds_many(field, field_options)
+          track_relation(field, :embeds_many, field_options)
         elsif trackable.fields.keys.include?(field)
           @options[:fields] << field
         else
@@ -153,22 +153,13 @@ module Mongoid
         end
       end
 
-      def track_embeds_one(field, field_options)
-        relation_class = trackable.embeds_one_class(field)
-        @options[:relations][:embeds_one][field] = if field_options.blank?
-                                                     relation_class.fields.keys
-                                                   else
-                                                     %w[_id] | field_options.map { |opt| relation_class.database_field_name(opt) }
-                                                   end
-      end
-
-      def track_embeds_many(field, field_options)
-        relation_class = trackable.embeds_many_class(field)
-        @options[:relations][:embeds_many][field] = if field_options.blank?
-                                                      relation_class.fields.keys
-                                                    else
-                                                      %w[_id] | field_options.map { |opt| relation_class.database_field_name(opt) }
-                                                    end
+      def track_relation(field, kind, field_options)
+        relation_class = trackable.relation_class_of(field)
+        @options[:relations][kind][field] = if field_options.blank?
+                                              relation_class.fields.keys
+                                            else
+                                              %w[_id] | field_options.map { |opt| relation_class.database_field_name(opt) }
+                                               end
       end
 
       def reserved_fields

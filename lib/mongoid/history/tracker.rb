@@ -180,9 +180,9 @@ module Mongoid
       def create_on_parent
         name = association_chain.last['name']
         if trackable_parent.class.embeds_one?(name)
-          trackable_parent.create_embedded(name, localize_keys(original))
+          trackable_parent._create_relation(name, localize_keys(original))
         elsif trackable_parent.class.embeds_many?(name)
-          trackable_parent.get_embedded(name).create!(localize_keys(original))
+          trackable_parent._get_relation(name).create!(localize_keys(original))
         else
           raise 'This should never happen. Please report bug!'
         end
@@ -205,9 +205,9 @@ module Mongoid
                   klass = name.classify.constantize
                   klass.unscoped.where(_id: node['id']).first
                 elsif doc.class.embeds_one?(name)
-                  doc.get_embedded(name)
+                  doc._get_relation(name)
                 elsif doc.class.embeds_many?(name)
-                  doc.get_embedded(name).unscoped.where(_id: node['id']).first
+                  doc._get_relation(name).unscoped.where(_id: node['id']).first
                 else
                   raise 'This should never happen. Please report bug.'
                 end

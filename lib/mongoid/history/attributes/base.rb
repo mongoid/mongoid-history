@@ -32,7 +32,7 @@ module Mongoid
 
         def format_embeds_one_relation(rel, obj)
           rel = trackable_class.database_field_name(rel)
-          relation_class = trackable_class.embeds_one_class(rel)
+          relation_class = trackable_class.relation_class_of(rel)
           permitted_attrs = trackable_class.tracked_embeds_one_attributes(rel)
           formats = trackable_class.field_format(rel)
           format_relation(relation_class, obj, permitted_attrs, formats)
@@ -40,7 +40,7 @@ module Mongoid
 
         def format_embeds_many_relation(rel, obj)
           rel = trackable_class.database_field_name(rel)
-          relation_class = trackable_class.embeds_many_class(rel)
+          relation_class = trackable_class.relation_class_of(rel)
           permitted_attrs = trackable_class.tracked_embeds_many_attributes(rel)
           formats = trackable_class.field_format(rel)
           format_relation(relation_class, obj, permitted_attrs, formats)

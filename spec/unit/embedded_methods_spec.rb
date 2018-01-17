@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Mongoid::History::Trackable do
   describe 'EmbeddedMethods' do
-    describe 'embeds_one_class' do
+    describe 'relation_class_of' do
       before :all do
         ModelOne = Class.new do
           include Mongoid::Document
@@ -23,9 +23,9 @@ describe Mongoid::History::Trackable do
         end
       end
 
-      it { expect(ModelOne.embeds_one_class('emb_one')).to eq EmbOne }
-      it { expect(ModelOne.embeds_one_class('emt')).to eq EmbTwo }
-      it { expect(ModelOne.embeds_one_class('invalid')).to be_nil }
+      it { expect(ModelOne.relation_class_of('emb_one')).to eq EmbOne }
+      it { expect(ModelOne.relation_class_of('emt')).to eq EmbTwo }
+      it { expect(ModelOne.relation_class_of('invalid')).to be_nil }
 
       after :all do
         Object.send(:remove_const, :ModelOne)
@@ -34,7 +34,7 @@ describe Mongoid::History::Trackable do
       end
     end
 
-    describe 'embeds_many_class' do
+    describe 'relation_class_of' do
       before :all do
         ModelOne = Class.new do
           include Mongoid::Document
@@ -55,9 +55,9 @@ describe Mongoid::History::Trackable do
         end
       end
 
-      it { expect(ModelOne.embeds_many_class('emb_ones')).to eq EmbOne }
-      it { expect(ModelOne.embeds_many_class('emts')).to eq EmbTwo }
-      it { expect(ModelOne.embeds_many_class('invalid')).to be_nil }
+      it { expect(ModelOne.relation_class_of('emb_ones')).to eq EmbOne }
+      it { expect(ModelOne.relation_class_of('emts')).to eq EmbTwo }
+      it { expect(ModelOne.relation_class_of('invalid')).to be_nil }
 
       after :all do
         Object.send(:remove_const, :ModelOne)
