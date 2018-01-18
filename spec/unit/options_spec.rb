@@ -137,7 +137,7 @@ describe Mongoid::History::Options do
     describe '#parse_tracked_fields_and_relations' do
       context 'when options not passed' do
         let(:expected_options) do
-          { on: %i[foo b hatbm_ids],
+          { on: %i[foo b],
             except: %w[created_at updated_at],
             tracker_class_name: nil,
             modifier_field: :modifier,
@@ -147,7 +147,7 @@ describe Mongoid::History::Options do
             track_create: true,
             track_update: true,
             track_destroy: true,
-            fields: %w[foo b hatbm_ids],
+            fields: %w[foo b],
             dynamic: [],
             relations: { embeds_one: {}, embeds_many: {}, has_and_belongs_to_many: {} },
             format: {} }
@@ -185,12 +185,12 @@ describe Mongoid::History::Options do
 
           context 'with :all' do
             let(:value) { :all }
-            it { expect(subject[:on]).to eq %i[foo b hatbm_ids] }
+            it { expect(subject[:on]).to eq %i[foo b] }
           end
 
           context 'with :fields' do
             let(:value) { :fields }
-            it { expect(subject[:on]).to eq %i[foo b hatbm_ids] }
+            it { expect(subject[:on]).to eq %i[foo b] }
           end
 
           describe '#categorize_tracked_option' do

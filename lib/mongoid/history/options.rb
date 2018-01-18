@@ -84,12 +84,12 @@ module Mongoid
           @options[:on] = options[:on].reject { |opt| opt == :fields }
           @options[:on] = options[:on] |
                           trackable.fields.keys.map(&:to_sym) -
-                          reserved_fields.map(&:to_sym)
+                          reserved_fields.map(&:to_sym) -
+                          trackable.referenced_relations.values.map { |r| r.key.to_sym }
         end
 
         if options[:on].include?(:embedded_relations)
           @options[:on] = options[:on].reject { |opt| opt == :embedded_relations }
-          p trackable.embedded_relations.keys
           @options[:on] = options[:on] | trackable.embedded_relations.keys
         end
 
