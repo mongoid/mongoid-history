@@ -1,16 +1,16 @@
 Contributing to Mongoid-History
 ===============================
 
-Mongoid-History is work of [many of contributors](https://github.com/intridea/mongoid-history/graphs/contributors). You're encouraged to submit [pull requests](https://github.com/intridea/mongoid-history/pulls), [propose features, ask questions and discuss issues](https://github.com/intridea/mongoid-history/issues).
+Mongoid-History is work of [many of contributors](https://github.com/mongoid/mongoid-history/graphs/contributors). You're encouraged to submit [pull requests](https://github.com/mongoid/mongoid-history/pulls), [propose features, ask questions and discuss issues](https://github.com/mongoid/mongoid-history/issues).
 
 #### Fork the Project
 
-Fork the [project on Github](https://github.com/intridea/mongoid-history) and check out your copy.
+Fork the [project on Github](https://github.com/mongoid/mongoid-history) and check out your copy.
 
 ```
 git clone https://github.com/contributor/mongoid-history.git
 cd mongoid-history
-git remote add upstream https://github.com/intridea/mongoid-history.git
+git remote add upstream https://github.com/mongoid/mongoid-history.git
 ```
 
 #### Create a Topic Branch
@@ -95,7 +95,7 @@ git push origin my-feature-branch -f
 Update the [CHANGELOG](CHANGELOG.md) with the pull request number. A typical entry looks as follows.
 
 ```
-* [#123](https://github.com/intridea/mongoid-history/pull/123): Reticulated splines - [@contributor](https://github.com/contributor).
+* [#123](https://github.com/mongoid/mongoid-history/pull/123): Reticulated splines - [@contributor](https://github.com/contributor).
 ```
 
 Amend your previous commit and force push the changes.
