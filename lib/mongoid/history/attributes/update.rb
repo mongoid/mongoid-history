@@ -13,6 +13,7 @@ module Mongoid
               @attributes[k] = format_field(k, v) unless v.all?(&:blank?)
             end
           end
+          insert_embeds_one_changes_on_child if trackable_class.tracked_embeds_one.present? && changes.empty?
           @attributes
         end
 
@@ -26,6 +27,22 @@ module Mongoid
           modified_value = value[1][paranoia_field].present? ? {} : format_embeds_one_relation(relation, value[1])
           return if original_value == modified_value
           @attributes[relation] = [original_value, modified_value]
+        end
+
+        def insert_embeds_one_changes_on_child
+          trackable_class.tracked_embeds_one.each do |rel|
+            rel_class = trackable_class.embeds_one_class(rel)
+            paranoia_field = Mongoid::History.trackable_class_settings(rel_class)[:paranoia_field]
+            paranoia_field = rel_class.aliased_fields.key(paranoia_field) || paranoia_field
+            rel = aliased_fields.key(rel) || rel
+            obj = trackable.send(rel)
+            next if !obj || (obj.respond_to?(paranoia_field) && obj.public_send(paranoia_field).present?)
+            @attributes[rel] = {}
+            obj.changes.each do |k, v|
+              @attributes[rel] = [{ k => v.first }, { k => v.last }]
+            end
+          end
+          @attributes
         end
 
         def insert_embeds_many_changes(relation, value)
