@@ -168,11 +168,11 @@ class Post
   field           :body
   field           :rating
 
-  track_history   :on => [:fields] # all fields will be tracked
+  track_history   :on => [ :fields ] # only fields will be tracked
 end
 ```
 
-You can also track changes on all embedded relations.
+You can also track changes on all embedded (`embeds_one` and `embeds_many`) or referenced (`has_and_belongs_to_many`) relations.
 
 ```ruby
 class Post
@@ -182,7 +182,10 @@ class Post
   embeds_many :comments
   embeds_one  :content
 
-  track_history   :on => [:embedded_relations] # all embedded relations will be tracked
+  track_history   :on => [
+    :embedded_relations,
+    :referenced_relations
+  ] # only embedded and references relations will be tracked
 end
 ```
 

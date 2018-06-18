@@ -82,7 +82,10 @@ module Mongoid
 
         if options[:on].include?(:fields)
           @options[:on] = options[:on].reject { |opt| opt == :fields }
-          @options[:on] = options[:on] | trackable.fields.keys.map(&:to_sym) - reserved_fields.map(&:to_sym)
+          @options[:on] = options[:on] |
+                          trackable.fields.keys.map(&:to_sym) -
+                          reserved_fields.map(&:to_sym) -
+                          trackable.referenced_relations.values.map { |r| r.key.to_sym }
         end
 
         if options[:on].include?(:embedded_relations)
@@ -90,9 +93,14 @@ module Mongoid
           @options[:on] = options[:on] | trackable.embedded_relations.keys
         end
 
+        if options[:on].include?(:referenced_relations)
+          @options[:on] = options[:on].reject { |opt| opt == :referenced_relations }
+          @options[:on] = options[:on] | trackable.referenced_relations.keys
+        end
+
         @options[:fields] = []
         @options[:dynamic] = []
-        @options[:relations] = { embeds_one: {}, embeds_many: {} }
+        @options[:relations] = { embeds_one: {}, embeds_many: {}, has_and_belongs_to_many: {} }
 
         options[:on].each do |option|
           field = get_database_field_name(option)
@@ -146,6 +154,8 @@ module Mongoid
           track_relation(field, :embeds_one, field_options)
         elsif trackable.embeds_many?(field)
           track_relation(field, :embeds_many, field_options)
+        elsif trackable.has_and_belongs_to_many?(field)
+          track_relation(field, :has_and_belongs_to_many, field_options)
         elsif trackable.fields.keys.include?(field)
           @options[:fields] << field
         else

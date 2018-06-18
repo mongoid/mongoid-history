@@ -12,6 +12,7 @@ describe Mongoid::History::Options do
       embeds_one :emb_two, store_as: :emtw, inverse_class_name: 'EmbTwo'
       embeds_many :emb_threes, inverse_class_name: 'EmbThree'
       embeds_many :emb_fours, store_as: :emfs, inverse_class_name: 'EmbFour'
+      has_and_belongs_to_many :hatbms, inverse_class_name: 'Hatbm'
       track_history
     end
 
@@ -39,6 +40,13 @@ describe Mongoid::History::Options do
       include Mongoid::Document
       field :f_em_baz
       embedded_in :model_one
+    end
+
+    Hatbm = Class.new do
+      include Mongoid::Document
+
+      field :f_hatbm
+      has_and_belongs_to_many :model_one
     end
   end
 
@@ -141,7 +149,7 @@ describe Mongoid::History::Options do
             track_destroy: true,
             fields: %w[foo b],
             dynamic: [],
-            relations: { embeds_one: {}, embeds_many: {} },
+            relations: { embeds_one: {}, embeds_many: {}, has_and_belongs_to_many: {} },
             format: {} }
         end
         it { expect(service.prepared).to eq expected_options }
@@ -256,13 +264,32 @@ describe Mongoid::History::Options do
               it { expect(subject[:dynamic]).to eq %w[my_field] }
             end
 
-            context 'with relations' do
+            context 'with embedded relations' do
               let(:options) { { on: :embedded_relations } }
               it do
-                expect(subject[:relations]).to eq(embeds_many: { 'emb_threes' => %w[_id f_em_foo fmb],
-                                                                 'emfs'       => %w[_id f_em_baz] },
-                                                  embeds_one: { 'emb_one'    => %w[_id f_em_foo fmb],
-                                                                'emtw'       => %w[_id f_em_baz] })
+                expect(subject[:relations]).to eq(
+                  embeds_many: {
+                    'emb_threes' => %w[_id f_em_foo fmb],
+                    'emfs' => %w[_id f_em_baz]
+                  },
+                  embeds_one: {
+                    'emb_one' => %w[_id f_em_foo fmb],
+                    'emtw' => %w[_id f_em_baz]
+                  },
+                  has_and_belongs_to_many: {}
+                )
+              end
+            end
+
+            context 'with referenced relations' do
+              let(:options) { { on: :referenced_relations } }
+              it do
+                expect(subject[:relations]).to eq(
+                  embeds_many: {},
+                  embeds_one: {},
+                  has_and_belongs_to_many: {
+                    'hatbms' => %w[_id f_hatbm model_one_ids]
+                  })
               end
             end
           end
@@ -323,5 +350,6 @@ describe Mongoid::History::Options do
     Object.send(:remove_const, :EmbTwo)
     Object.send(:remove_const, :EmbThree)
     Object.send(:remove_const, :EmbFour)
+    Object.send(:remove_const, :Hatbm)
   end
 end
