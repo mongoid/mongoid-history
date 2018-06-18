@@ -184,7 +184,7 @@ class Post
 
   track_history   :on => [
     :embedded_relations,
-    :rereferenced_relations
+    :referenced_relations
   ] # only embedded and references relations will be tracked
 end
 ```
