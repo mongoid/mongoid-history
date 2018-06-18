@@ -179,6 +179,13 @@ module Mongoid
 
       def create_on_parent
         name = association_chain.last['name']
+
+        #
+        # TODO: modifier
+        # klass = trackable_parent.class.relation_class_of(name)
+        # klass.history_trackable_options[:modifier_field] if klass.respond_to?(:history_trackable_options)
+        #
+
         if trackable_parent.class.embeds_one?(name)
           trackable_parent._create_relation(name, localize_keys(original))
         elsif trackable_parent.class.embeds_many?(name)
@@ -209,7 +216,9 @@ module Mongoid
                 elsif doc.class.embeds_many?(name)
                   doc._get_relation(name).unscoped.where(_id: node['id']).first
                 else
-                  raise 'This should never happen. Please report bug.'
+                  relation_klass = doc.class.relation_class_of(name) if doc
+                  relation_klass ||= 'nil'
+                  raise "Unexpected relation for field '#{name}': #{relation_klass}. This should never happen. Please report bug."
                 end
           documents << doc
           break if chain.empty?

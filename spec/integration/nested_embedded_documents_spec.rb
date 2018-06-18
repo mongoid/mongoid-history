@@ -61,11 +61,11 @@ describe Mongoid::History::Tracker do
     user = User.new
     user.save!
 
-    model = Modelone.new(name: 'm1name')
+    model = Modelone.new(name: 'm1name', modifier: user)
     model.user = user
     model.save!
-    embedded1 = model.embones.create(name: 'e1name')
-    embedded2 = embedded1.embtwos.create(name: 'e2name')
+    embedded1 = model.embones.create(name: 'e1name', modifier: user)
+    embedded2 = embedded1.embtwos.create(name: 'e2name', modifier: user)
 
     embedded2.name = 'a new name'
     embedded2.save!

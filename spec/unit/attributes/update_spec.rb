@@ -157,7 +157,11 @@ describe Mongoid::History::Attributes::Update do
             include Mongoid::Document
             include Mongoid::History::Trackable
             store_in collection: :model_ones
-            embeds_many :emb_ones
+            if Mongoid::Compatibility::Version.mongoid7_or_newer?
+              embeds_many :emb_ones
+            else
+              embeds_many :emb_ones, inverse_class_name: 'EmbOne'
+            end
             track_history on: :fields
           end
 
@@ -210,7 +214,11 @@ describe Mongoid::History::Attributes::Update do
             include Mongoid::Document
             include Mongoid::History::Trackable
             store_in collection: :model_ones
-            embeds_many :emb_ones, store_as: :eons
+            if Mongoid::Compatibility::Version.mongoid7_or_newer?
+              embeds_many :emb_ones, store_as: :eons
+            else
+              embeds_many :emb_ones, store_as: :eons, inverse_class_name: 'EmbOne'
+            end
             track_history on: :fields
           end
 
@@ -250,7 +258,11 @@ describe Mongoid::History::Attributes::Update do
             include Mongoid::Document
             include Mongoid::History::Trackable
             store_in collection: :model_ones
-            embeds_many :emb_ones
+            if Mongoid::Compatibility::Version.mongoid7_or_newer?
+              embeds_many :emb_ones
+            else
+              embeds_many :emb_ones, inverse_class_name: 'EmbOne'
+            end
             track_history on: :fields
           end
 

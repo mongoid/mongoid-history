@@ -28,11 +28,12 @@ describe Mongoid::History::Tracker do
 
   it 'should be possible to undo when having multiple relations to modifier class' do
     user = User.new
-    user.save
+    user.save!
 
     model = Model.new
     model.name = 'Foo'
     model.user = user
+    model.modifier = user
     model.save!
 
     model.name = 'Bar'

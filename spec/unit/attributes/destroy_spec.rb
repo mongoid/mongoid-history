@@ -24,7 +24,7 @@ describe Mongoid::History::Attributes::Destroy do
     describe '#fields' do
       before(:each) do
         model_one.instance_variable_set(:@history_trackable_options, nil)
-        model_one.track_history on: :foo
+        model_one.track_history on: :foo, modifier_field_optional: true
         obj_one.save!
       end
       let(:obj_one) { model_one.new(foo: 'Foo', bar: 'Bar') }
@@ -39,7 +39,7 @@ describe Mongoid::History::Attributes::Destroy do
           include Mongoid::History::Trackable
           store_in collection: :model_twos
           embeds_one :emb_two
-          track_history on: :fields
+          track_history on: :fields, modifier_field_optional: true
         end
 
         class EmbTwo
@@ -57,7 +57,7 @@ describe Mongoid::History::Attributes::Destroy do
 
       context 'when relation tracked' do
         before(:each) do
-          ModelTwo.track_history on: :emb_two
+          ModelTwo.track_history on: :emb_two, modifier_field_optional: true
           obj_two.save!
         end
         it { expect(subject['emb_two']).to eq [{ '_id' => emb_obj_two._id, 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' }, nil] }
@@ -65,7 +65,7 @@ describe Mongoid::History::Attributes::Destroy do
 
       context 'when relation not tracked' do
         before(:each) do
-          ModelTwo.track_history on: :fields
+          ModelTwo.track_history on: :fields, modifier_field_optional: true
           allow(ModelTwo).to receive(:dynamic_enabled?) { false }
           obj_two.save!
         end
@@ -91,7 +91,7 @@ describe Mongoid::History::Attributes::Destroy do
 
         before(:each) do
           ModelThree.instance_variable_set(:@history_trackable_options, nil)
-          ModelThree.track_history on: :emb_three
+          ModelThree.track_history on: :emb_three, modifier_field_optional: true
           obj_three.save!
         end
 
@@ -108,7 +108,7 @@ describe Mongoid::History::Attributes::Destroy do
 
       context 'relation with permitted attributes' do
         before(:each) do
-          ModelTwo.track_history on: [{ emb_two: :em_foo }]
+          ModelTwo.track_history on: [{ emb_two: :em_foo }], modifier_field_optional: true
           obj_two.save!
         end
         it { expect(subject['emb_two']).to eq [{ '_id' => emb_obj_two._id, 'em_foo' => 'Em-Foo' }, nil] }
@@ -116,7 +116,7 @@ describe Mongoid::History::Attributes::Destroy do
 
       context 'when relation object not built' do
         before(:each) do
-          ModelTwo.track_history on: :emb_two
+          ModelTwo.track_history on: :emb_two, modifier_field_optional: true
           obj_two.save!
         end
         let(:obj_two) { ModelTwo.new }

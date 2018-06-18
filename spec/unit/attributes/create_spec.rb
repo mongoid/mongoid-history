@@ -38,7 +38,11 @@ describe Mongoid::History::Attributes::Create do
             include Mongoid::Document
             include Mongoid::History::Trackable
             store_in collection: :model_twos
-            embeds_one :emb_one_one, inverse_class_name: 'EmbOneOne'
+            if Mongoid::Compatibility::Version.mongoid7_or_newer?
+              embeds_one :emb_one_one
+            else
+              embeds_one :emb_one_one, inverse_class_name: 'EmbOneOne'
+            end
           end
 
           class EmbOneOne
@@ -71,7 +75,11 @@ describe Mongoid::History::Attributes::Create do
             include Mongoid::Document
             include Mongoid::History::Trackable
             store_in collection: :model_twos
-            embeds_one :emb_one_one, inverse_class_name: 'EmbOneOne'
+            if Mongoid::Compatibility::Version.mongoid7_or_newer?
+              embeds_one :emb_one_one
+            else
+              embeds_one :emb_one_one, inverse_class_name: 'EmbOneOne'
+            end
           end
 
           class EmbOneOne
@@ -104,7 +112,11 @@ describe Mongoid::History::Attributes::Create do
             include Mongoid::Document
             include Mongoid::History::Trackable
             store_in collection: :model_twos
-            embeds_one :emb_one_one, inverse_class_name: 'EmbOneOne'
+            if Mongoid::Compatibility::Version.mongoid7_or_newer?
+              embeds_one :emb_one_one
+            else
+              embeds_one :emb_one_one, inverse_class_name: 'EmbOneOne'
+            end
           end
 
           class EmbOneOne
@@ -141,7 +153,11 @@ describe Mongoid::History::Attributes::Create do
             include Mongoid::Document
             include Mongoid::History::Trackable
             store_in collection: :model_twos
-            embeds_one :emb_one_one, inverse_class_name: 'EmbOneOne'
+            if Mongoid::Compatibility::Version.mongoid7_or_newer?
+              embeds_one :emb_one_one
+            else
+              embeds_one :emb_one_one, inverse_class_name: 'EmbOneOne'
+            end
           end
 
           class EmbOneOne
@@ -178,7 +194,11 @@ describe Mongoid::History::Attributes::Create do
             include Mongoid::Document
             include Mongoid::History::Trackable
             store_in collection: :model_twos
-            embeds_one :emb_one_one, inverse_class_name: 'EmbOneOne'
+            if Mongoid::Compatibility::Version.mongoid7_or_newer?
+              embeds_one :emb_one_one
+            else
+              embeds_one :emb_one_one, inverse_class_name: 'EmbOneOne'
+            end
           end
 
           class EmbOneOne
@@ -213,7 +233,11 @@ describe Mongoid::History::Attributes::Create do
             include Mongoid::Document
             include Mongoid::History::Trackable
             store_in collection: :model_twos
-            embeds_one :emb_one_one, store_as: :eoo, inverse_class_name: 'EmbOneOne'
+            if Mongoid::Compatibility::Version.mongoid7_or_newer?
+              embeds_one :emb_one_one, store_as: :eoo
+            else
+              embeds_one :emb_one_one, inverse_class_name: 'EmbOneOne', store_as: :eoo
+            end
           end
 
           class EmbOneOne
@@ -246,7 +270,11 @@ describe Mongoid::History::Attributes::Create do
             include Mongoid::Document
             include Mongoid::History::Trackable
             store_in collection: :model_twos
-            embeds_one :emb_one_one, store_as: :eoo, inverse_class_name: 'EmbOneOne'
+            if Mongoid::Compatibility::Version.mongoid7_or_newer?
+              embeds_one :emb_one_one, store_as: :eoo
+            else
+              embeds_one :emb_one_one, store_as: :eoo, inverse_class_name: 'EmbOneOne'
+            end
           end
 
           class EmbOneOne
@@ -278,7 +306,11 @@ describe Mongoid::History::Attributes::Create do
             include Mongoid::Document
             include Mongoid::History::Trackable
             store_in collection: :model_twos
-            embeds_one :emb_one_one, store_as: :eoo, inverse_class_name: 'EmbOneOne'
+            if Mongoid::Compatibility::Version.mongoid7_or_newer?
+              embeds_one :emb_one_one, store_as: :eoo
+            else
+              embeds_one :emb_one_one, store_as: :eoo, inverse_class_name: 'EmbOneOne'
+            end
           end
 
           class EmbOneOne

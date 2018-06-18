@@ -8,10 +8,17 @@ describe Mongoid::History::Options do
       store_in collection: :model_ones
       field :foo
       field :b, as: :bar
-      embeds_one :emb_one, inverse_class_name: 'EmbOne'
-      embeds_one :emb_two, store_as: :emtw, inverse_class_name: 'EmbTwo'
-      embeds_many :emb_threes, inverse_class_name: 'EmbThree'
-      embeds_many :emb_fours, store_as: :emfs, inverse_class_name: 'EmbFour'
+      if Mongoid::Compatibility::Version.mongoid7_or_newer?
+        embeds_one :emb_one
+        embeds_one :emb_two, store_as: :emtw
+        embeds_many :emb_threes
+        embeds_many :emb_fours, store_as: :emfs
+      else
+        embeds_one :emb_one, inverse_class_name: 'EmbOne'
+        embeds_one :emb_two, store_as: :emtw, inverse_class_name: 'EmbTwo'
+        embeds_many :emb_threes, inverse_class_name: 'EmbThree'
+        embeds_many :emb_fours, store_as: :emfs, inverse_class_name: 'EmbFour'
+      end
       track_history
     end
 

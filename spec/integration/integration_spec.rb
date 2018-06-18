@@ -29,7 +29,7 @@ describe Mongoid::History do
       field :t, as: :title
       field :body
       embedded_in :commentable, polymorphic: true
-      track_history on: %i[title body], scope: :post, track_create: true, track_destroy: true
+      track_history on: %i[title body], scope: :post, track_create: true, track_destroy: true, modifier_field_optional: true # BUGBUG
     end
 
     class Section
@@ -54,7 +54,7 @@ describe Mongoid::History do
       field :city
       field :country
       field :aliases, type: Array
-      track_history except: %i[email updated_at]
+      track_history except: %i[email updated_at], modifier_field_optional: true
     end
 
     class Tag
@@ -71,6 +71,14 @@ describe Mongoid::History do
     class Foo < Comment
     end
 
+    class Sausage
+      include Mongoid::Document
+      include Mongoid::History::Trackable
+
+      field :flavour, localize: true
+      track_history on: [:flavour], track_destroy: true, modifier_field_optional: true
+    end
+
     @persisted_history_options = Mongoid::History.trackable_class_options
   end
 
@@ -79,7 +87,7 @@ describe Mongoid::History do
   let(:another_user) { User.create!(name: 'Another Guy', email: 'anotherguy@randomemail.com') }
   let(:post) { Post.create!(title: 'Test', body: 'Post', modifier: user, views: 100) }
   let(:comment) { post.comments.create!(title: 'test', body: 'comment', modifier: user) }
-  let(:tag) { Tag.create!(title: 'test') }
+  let(:tag) { Tag.create!(title: 'test', updated_by: user) }
 
   describe 'track' do
     describe 'on creation' do
@@ -150,65 +158,65 @@ describe Mongoid::History do
       it 'should create a history track if changed attributes match tracked attributes' do
         post # This will create history track records for creation
         expect do
-          post.update_attributes(title: 'Another Test')
+          post.update_attributes!(title: 'Another Test')
         end.to change(Tracker, :count).by(1)
       end
 
       it 'should not create a history track if changed attributes do not match tracked attributes' do
         post # This will create history track records for creation
         expect do
-          post.update_attributes(rating: 'untracked')
+          post.update_attributes!(rating: 'untracked')
         end.to change(Tracker, :count).by(0)
       end
 
       it 'should assign modified fields' do
-        post.update_attributes(title: 'Another Test')
+        post.update_attributes!(title: 'Another Test')
         expect(post.history_tracks.last.modified).to eq(
           'title' => 'Another Test'
         )
       end
 
       it 'should assign method field' do
-        post.update_attributes(title: 'Another Test')
+        post.update_attributes!(title: 'Another Test')
         expect(post.history_tracks.last.action).to eq('update')
       end
 
       it 'should assign original fields' do
-        post.update_attributes(title: 'Another Test')
+        post.update_attributes!(title: 'Another Test')
         expect(post.history_tracks.last.original).to eq(
           'title' => 'Test'
         )
       end
 
       it 'should assign modifier' do
-        post.update_attributes(title: 'Another Test')
+        post.update_attributes!(title: 'Another Test')
         expect(post.history_tracks.first.modifier).to eq(user)
       end
 
       it 'should assign version on history tracks' do
-        post.update_attributes(title: 'Another Test')
+        post.update_attributes!(title: 'Another Test')
         expect(post.history_tracks.first.version).to eq(1)
       end
 
       it 'should assign version on post' do
         expect(post.version).to eq(1) # Created
-        post.update_attributes(title: 'Another Test')
+        post.update_attributes!(title: 'Another Test')
         expect(post.version).to eq(2) # Updated
       end
 
       it 'should assign scope' do
-        post.update_attributes(title: 'Another Test')
+        post.update_attributes!(title: 'Another Test')
         expect(post.history_tracks.first.scope).to eq('post')
       end
 
       it 'should assign association_chain' do
-        post.update_attributes(title: 'Another Test')
+        post.update_attributes!(title: 'Another Test')
         expect(post.history_tracks.last.association_chain).to eq([{ 'id' => post.id, 'name' => 'Post' }])
       end
 
       it 'should exclude defined options' do
         name = user.name
-        user.update_attributes(name: 'Aaron2', email: 'aaronsnewemail@randomemail.com')
+        user.update_attributes!(name: 'Aaron2', email: 'aaronsnewemail@randomemail.com')
         expect(user.history_tracks.last.original.keys).to eq(['n'])
         expect(user.history_tracks.last.original['n']).to eq(name)
         expect(user.history_tracks.last.modified.keys).to eq(['n'])
@@ -217,7 +225,7 @@ describe Mongoid::History do
 
       it 'should undo field changes' do
         name = user.name
-        user.update_attributes(name: 'Aaron2', email: 'aaronsnewemail@randomemail.com')
+        user.update_attributes!(name: 'Aaron2', email: 'aaronsnewemail@randomemail.com')
         user.history_tracks.last.undo! nil
         expect(user.reload.name).to eq(name)
       end
@@ -225,22 +233,22 @@ describe Mongoid::History do
       it 'should undo non-existing field changes' do
         post = Post.create!(modifier: user, views: 100)
         expect(post.reload.title).to be_nil
-        post.update_attributes(title: 'Aaron2')
+        post.update_attributes!(title: 'Aaron2')
         expect(post.reload.title).to eq('Aaron2')
-        post.history_tracks.last.undo! nil
+        post.history_tracks.last.undo! user
         expect(post.reload.title).to be_nil
       end
 
       it 'should track array changes' do
         aliases = user.aliases
-        user.update_attributes(aliases: %w[bob joe])
+        user.update_attributes!(aliases: %w[bob joe])
         expect(user.history_tracks.last.original['aliases']).to eq(aliases)
         expect(user.history_tracks.last.modified['aliases']).to eq(user.aliases)
       end
 
       it 'should undo array changes' do
         aliases = user.aliases
-        user.update_attributes(aliases: %w[bob joe])
+        user.update_attributes!(aliases: %w[bob joe])
         user.history_tracks.last.undo! nil
         expect(user.reload.aliases).to eq(aliases)
       end
@@ -265,7 +273,7 @@ describe Mongoid::History do
       context 'update action' do
         subject { user.history_tracks.last.tracked_changes }
         before do
-          user.update_attributes(name: 'Aaron2', email: nil, country: '',  city: nil, phone: '867-5309', aliases: ['', 'bill', 'james'])
+          user.update_attributes!(name: 'Aaron2', email: nil, country: '',  city: nil, phone: '867-5309', aliases: ['', 'bill', 'james'])
         end
         it { is_expected.to be_a HashWithIndifferentAccess }
         it 'should track changed field' do
@@ -311,7 +319,7 @@ describe Mongoid::History do
       context 'update action' do
         subject { user.history_tracks.last.tracked_edits }
         before do
-          user.update_attributes(name: 'Aaron2', email: nil, country: '', city: nil, phone: '867-5309', aliases: ['', 'bill', 'james'])
+          user.update_attributes!(name: 'Aaron2', email: nil, country: '', city: nil, phone: '867-5309', aliases: ['', 'bill', 'james'])
         end
         it { is_expected.to be_a HashWithIndifferentAccess }
         it 'should track changed field' do
@@ -353,74 +361,74 @@ describe Mongoid::History do
     describe 'on update non-embedded twice' do
       it 'should assign version on post' do
         expect(post.version).to eq(1)
-        post.update_attributes(title: 'Test2')
-        post.update_attributes(title: 'Test3')
+        post.update_attributes!(title: 'Test2')
+        post.update_attributes!(title: 'Test3')
         expect(post.version).to eq(3)
       end
 
       it 'should create a history track if changed attributes match tracked attributes' do
         post # Created
         expect do
-          post.update_attributes(title: 'Test2')
-          post.update_attributes(title: 'Test3')
+          post.update_attributes!(title: 'Test2')
+          post.update_attributes!(title: 'Test3')
         end.to change(Tracker, :count).by(2)
       end
 
       it 'should create a history track of version 2' do
-        post.update_attributes(title: 'Test2')
-        post.update_attributes(title: 'Test3')
+        post.update_attributes!(title: 'Test2')
+        post.update_attributes!(title: 'Test3')
         expect(post.history_tracks.where(version: 2).first).not_to be_nil
       end
 
       it 'should assign modified fields' do
-        post.update_attributes(title: 'Test2')
-        post.update_attributes(title: 'Test3')
+        post.update_attributes!(title: 'Test2')
+        post.update_attributes!(title: 'Test3')
         expect(post.history_tracks.where(version: 3).first.modified).to eq(
           'title' => 'Test3'
         )
       end
 
       it 'should assign original fields' do
-        post.update_attributes(title: 'Test2')
-        post.update_attributes(title: 'Test3')
+        post.update_attributes!(title: 'Test2')
+        post.update_attributes!(title: 'Test3')
         expect(post.history_tracks.where(version: 3).first.original).to eq(
           'title' => 'Test2'
         )
       end
 
       it 'should assign modifier' do
-        post.update_attributes(title: 'Another Test', modifier: another_user)
+        post.update_attributes!(title: 'Another Test', modifier: another_user)
         expect(post.history_tracks.last.modifier).to eq(another_user)
       end
     end
 
     describe 'on update embedded 1..N (embeds_many)' do
       it 'should assign version on comment' do
-        comment.update_attributes(title: 'Test2')
+        comment.update_attributes!(title: 'Test2')
         expect(comment.version).to eq(2) # first track generated on creation
       end
 
       it 'should create a history track of version 2' do
-        comment.update_attributes(title: 'Test2')
+        comment.update_attributes!(title: 'Test2')
         expect(comment.history_tracks.where(version: 2).first).not_to be_nil
       end
 
       it 'should assign modified fields' do
-        comment.update_attributes(t: 'Test2')
+        comment.update_attributes!(t: 'Test2')
         expect(comment.history_tracks.where(version: 2).first.modified).to eq(
           't' => 'Test2'
         )
       end
 
       it 'should assign original fields' do
-        comment.update_attributes(title: 'Test2')
+        comment.update_attributes!(title: 'Test2')
         expect(comment.history_tracks.where(version: 2).first.original).to eq(
           't' => 'test'
         )
       end
 
       it 'should be possible to undo from parent' do
-        comment.update_attributes(title: 'Test 2')
+        comment.update_attributes!(title: 'Test 2')
         user
         post.history_tracks.last.undo!(user)
         comment.reload
@@ -428,16 +436,17 @@ describe Mongoid::History do
       end
 
       it 'should assign modifier' do
-        post.update_attributes(title: 'Another Test', modifier: another_user)
+        post.update_attributes!(title: 'Another Test', modifier: another_user)
         expect(post.history_tracks.last.modifier).to eq(another_user)
       end
     end
 
     describe 'on update embedded 1..1 (embeds_one)' do
-      let(:section) { Section.new(title: 'Technology') }
+      let(:section) { Section.new(title: 'Technology', modifier: user) }
 
       before(:each) do
         post.section = section
+        post.modifier = user
         post.save!
         post.reload
         post.section
@@ -448,38 +457,38 @@ describe Mongoid::History do
       end
 
       it 'should assign version on section' do
-        section.update_attributes(title: 'Technology 2')
+        section.update_attributes!(title: 'Technology 2')
         expect(section.version).to eq(2) # first track generated on creation
       end
 
       it 'should create a history track of version 2' do
-        section.update_attributes(title: 'Technology 2')
+        section.update_attributes!(title: 'Technology 2')
         expect(section.history_tracks.where(version: 2).first).not_to be_nil
       end
 
       it 'should assign modified fields' do
-        section.update_attributes(title: 'Technology 2')
+        section.update_attributes!(title: 'Technology 2')
         expect(section.history_tracks.where(version: 2).first.modified).to eq(
           't' => 'Technology 2'
         )
       end
 
       it 'should assign original fields' do
-        section.update_attributes(title: 'Technology 2')
+        section.update_attributes!(title: 'Technology 2')
         expect(section.history_tracks.where(version: 2).first.original).to eq(
           't' => 'Technology'
         )
       end
 
       it 'should be possible to undo from parent' do
-        section.update_attributes(title: 'Technology 2')
+        section.update_attributes!(title: 'Technology 2')
         post.history_tracks.last.undo!(user)
         section.reload
         expect(section.title).to eq('Technology')
       end
 
       it 'should assign modifier' do
-        section.update_attributes(title: 'Business', modifier: another_user)
+        section.update_attributes!(title: 'Business', modifier: another_user)
         expect(post.history_tracks.last.modifier).to eq(another_user)
       end
     end
@@ -509,18 +518,19 @@ describe Mongoid::History do
 
       it 'should be possible to create with redo after undo create embedded from parent' do
         comment # initialize
-        post.comments.create!(title: 'The second one')
+        post.comments.create!(title: 'The second one', modifier: user)
         track = post.history_tracks[2]
+        expect(post.reload.comments.count).to eq 2
         track.undo!(user)
+        expect(post.reload.comments.count).to eq 1
         track.redo!(user)
-        post.reload
-        expect(post.comments.count).to eq(2)
+        expect(post.reload.comments.count).to eq 2
       end
     end
 
     describe 'embedded with cascading callbacks' do
       let(:tag_foo) { post.tags.create!(title: 'foo', updated_by: user) }
-      let(:tag_bar) { post.tags.create!(title: 'bar') }
+      let(:tag_bar) { post.tags.create!(title: 'bar', updated_by: user) }
 
       # it "should have cascaded the creation callbacks and set timestamps" do
       #   tag_foo; tag_bar # initialize
@@ -530,7 +540,7 @@ describe Mongoid::History do
 
       it 'should allow an update through the parent model' do
         update_hash = { 'post' => { 'tags_attributes' => { '1234' => { 'id' => tag_bar.id, 'title' => 'baz' } } } }
-        post.update_attributes(update_hash['post'])
+        post.update_attributes!(update_hash['post'])
         expect(post.tags.last.title).to eq('baz')
       end
 
@@ -539,14 +549,14 @@ describe Mongoid::History do
         tag_bar # initialize
         expect(post.tags.count).to eq(2)
         update_hash = { 'post' => { 'tags_attributes' => { '1234' => { 'id' => tag_bar.id, 'title' => 'baz', '_destroy' => 'true' } } } }
-        post.update_attributes(update_hash['post'])
+        post.update_attributes!(update_hash['post'])
         expect(post.tags.count).to eq(1)
         expect(post.history_tracks.to_a.last.action).to eq('destroy')
       end
 
       it 'should write relationship name for association_chain hiearchy instead of class name when using _destroy macro' do
         update_hash = { 'tags_attributes' => { '1234' => { 'id' => tag_foo.id, '_destroy' => '1' } } }
-        post.update_attributes(update_hash)
+        post.update_attributes!(update_hash)
 
         # historically this would have evaluated to 'Tags' and an error would be thrown
         # on any call that walked up the association_chain, e.g. 'trackable'
@@ -557,7 +567,7 @@ describe Mongoid::History do
 
     describe 'non-embedded' do
       it 'should undo changes' do
-        post.update_attributes(title: 'Test2')
+        post.update_attributes!(title: 'Test2')
         post.history_tracks.where(version: 2).last.undo!(user)
         post.reload
         expect(post.title).to eq('Test')
@@ -571,21 +581,21 @@ describe Mongoid::History do
 
       it 'should create a new history track after undo' do
         comment # initialize
-        post.update_attributes(title: 'Test2')
+        post.update_attributes!(title: 'Test2')
         post.history_tracks.last.undo!(user)
         post.reload
         expect(post.history_tracks.count).to eq(4)
       end
 
       it 'should assign user as the modifier of the newly created history track' do
-        post.update_attributes(title: 'Test2')
+        post.update_attributes!(title: 'Test2')
         post.history_tracks.where(version: 2).last.undo!(user)
         post.reload
         expect(post.history_tracks.where(version: 2).last.modifier).to eq(user)
       end
 
       it 'should stay the same after undo and redo' do
-        post.update_attributes(title: 'Test2')
+        post.update_attributes!(title: 'Test2')
         track = post.history_tracks.last
         track.undo!(user)
         track.redo!(user)
@@ -605,28 +615,28 @@ describe Mongoid::History do
 
     describe 'embedded' do
       it 'should undo changes' do
-        comment.update_attributes(title: 'Test2')
+        comment.update_attributes!(title: 'Test2')
         comment.history_tracks.where(version: 2).first.undo!(user)
         comment.reload
         expect(comment.title).to eq('test')
       end
 
       it 'should create a new history track after undo' do
-        comment.update_attributes(title: 'Test2')
+        comment.update_attributes!(title: 'Test2')
         comment.history_tracks.where(version: 2).first.undo!(user)
         comment.reload
         expect(comment.history_tracks.count).to eq(3)
       end
 
       it 'should assign user as the modifier of the newly created history track' do
-        comment.update_attributes(title: 'Test2')
+        comment.update_attributes!(title: 'Test2')
         comment.history_tracks.where(version: 2).first.undo!(user)
         comment.reload
         expect(comment.history_tracks.where(version: 3).first.modifier).to eq(user)
       end
 
       it 'should stay the same after undo and redo' do
-        comment.update_attributes(title: 'Test2')
+        comment.update_attributes!(title: 'Test2')
         track = comment.history_tracks.where(version: 2).first
         track.undo!(user)
         track.redo!(user)
@@ -702,7 +712,7 @@ describe Mongoid::History do
         [nil, :reload].each do |method|
           context (method || 'instance').to_s do
             before :each do
-              comment.update_attributes(title: 'Test5')
+              comment.update_attributes!(title: 'Test5')
             end
 
             it 'should recognize :from, :to options' do
@@ -757,39 +767,8 @@ describe Mongoid::History do
       end
     end
 
-    describe 'localized fields' do
-      before :each do
-        class Sausage
-          include Mongoid::Document
-          include Mongoid::History::Trackable
-
-          field :flavour, localize: true
-          track_history on: [:flavour], track_destroy: true
-        end
-      end
-      it 'should correctly undo and redo' do
-        if Sausage.respond_to?(:localized_fields)
-          sausage = Sausage.create!(flavour_translations: { 'en' => 'Apple', 'nl' => 'Appel' })
-          sausage.update_attributes(flavour: 'Guinness')
-
-          track = sausage.history_tracks.last
-
-          track.undo! user
-          expect(sausage.reload.flavour).to eq('Apple')
-
-          track.redo! user
-          expect(sausage.reload.flavour).to eq('Guinness')
-
-          sausage.destroy
-          expect(sausage.history_tracks.last.action).to eq('destroy')
-          sausage.history_tracks.last.undo! user
-          expect(sausage.reload.flavour).to eq('Guinness')
-        end
-      end
-    end
-
     describe 'embedded with a polymorphic trackable' do
-      let(:foo) { Foo.new(title: 'a title', body: 'a body') }
+      let(:foo) { Foo.new(title: 'a title', body: 'a body', modifier: user) }
       before :each do
         post.comments << foo
         post.save!
@@ -815,7 +794,7 @@ describe Mongoid::History do
       end
       context 'an embedded model' do
         it 'should return the trackable parent class' do
-          comment.update_attributes(title: 'Foo')
+          comment.update_attributes!(title: 'Foo')
           expect(comment.history_tracks.first.trackable_parent_class).to eq(Post)
         end
         it 'should return the parent class even if the trackable is deleted' do
@@ -844,7 +823,7 @@ describe Mongoid::History do
 
       describe 'post' do
         it 'should correctly undo and redo' do
-          post.update_attributes(title: 'a new title')
+          post.update_attributes!(title: 'a new title')
           track = post.history_tracks.last
           track.undo! user
           expect(post.reload.title).to eq('Test')
@@ -853,7 +832,7 @@ describe Mongoid::History do
         end
 
         it 'should stay the same after undo and redo' do
-          post.update_attributes(title: 'testing')
+          post.update_attributes!(title: 'testing')
           track = post.history_tracks.last
           track.undo! user
           track.redo! user
@@ -862,7 +841,7 @@ describe Mongoid::History do
       end
       describe 'comment' do
         it 'should correctly undo and redo' do
-          comment.update_attributes(title: 'a new title')
+          comment.update_attributes!(title: 'a new title')
           track = comment.history_tracks.last
           track.undo! user
           expect(comment.reload.title).to eq('test')
@@ -871,7 +850,7 @@ describe Mongoid::History do
         end
 
         it 'should stay the same after undo and redo' do
-          comment.update_attributes(title: 'testing')
+          comment.update_attributes!(title: 'testing')
           track = comment.history_tracks.last
           track.undo! user
           track.redo! user
@@ -880,7 +859,7 @@ describe Mongoid::History do
       end
       describe 'user' do
         it 'should correctly undo and redo' do
-          user.update_attributes(name: 'a new name')
+          user.update_attributes!(name: 'a new name')
           track = user.history_tracks.last
           track.undo! user
           expect(user.reload.name).to eq('Aaron')
@@ -889,7 +868,7 @@ describe Mongoid::History do
         end
 
         it 'should stay the same after undo and redo' do
-          user.update_attributes(name: 'testing')
+          user.update_attributes!(name: 'testing')
           track = user.history_tracks.last
           track.undo! user
           track.redo! user
@@ -898,7 +877,7 @@ describe Mongoid::History do
       end
       describe 'tag' do
         it 'should correctly undo and redo' do
-          tag.update_attributes(title: 'a new title')
+          tag.update_attributes!(title: 'a new title')
           track = tag.history_tracks.last
           track.undo! user
           expect(tag.reload.title).to eq('test')
@@ -907,7 +886,7 @@ describe Mongoid::History do
         end
 
         it 'should stay the same after undo and redo' do
-          tag.update_attributes(title: 'testing')
+          tag.update_attributes!(title: 'testing')
           track = tag.history_tracks.last
           track.undo! user
           track.redo! user
@@ -931,11 +910,33 @@ describe Mongoid::History do
       end
 
       it 'should add foo to the changes history' do
-        o = OverriddenChangesMethod.create
+        o = OverriddenChangesMethod.create(modifier: user)
         o.save!
         track = o.history_tracks.last
         expect(track.modified).to eq('foo' => 'baz')
         expect(track.original).to eq('foo' => 'bar')
+      end
+    end
+
+    describe 'localized fields' do
+      it 'should correctly undo and redo' do
+        if Sausage.respond_to?(:localized_fields)
+          sausage = Sausage.create!(flavour_translations: { 'en' => 'Apple', 'nl' => 'Appel' }, modifier: user)
+          sausage.update_attributes!(flavour: 'Guinness')
+
+          track = sausage.history_tracks.last
+
+          track.undo! user
+          expect(sausage.reload.flavour).to eq('Apple')
+
+          track.redo! user
+          expect(sausage.reload.flavour).to eq('Guinness')
+
+          sausage.destroy
+          expect(sausage.history_tracks.last.action).to eq('destroy')
+          sausage.history_tracks.last.undo! user
+          expect(sausage.reload.flavour).to eq('Guinness')
+        end
       end
     end
   end

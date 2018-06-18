@@ -12,6 +12,7 @@ describe Mongoid::History::Options do
         track_history track_create: true,
                       track_update: true,
                       track_destroy: true,
+                      modifier_field_optional: true,
                       if: :bar
         def self.name
           'DummyModel'
@@ -54,6 +55,7 @@ describe Mongoid::History::Options do
         track_history track_create: true,
                       track_update: true,
                       track_destroy: true,
+                      modifier_field_optional: true,
                       unless: ->(obj) { obj.bar }
         def self.name
           'DummyModel'
@@ -96,6 +98,7 @@ describe Mongoid::History::Options do
         track_history track_create: true,
                       track_update: true,
                       track_destroy: true,
+                      modifier_field_optional: true,
                       if: :bar, unless: ->(obj) { obj.baz }
         def self.name
           'DummyModel'

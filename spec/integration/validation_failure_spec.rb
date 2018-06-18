@@ -2,6 +2,10 @@ require 'spec_helper'
 
 describe Mongoid::History::Tracker do
   before :all do
+    class User
+      include Mongoid::Document
+    end
+
     class Element
       include Mongoid::Document
       include Mongoid::Timestamps
@@ -12,7 +16,11 @@ describe Mongoid::History::Tracker do
 
       validates :title, presence: true
 
-      has_many :items, dependent: :restrict
+      if Mongoid::Compatibility::Version.mongoid7_or_newer?
+        has_many :items, dependent: :restrict_with_exception
+      else
+        has_many :items, dependent: :restrict
+      end
 
       track_history on: [:body], track_create: true, track_update: true, track_destroy: true
     end
@@ -30,10 +38,12 @@ describe Mongoid::History::Tracker do
     @persisted_history_options = Mongoid::History.trackable_class_options
   end
 
+  let(:user) { User.create! }
+
   before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
 
   it 'does not track delete when parent class validation fails' do
-    prompt = Prompt.new(title: 'first')
+    prompt = Prompt.new(title: 'first', modifier: user)
     expect { prompt.save! }.to change(Tracker, :count).by(1)
     expect do
       expect { prompt.update_attributes!(title: nil, body: 'one') }
@@ -42,7 +52,7 @@ describe Mongoid::History::Tracker do
   end
 
   it 'does not track delete when parent class restrict dependency fails' do
-    prompt = Prompt.new(title: 'first')
+    prompt = Prompt.new(title: 'first', modifier: user)
     prompt.items << Item.new
     expect { prompt.save! }.to change(Tracker, :count).by(1)
     expect(prompt.version).to eq(1)
@@ -52,7 +62,7 @@ describe Mongoid::History::Tracker do
   end
 
   it 'does not track delete when restrict dependency fails' do
-    elem = Element.new(title: 'first')
+    elem = Element.new(title: 'first', modifier: user)
     elem.items << Item.new
     expect { elem.save! }.to change(Tracker, :count).by(1)
     expect(elem.version).to eq(1)

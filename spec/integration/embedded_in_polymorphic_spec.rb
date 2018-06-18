@@ -13,6 +13,7 @@ describe Mongoid::History::Tracker do
 
       track_history on: :all, # track title and body fields only, default is :all
                     modifier_field: :modifier, # adds "referenced_in :modifier" to track who made the change, default is :modifier
+                    modifier_field_optional: true,
                     version_field: :version,   # adds "field :version, :type => Integer" to track current version, default is :version
                     track_create: true, # track document creation, default is false
                     track_update: true,     # track document updates, default is true
@@ -31,6 +32,7 @@ describe Mongoid::History::Tracker do
 
       track_history on: :all, # track title and body fields only, default is :all
                     modifier_field: :modifier, # adds "referenced_in :modifier" to track who made the change, default is :modifier
+                    modifier_field_optional: true,
                     version_field: :version,   # adds "field :version, :type => Integer" to track current version, default is :version
                     track_create: true, # track document creation, default is false
                     track_update: true, # track document updates, default is true
@@ -46,6 +48,7 @@ describe Mongoid::History::Tracker do
 
       track_history on: :all, # track title and body fields only, default is :all
                     modifier_field: :modifier, # adds "referenced_in :modifier" to track who made the change, default is :modifier
+                    modifier_field_optional: true,
                     version_field: :version,   # adds "field :version, :type => Integer" to track current version, default is :version
                     track_create: true, # track document creation, default is false
                     track_update: true, # track document updates, default is true
@@ -64,6 +67,7 @@ describe Mongoid::History::Tracker do
 
       track_history on: :all, # track title and body fields only, default is :all
                     modifier_field: :modifier, # adds "referenced_in :modifier" to track who made the change, default is :modifier
+                    modifier_field_optional: true,
                     version_field: :version,   # adds "field :version, :type => Integer" to track current version, default is :version
                     track_create: true, # track document creation, default is false
                     track_update: true, # track document updates, default is true

@@ -1,22 +1,37 @@
 require 'spec_helper'
 
-class MyModel
-  include Mongoid::Document
-  include Mongoid::History::Trackable
-  field :foo
-end
-
-class MyDynamicModel
-  include Mongoid::Document
-  include Mongoid::History::Trackable
-  include Mongoid::Attributes::Dynamic unless Mongoid::Compatibility::Version.mongoid3?
-end
-
-class HistoryTracker
-  include Mongoid::History::Tracker
-end
-
 describe Mongoid::History::Trackable do
+  before :all do
+    class MyModel
+      include Mongoid::Document
+      include Mongoid::History::Trackable
+      field :foo
+    end
+
+    class MyDynamicModel
+      include Mongoid::Document
+      include Mongoid::History::Trackable
+      include Mongoid::Attributes::Dynamic unless Mongoid::Compatibility::Version.mongoid3?
+    end
+
+    class HistoryTracker
+      include Mongoid::History::Tracker
+    end
+
+    class User
+      include Mongoid::Document
+    end
+  end
+
+  after :all do
+    Object.send(:remove_const, :MyModel)
+    Object.send(:remove_const, :MyDynamicModel)
+    Object.send(:remove_const, :HistoryTracker)
+    Object.send(:remove_const, :User)
+  end
+
+  let(:user) { User.create! }
+
   it 'should have #track_history' do
     expect(MyModel).to respond_to :track_history
   end
@@ -95,7 +110,9 @@ describe Mongoid::History::Trackable do
 
         it 'marks modifier relationship optional' do
           MyModelWithOptionalModifier.track_history modifier_field_optional: true
-          if Mongoid::Compatibility::Version.mongoid6_or_newer?
+          if Mongoid::Compatibility::Version.mongoid7_or_newer?
+            expect(MyModelWithOptionalModifier.reflect_on_association(:modifier).options[:optional]).to be true
+          elsif Mongoid::Compatibility::Version.mongoid6_or_newer?
             expect(MyModelWithOptionalModifier.reflect_on_association(:modifier)[:optional]).to be true
           else
             expect(MyModelWithOptionalModifier.reflect_on_association(:modifier)).not_to be_nil
@@ -359,7 +376,7 @@ describe Mongoid::History::Trackable do
       end
 
       it 'should default to :changes' do
-        m = MyModel.create
+        m = MyModel.create!(modifier: user)
         expect(m).to receive(:changes).exactly(3).times.and_call_original
         expect(m).not_to receive(:my_changes)
         m.save
@@ -374,14 +391,18 @@ describe Mongoid::History::Trackable do
           end
         end
 
-        m = MyModel3.create
+        m = MyModel3.create!(modifier: user)
         expect(m).to receive(:changes).twice.and_call_original
         expect(m).to receive(:my_changes).once.and_call_original
         m.save
       end
 
       it 'should allow an alternate method to be specified on object creation' do
-        m = custom_tracker.create(key: 'on object creation')
+        m = if Mongoid::Compatibility::Version.mongoid7_or_newer? # BUGBUG
+              custom_tracker.create!(key: 'on object creation', modifier: user)
+            else
+              custom_tracker.create!(key: 'on object creation')
+            end
         history_track = m.history_tracks.last
         expect(history_track.modified['key']).to eq('Save history-on object creation')
       end
@@ -396,8 +417,14 @@ describe Mongoid::History::Trackable do
         include Mongoid::Document
         include Mongoid::History::Trackable
         store_in collection: :model_ones
-        embeds_one :emb_one, inverse_class_name: 'EmbOne'
-        embeds_many :emb_twos, inverse_class_name: 'EmbTwo'
+
+        if Mongoid::Compatibility::Version.mongoid7_or_newer?
+          embeds_one :emb_one
+          embeds_many :emb_twos
+        else
+          embeds_one :emb_one, inverse_class_name: 'EmbOne'
+          embeds_many :emb_twos, inverse_class_name: 'EmbTwo'
+        end
 
         def self.name
           'ModelOne'
@@ -534,7 +561,11 @@ describe Mongoid::History::Trackable do
           include Mongoid::History::Trackable
           store_in collection: :model_ones
           field :foo
-          embeds_many :emb_ones, inverse_class_name: 'EmbOne'
+          if Mongoid::Compatibility::Version.mongoid7_or_newer?
+            embeds_many :emb_ones
+          else
+            embeds_many :emb_ones, inverse_class_name: 'EmbOne'
+          end
         end
 
         EmbOne = Class.new do
@@ -560,14 +591,14 @@ describe Mongoid::History::Trackable do
         before(:each) { allow(model_one).to receive(:changes) { changes } }
 
         context 'when not paranoia' do
-          before(:each) { ModelOne.track_history(on: :emb_ones) }
+          before(:each) { ModelOne.track_history(on: :emb_ones, modifier_field_optional: true) }
           let(:changes) { { 'emb_ones' => [[{ 'em_foo' => 'Foo' }], [{ 'em_foo' => 'Foo-new' }]] } }
           it { expect(subject['emb_ones'][0]).to eq [{ 'em_foo' => 'Foo' }] }
           it { expect(subject['emb_ones'][1]).to eq [{ 'em_foo' => 'Foo-new' }] }
         end
 
         context 'when default field for paranoia' do
-          before(:each) { ModelOne.track_history(on: :emb_ones) }
+          before(:each) { ModelOne.track_history(on: :emb_ones, modifier_field_optional: true) }
           let(:changes) do
             { 'emb_ones' => [[{ 'em_foo' => 'Foo' }, { 'em_foo' => 'Foo-2', 'deleted_at' => Time.now }],
                              [{ 'em_foo' => 'Foo-new' }, { 'em_foo' => 'Foo-2-new', 'deleted_at' => Time.now }]] }
@@ -578,7 +609,7 @@ describe Mongoid::History::Trackable do
 
         context 'when custom field for paranoia' do
           before(:each) do
-            ModelOne.track_history on: :emb_ones
+            ModelOne.track_history on: :emb_ones, modifier_field_optional: true
             EmbOne.history_settings paranoia_field: :my_paranoia_field
           end
           let(:changes) do
@@ -627,7 +658,7 @@ describe Mongoid::History::Trackable do
       @persisted_history_options = Mongoid::History.trackable_class_options
     end
     before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
-    let!(:m) { MyModel.create!(foo: 'bar') }
+    let!(:m) { MyModel.create!(foo: 'bar', modifier: user) }
 
     it 'should create history' do
       expect { m.update_attributes!(foo: 'bar2') }.to change(Tracker, :count).by(1)
@@ -647,7 +678,7 @@ describe Mongoid::History::Trackable do
       @persisted_history_options = Mongoid::History.trackable_class_options
     end
     before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
-    let!(:m) { MyModel.create!(foo: 'bar') }
+    let!(:m) { MyModel.create!(foo: 'bar', modifier: user) }
 
     it 'should create history' do
       expect { m.destroy }.to change(Tracker, :count).by(1)
@@ -670,7 +701,7 @@ describe Mongoid::History::Trackable do
     before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
 
     it 'should create history' do
-      expect { MyModel.create!(foo: 'bar') }.to change(Tracker, :count).by(1)
+      expect { MyModel.create!(foo: 'bar', modifier: user) }.to change(Tracker, :count).by(1)
     end
 
     context 'no modifier_field' do

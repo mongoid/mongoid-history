@@ -14,16 +14,28 @@ describe Mongoid::History::Tracker do
 
     class Prompt < Element
     end
+
+    class User
+      include Mongoid::Document
+    end
   end
 
+  let(:user) { User.create! }
+
   it 'tracks subclass create and update' do
-    prompt = Prompt.new
+    prompt = Prompt.new(modifier: user)
     expect { prompt.save! }.to change(Tracker, :count).by(1)
     expect { prompt.update_attributes!(body: 'one') }.to change(Tracker, :count).by(1)
-    prompt.undo!
+    prompt.undo! user
     expect(prompt.body).to be_blank
-    prompt.redo! nil, 2
+    prompt.redo! user, 2
     expect(prompt.body).to eq('one')
     expect { prompt.destroy }.to change(Tracker, :count).by(1)
+  end
+
+  after :all do
+    Object.send(:remove_const, :Element)
+    Object.send(:remove_const, :Prompt)
+    Object.send(:remove_const, :User)
   end
 end

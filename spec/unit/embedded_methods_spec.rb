@@ -7,8 +7,13 @@ describe Mongoid::History::Trackable do
         ModelOne = Class.new do
           include Mongoid::Document
           include Mongoid::History::Trackable
-          embeds_one :emb_one, inverse_class_name: 'EmbOne'
-          embeds_one :emb_two, store_as: 'emt', inverse_class_name: 'EmbTwo'
+          if Mongoid::Compatibility::Version.mongoid7_or_newer?
+            embeds_one :emb_one
+            embeds_one :emb_two, store_as: 'emt'
+          else
+            embeds_one :emb_one, inverse_class_name: 'EmbOne'
+            embeds_one :emb_two, store_as: 'emt', inverse_class_name: 'EmbTwo'
+          end
           track_history
         end
 
@@ -39,8 +44,13 @@ describe Mongoid::History::Trackable do
         ModelOne = Class.new do
           include Mongoid::Document
           include Mongoid::History::Trackable
-          embeds_many :emb_ones, inverse_class_name: 'EmbOne'
-          embeds_many :emb_twos, store_as: 'emts', inverse_class_name: 'EmbTwo'
+          if Mongoid::Compatibility::Version.mongoid7_or_newer?
+            embeds_many :emb_ones
+            embeds_many :emb_twos, store_as: 'emts'
+          else
+            embeds_many :emb_ones, inverse_class_name: 'EmbOne'
+            embeds_many :emb_twos, store_as: 'emts', inverse_class_name: 'EmbTwo'
+          end
           track_history
         end
 

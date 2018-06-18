@@ -8,9 +8,15 @@ describe Mongoid::History::Trackable do
         include Mongoid::History::Trackable
         field :foo
         field :b, as: :bar
-        embeds_one :my_embed_one_model, inverse_class_name: 'MyEmbedOneModel'
-        embeds_one :my_untracked_embed_one_model, inverse_class_name: 'MyUntrackedEmbedOneModel'
-        embeds_many :my_embed_many_models, inverse_class_name: 'MyEmbedManyModel'
+        if Mongoid::Compatibility::Version.mongoid7_or_newer?
+          embeds_one :my_embed_one_model
+          embeds_one :my_untracked_embed_one_model
+          embeds_many :my_embed_many_models
+        else
+          embeds_one :my_embed_one_model, inverse_class_name: 'MyEmbedOneModel'
+          embeds_one :my_untracked_embed_one_model, inverse_class_name: 'MyUntrackedEmbedOneModel'
+          embeds_many :my_embed_many_models, inverse_class_name: 'MyEmbedManyModel'
+        end
       end
 
       MyEmbedOneModel = Class.new do
@@ -59,7 +65,11 @@ describe Mongoid::History::Trackable do
               include Mongoid::Document
               include Mongoid::History::Trackable
               store_in collection: :my_models
-              embeds_one :emb_one
+              if Mongoid::Compatibility::Version.mongoid7_or_newer?
+                embeds_one :emb_one
+              else
+                embeds_one :emb_one, inverse_class_name: 'EmbOne'
+              end
               track_history
             end
           end
@@ -90,7 +100,11 @@ describe Mongoid::History::Trackable do
               include Mongoid::Document
               include Mongoid::History::Trackable
               store_in collection: :my_models
-              embeds_one :emb_one, inverse_class_name: 'EmbOne', store_as: :emo
+              if Mongoid::Compatibility::Version.mongoid7_or_newer?
+                embeds_one :emb_one, store_as: :emo
+              else
+                embeds_one :emb_one, inverse_class_name: 'EmbOne', store_as: :emo
+              end
               track_history
             end
           end
@@ -107,7 +121,11 @@ describe Mongoid::History::Trackable do
               include Mongoid::Document
               include Mongoid::History::Trackable
               store_in collection: :my_models
-              embeds_many :emb_ones, inverse_class_name: 'EmbOne'
+              if Mongoid::Compatibility::Version.mongoid7_or_newer?
+                embeds_many :emb_ones
+              else
+                embeds_many :emb_ones, inverse_class_name: 'EmbOne'
+              end
               track_history
             end
           end
@@ -124,7 +142,11 @@ describe Mongoid::History::Trackable do
               include Mongoid::Document
               include Mongoid::History::Trackable
               store_in collection: :my_models
-              embeds_many :emb_ones, inverse_class_name: 'EmbOne', store_as: :emos
+              if Mongoid::Compatibility::Version.mongoid7_or_newer?
+                embeds_many :emb_ones, store_as: :emos
+              else
+                embeds_many :emb_ones, store_as: :emos, inverse_class_name: 'EmbOne'
+              end
               track_history
             end
           end
@@ -171,9 +193,15 @@ describe Mongoid::History::Trackable do
         ModelOne = Class.new do
           include Mongoid::Document
           include Mongoid::History::Trackable
-          embeds_one :emb_one, inverse_class_name: 'EmbOne'
-          embeds_one :emb_two, store_as: :emt, inverse_class_name: 'EmbTwo'
-          embeds_one :emb_three, inverse_class_name: 'EmbThree'
+          if Mongoid::Compatibility::Version.mongoid7_or_newer?
+            embeds_one :emb_one
+            embeds_one :emb_two, store_as: :emt
+            embeds_one :emb_three
+          else
+            embeds_one :emb_one, inverse_class_name: 'EmbOne'
+            embeds_one :emb_two, store_as: :emt, inverse_class_name: 'EmbTwo'
+            embeds_one :emb_three, inverse_class_name: 'EmbThree'
+          end
         end
 
         EmbOne = Class.new do
@@ -240,9 +268,15 @@ describe Mongoid::History::Trackable do
         ModelOne = Class.new do
           include Mongoid::Document
           include Mongoid::History::Trackable
-          embeds_many :emb_ones, inverse_class_name: 'EmbOne'
-          embeds_many :emb_twos, store_as: :emts, inverse_class_name: 'EmbTwo'
-          embeds_many :emb_threes, inverse_class_name: 'EmbThree'
+          if Mongoid::Compatibility::Version.mongoid7_or_newer?
+            embeds_many :emb_ones
+            embeds_many :emb_twos, store_as: :emts
+            embeds_many :emb_threes
+          else
+            embeds_many :emb_ones, inverse_class_name: 'EmbOne'
+            embeds_many :emb_twos, store_as: :emts, inverse_class_name: 'EmbTwo'
+            embeds_many :emb_threes, inverse_class_name: 'EmbThree'
+          end
         end
 
         EmbOne = Class.new do

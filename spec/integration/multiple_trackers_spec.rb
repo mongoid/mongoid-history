@@ -4,30 +4,32 @@ describe Mongoid::History do
   before :all do
     Mongoid::History.tracker_class_name = nil
 
-    module MultipleTrackersSpec
-      class First
-        include Mongoid::Document
-        include Mongoid::History::Trackable
+    class First
+      include Mongoid::Document
+      include Mongoid::History::Trackable
 
-        field :text, type: String
-        track_history on: [:text],
-                      track_create: true,
-                      track_update: true,
-                      track_destroy: true,
-                      tracker_class_name: :first_history_tracker
-      end
+      field :text, type: String
+      track_history on: [:text],
+                    track_create: true,
+                    track_update: true,
+                    track_destroy: true,
+                    tracker_class_name: :first_history_tracker
+    end
 
-      class Second
-        include Mongoid::Document
-        include Mongoid::History::Trackable
+    class Second
+      include Mongoid::Document
+      include Mongoid::History::Trackable
 
-        field :text, type: String
-        track_history on: [:text],
-                      track_create: true,
-                      track_update: true,
-                      track_destroy: true,
-                      tracker_class_name: :second_history_tracker
-      end
+      field :text, type: String
+      track_history on: [:text],
+                    track_create: true,
+                    track_update: true,
+                    track_destroy: true,
+                    tracker_class_name: :second_history_tracker
+    end
+
+    class User
+      include Mongoid::Document
     end
 
     class FirstHistoryTracker
@@ -39,17 +41,27 @@ describe Mongoid::History do
     end
   end
 
+  after :all do
+    Object.send(:remove_const, :First)
+    Object.send(:remove_const, :Second)
+    Object.send(:remove_const, :User)
+    Object.send(:remove_const, :FirstHistoryTracker)
+    Object.send(:remove_const, :SecondHistoryTracker)
+  end
+
+  let(:user) { User.create! }
+
   it 'should be possible to have different trackers for each class' do
     expect(FirstHistoryTracker.count).to eq(0)
     expect(SecondHistoryTracker.count).to eq(0)
-    expect(MultipleTrackersSpec::First.tracker_class).to be FirstHistoryTracker
-    expect(MultipleTrackersSpec::Second.tracker_class).to be SecondHistoryTracker
+    expect(First.tracker_class).to be FirstHistoryTracker
+    expect(Second.tracker_class).to be SecondHistoryTracker
 
-    foo = MultipleTrackersSpec::First.new
-    foo.save
+    foo = First.new(modifier: user)
+    foo.save!
 
-    bar = MultipleTrackersSpec::Second.new
-    bar.save
+    bar = Second.new(modifier: user)
+    bar.save!
 
     expect(FirstHistoryTracker.count).to eq 1
     expect(SecondHistoryTracker.count).to eq 1

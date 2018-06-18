@@ -9,10 +9,17 @@ describe Mongoid::History::Trackable do
         store_in collection: :model_ones
         field :foo
         field :b, as: :bar
-        embeds_one :emb_one, inverse_class_name: 'EmbOne'
-        embeds_one :emb_two, store_as: :emt, inverse_class_name: 'EmbTwo'
-        embeds_many :emb_threes, inverse_class_name: 'EmbThree'
-        embeds_many :emb_fours, store_as: :emfs, inverse_class_name: 'EmbFour'
+        if Mongoid::Compatibility::Version.mongoid7_or_newer?
+          embeds_one :emb_one
+          embeds_one :emb_two, store_as: :emt
+          embeds_many :emb_threes
+          embeds_many :emb_fours, store_as: :emfs
+        else
+          embeds_one :emb_one, inverse_class_name: 'EmbOne'
+          embeds_one :emb_two, store_as: :emt, inverse_class_name: 'EmbTwo'
+          embeds_many :emb_threes, inverse_class_name: 'EmbThree'
+          embeds_many :emb_fours, store_as: :emfs, inverse_class_name: 'EmbFour'
+        end
       end
 
       EmbOne = Class.new do
@@ -45,7 +52,7 @@ describe Mongoid::History::Trackable do
         embedded_in :model_one
       end
 
-      ModelOne.track_history(on: %i[foo emb_one emb_threes])
+      ModelOne.track_history(modifier_field_optional: true, on: %i[foo emb_one emb_threes])
       @persisted_history_options = Mongoid::History.trackable_class_options
     end
     before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
@@ -66,7 +73,7 @@ describe Mongoid::History::Trackable do
       subject { model_one.send(:modified_attributes_for_create) }
 
       context 'with tracked embeds_one object' do
-        before(:each) { ModelOne.track_history(on: { emb_one: :f_em_foo }) }
+        before(:each) { ModelOne.track_history(modifier_field_optional: true, on: { emb_one: :f_em_foo }) }
         it 'should include tracked attributes only' do
           expect(subject['emb_one'][0]).to be_nil
 
@@ -77,14 +84,14 @@ describe Mongoid::History::Trackable do
       end
 
       context 'with untracked embeds_one object' do
-        before(:each) { ModelOne.track_history(on: :fields) }
+        before(:each) { ModelOne.track_history(modifier_field_optional: true, on: :fields) }
         it 'should not include embeds_one attributes' do
           expect(subject['emb_one']).to be_nil
         end
       end
 
       context 'with tracked embeds_many objects' do
-        before(:each) { ModelOne.track_history(on: { emb_threes: :f_em_foo }) }
+        before(:each) { ModelOne.track_history(modifier_field_optional: true, on: { emb_threes: :f_em_foo }) }
         it 'should include tracked attributes only' do
           expect(subject['emb_threes'][0]).to be_nil
 
@@ -95,7 +102,7 @@ describe Mongoid::History::Trackable do
       end
 
       context 'with untracked embeds_many objects' do
-        before(:each) { ModelOne.track_history(on: :fields) }
+        before(:each) { ModelOne.track_history(modifier_field_optional: true, on: :fields) }
         it 'should include not tracked embeds_many attributes' do
           expect(subject['emb_threes']).to be_nil
         end
@@ -116,7 +123,11 @@ describe Mongoid::History::Trackable do
             include Mongoid::History::Trackable
             store_in collection: :mails
             field :provider
-            embeds_one :mail_subject, inverse_class_name: 'MailSubject'
+            if Mongoid::Compatibility::Version.mongoid7_or_newer?
+              embeds_one :mail_subject
+            else
+              embeds_one :mail_subject, inverse_class_name: 'MailSubject'
+            end
           end
 
           MailSubject = Class.new do
@@ -168,7 +179,11 @@ describe Mongoid::History::Trackable do
             include Mongoid::Document
             include Mongoid::History::Trackable
             store_in collection: :model_paranoias
-            embeds_many :emb_para_ones, inverse_class_name: 'EmbParaOne'
+            if Mongoid::Compatibility::Version.mongoid7_or_newer?
+              embeds_many :emb_para_ones
+            else
+              embeds_many :emb_para_ones, inverse_class_name: 'EmbParaOne'
+            end
           end
 
           EmbParaOne = Class.new do
@@ -236,51 +251,51 @@ describe Mongoid::History::Trackable do
       subject { model_one.send(:modified_attributes_for_update) }
 
       context 'when embeds_one attributes passed in options' do
-        before(:each) { ModelOne.track_history(on: { emb_one: :f_em_foo }) }
+        before(:each) { ModelOne.track_history(modifier_field_optional: true, on: { emb_one: :f_em_foo }) }
         let(:changes) { { 'emb_one' => [{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }, { 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }] } }
         it { expect(subject['emb_one'][0]).to eq('f_em_foo' => 'Foo') }
         it { expect(subject['emb_one'][1]).to eq('f_em_foo' => 'Foo-new') }
       end
 
       context 'when embeds_one relation passed in options' do
-        before(:each) { ModelOne.track_history(on: :emb_one) }
+        before(:each) { ModelOne.track_history(modifier_field_optional: true, on: :emb_one) }
         let(:changes) { { 'emb_one' => [{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }, { 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }] } }
         it { expect(subject['emb_one'][0]).to eq('f_em_foo' => 'Foo', 'fmb' => 'Bar') }
         it { expect(subject['emb_one'][1]).to eq('f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new') }
       end
 
       context 'when embeds_one relation not tracked' do
-        before(:each) { ModelOne.track_history(on: :fields) }
+        before(:each) { ModelOne.track_history(modifier_field_optional: true, on: :fields) }
         let(:changes) { { 'emb_one' => [{ 'f_em_foo' => 'Foo' }, { 'f_em_foo' => 'Foo-new' }] } }
         it { expect(subject['emb_one']).to be_nil }
       end
 
       context 'when embeds_many attributes passed in options' do
-        before(:each) { ModelOne.track_history(on: { emb_threes: :f_em_foo }) }
+        before(:each) { ModelOne.track_history(modifier_field_optional: true, on: { emb_threes: :f_em_foo }) }
         let(:changes) { { 'emb_threes' => [[{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }], [{ 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }]] } }
         it { expect(subject['emb_threes']).to eq [[{ 'f_em_foo' => 'Foo' }], [{ 'f_em_foo' => 'Foo-new' }]] }
       end
 
       context 'when embeds_many relation passed in options' do
-        before(:each) { ModelOne.track_history(on: :emb_threes) }
+        before(:each) { ModelOne.track_history(modifier_field_optional: true, on: :emb_threes) }
         let(:changes) { { 'emb_threes' => [[{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }], [{ 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }]] } }
         it { expect(subject['emb_threes']).to eq [[{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }], [{ 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }]] }
       end
 
       context 'when embeds_many relation not tracked' do
-        before(:each) { ModelOne.track_history(on: :fields) }
+        before(:each) { ModelOne.track_history(modifier_field_optional: true, on: :fields) }
         let(:changes) { { 'emb_threes' => [[{ 'f_em_foo' => 'Foo' }], [{ 'f_em_foo' => 'Foo-new' }]] } }
         it { expect(subject['emb_threes']).to be_nil }
       end
 
       context 'when field tracked' do
-        before(:each) { ModelOne.track_history(on: :foo) }
+        before(:each) { ModelOne.track_history(modifier_field_optional: true, on: :foo) }
         let(:changes) { { 'foo' => ['Foo', 'Foo-new'], 'b' => ['Bar', 'Bar-new'] } }
         it { is_expected.to eq('foo' => ['Foo', 'Foo-new']) }
       end
 
       context 'when field not tracked' do
-        before(:each) { ModelOne.track_history(on: []) }
+        before(:each) { ModelOne.track_history(modifier_field_optional: true, on: []) }
         let(:changes) { { 'foo' => ['Foo', 'Foo-new'] } }
         it { is_expected.to eq({}) }
       end
@@ -292,7 +307,11 @@ describe Mongoid::History::Trackable do
             include Mongoid::History::Trackable
             store_in collection: :emails
             field :provider
-            embeds_one :email_subject, inverse_class_name: 'EmailSubject'
+            if Mongoid::Compatibility::Version.mongoid7_or_newer?
+              embeds_one :email_subject
+            else
+              embeds_one :email_subject, inverse_class_name: 'EmailSubject'
+            end
           end
 
           EmailSubject = Class.new do
@@ -350,7 +369,11 @@ describe Mongoid::History::Trackable do
               include Mongoid::Document
               include Mongoid::History::Trackable
               store_in collection: :model_twos
-              embeds_one :emb_two_one, inverse_class_name: 'EmbTwoOne'
+              if Mongoid::Compatibility::Version.mongoid7_or_newer?
+                embeds_one :emb_two_one
+              else
+                embeds_one :emb_two_one, inverse_class_name: 'EmbTwoOne'
+              end
             end
 
             EmbTwoOne = Class.new do
@@ -392,7 +415,11 @@ describe Mongoid::History::Trackable do
               include Mongoid::Document
               include Mongoid::History::Trackable
               store_in collection: :model_twos
-              embeds_many :emb_two_ones, inverse_class_name: 'EmbTwoOne'
+              if Mongoid::Compatibility::Version.mongoid7_or_newer?
+                embeds_many :emb_two_ones
+              else
+                embeds_many :emb_two_ones, inverse_class_name: 'EmbTwoOne'
+              end
             end
 
             EmbTwoOne = Class.new do
@@ -438,7 +465,7 @@ describe Mongoid::History::Trackable do
       subject { model_one.send(:modified_attributes_for_destroy) }
 
       context 'with tracked embeds_one object' do
-        before(:each) { ModelOne.track_history(on: { emb_one: :f_em_foo }) }
+        before(:each) { ModelOne.track_history(modifier_field_optional: true, on: { emb_one: :f_em_foo }) }
         it 'should include tracked attributes only' do
           expect(subject['emb_one'][0].keys.size).to eq 2
           expect(subject['emb_one'][0]['_id']).to eq emb_one._id
@@ -449,14 +476,14 @@ describe Mongoid::History::Trackable do
       end
 
       context 'with untracked embeds_one object' do
-        before(:each) { ModelOne.track_history(on: :fields) }
+        before(:each) { ModelOne.track_history(modifier_field_optional: true, on: :fields) }
         it 'should not include embeds_one attributes' do
           expect(subject['emb_one']).to be_nil
         end
       end
 
       context 'with tracked embeds_many objects' do
-        before(:each) { ModelOne.track_history(on: { emb_threes: :f_em_foo }) }
+        before(:each) { ModelOne.track_history(modifier_field_optional: true, on: { emb_threes: :f_em_foo }) }
         it 'should include tracked attributes only' do
           expect(subject['emb_threes'][0][0].keys.count).to eq 2
           expect(subject['emb_threes'][0][0]['_id']).to eq emb_threes.first._id
@@ -467,7 +494,7 @@ describe Mongoid::History::Trackable do
       end
 
       context 'with untracked embeds_many objects' do
-        before(:each) { ModelOne.track_history(on: :fields) }
+        before(:each) { ModelOne.track_history(modifier_field_optional: true, on: :fields) }
         it 'should include not tracked embeds_many attributes' do
           expect(subject['emb_threes']).to be_nil
         end
