@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe Mongoid::History do
-  before :all do
+  before :each do
     class Post
       include Mongoid::Document
       include Mongoid::Timestamps
@@ -29,7 +29,8 @@ describe Mongoid::History do
       field :t, as: :title
       field :body
       embedded_in :commentable, polymorphic: true
-      track_history on: %i[title body], scope: :post, track_create: true, track_destroy: true, modifier_field_optional: true # BUGBUG
+      # BUG: see https://github.com/mongoid/mongoid-history/issues/223, modifier_field_optional should not be necessary
+      track_history on: %i[title body], scope: :post, track_create: true, track_destroy: true, modifier_field_optional: true
     end
 
     class Section
@@ -70,19 +71,17 @@ describe Mongoid::History do
 
     class Foo < Comment
     end
-
-    class Sausage
-      include Mongoid::Document
-      include Mongoid::History::Trackable
-
-      field :flavour, localize: true
-      track_history on: [:flavour], track_destroy: true, modifier_field_optional: true
-    end
-
-    @persisted_history_options = Mongoid::History.trackable_class_options
   end
 
-  before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
+  after :each do
+    Object.send(:remove_const, :Post)
+    Object.send(:remove_const, :Comment)
+    Object.send(:remove_const, :Section)
+    Object.send(:remove_const, :User)
+    Object.send(:remove_const, :Tag)
+    Object.send(:remove_const, :Foo)
+  end
+
   let(:user) { User.create!(name: 'Aaron', email: 'aaron@randomemail.com', aliases: ['bob'], country: 'Canada', city: 'Toronto', address: '21 Jump Street') }
   let(:another_user) { User.create!(name: 'Another Guy', email: 'anotherguy@randomemail.com') }
   let(:post) { Post.create!(title: 'Test', body: 'Post', modifier: user, views: 100) }
@@ -104,7 +103,7 @@ describe Mongoid::History do
       end
 
       it 'should assign modifier' do
-        expect(comment.history_tracks.first.modifier).to eq(user)
+        expect(comment.history_tracks.first.modifier.id).to eq(user.id)
       end
 
       it 'should assign version' do
@@ -190,7 +189,7 @@ describe Mongoid::History do
 
       it 'should assign modifier' do
         post.update_attributes!(title: 'Another Test')
-        expect(post.history_tracks.first.modifier).to eq(user)
+        expect(post.history_tracks.first.modifier.id).to eq(user.id)
       end
 
       it 'should assign version on history tracks' do
@@ -398,7 +397,7 @@ describe Mongoid::History do
 
       it 'should assign modifier' do
         post.update_attributes!(title: 'Another Test', modifier: another_user)
-        expect(post.history_tracks.last.modifier).to eq(another_user)
+        expect(post.history_tracks.last.modifier.id).to eq(another_user.id)
       end
     end
 
@@ -437,7 +436,7 @@ describe Mongoid::History do
 
       it 'should assign modifier' do
         post.update_attributes!(title: 'Another Test', modifier: another_user)
-        expect(post.history_tracks.last.modifier).to eq(another_user)
+        expect(post.history_tracks.last.modifier.id).to eq(another_user.id)
       end
     end
 
@@ -489,7 +488,7 @@ describe Mongoid::History do
 
       it 'should assign modifier' do
         section.update_attributes!(title: 'Business', modifier: another_user)
-        expect(post.history_tracks.last.modifier).to eq(another_user)
+        expect(post.history_tracks.last.modifier.id).to eq(another_user.id)
       end
     end
 
@@ -531,12 +530,6 @@ describe Mongoid::History do
     describe 'embedded with cascading callbacks' do
       let(:tag_foo) { post.tags.create!(title: 'foo', updated_by: user) }
       let(:tag_bar) { post.tags.create!(title: 'bar', updated_by: user) }
-
-      # it "should have cascaded the creation callbacks and set timestamps" do
-      #   tag_foo; tag_bar # initialize
-      #   tag_foo.created_at.should_not be_nil
-      #   tag_foo.updated_at.should_not be_nil
-      # end
 
       it 'should allow an update through the parent model' do
         update_hash = { 'post' => { 'tags_attributes' => { '1234' => { 'id' => tag_bar.id, 'title' => 'baz' } } } }
@@ -591,7 +584,7 @@ describe Mongoid::History do
         post.update_attributes!(title: 'Test2')
         post.history_tracks.where(version: 2).last.undo!(user)
         post.reload
-        expect(post.history_tracks.where(version: 2).last.modifier).to eq(user)
+        expect(post.history_tracks.where(version: 2).last.modifier.id).to eq(user.id)
       end
 
       it 'should stay the same after undo and redo' do
@@ -632,7 +625,7 @@ describe Mongoid::History do
         comment.update_attributes!(title: 'Test2')
         comment.history_tracks.where(version: 2).first.undo!(user)
         comment.reload
-        expect(comment.history_tracks.where(version: 3).first.modifier).to eq(user)
+        expect(comment.history_tracks.where(version: 3).first.modifier.id).to eq(user.id)
       end
 
       it 'should stay the same after undo and redo' do
@@ -806,7 +799,7 @@ describe Mongoid::History do
     end
 
     describe 'when default scope is present' do
-      before do
+      before :each do
         class Post
           default_scope -> { where(title: nil) }
         end
@@ -909,6 +902,10 @@ describe Mongoid::History do
         end
       end
 
+      after :each do
+        Object.send(:remove_const, :OverriddenChangesMethod)
+      end
+
       it 'should add foo to the changes history' do
         o = OverriddenChangesMethod.create(modifier: user)
         o.save!
@@ -919,24 +916,38 @@ describe Mongoid::History do
     end
 
     describe 'localized fields' do
-      it 'should correctly undo and redo' do
-        if Sausage.respond_to?(:localized_fields)
-          sausage = Sausage.create!(flavour_translations: { 'en' => 'Apple', 'nl' => 'Appel' }, modifier: user)
-          sausage.update_attributes!(flavour: 'Guinness')
+      before :each do
+        class Sausage
+          include Mongoid::Document
+          include Mongoid::History::Trackable
 
-          track = sausage.history_tracks.last
-
-          track.undo! user
-          expect(sausage.reload.flavour).to eq('Apple')
-
-          track.redo! user
-          expect(sausage.reload.flavour).to eq('Guinness')
-
-          sausage.destroy
-          expect(sausage.history_tracks.last.action).to eq('destroy')
-          sausage.history_tracks.last.undo! user
-          expect(sausage.reload.flavour).to eq('Guinness')
+          field :flavour, localize: true
+          track_history on: [:flavour], track_destroy: true, modifier_field_optional: true
         end
+      end
+
+      after :each do
+        Object.send(:remove_const, :Sausage)
+      end
+
+      it 'should correctly undo and redo' do
+        pending unless Sausage.respond_to?(:localized_fields)
+
+        sausage = Sausage.create!(flavour_translations: { 'en' => 'Apple', 'nl' => 'Appel' }, modifier: user)
+        sausage.update_attributes!(flavour: 'Guinness')
+
+        track = sausage.history_tracks.last
+
+        track.undo! user
+        expect(sausage.reload.flavour).to eq('Apple')
+
+        track.redo! user
+        expect(sausage.reload.flavour).to eq('Guinness')
+
+        sausage.destroy
+        expect(sausage.history_tracks.last.action).to eq('destroy')
+        sausage.history_tracks.last.undo! user
+        expect(sausage.reload.flavour).to eq('Guinness')
       end
     end
   end

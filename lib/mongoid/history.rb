@@ -42,11 +42,15 @@ module Mongoid
       def trackable_class_settings(trackable_class)
         trackable_settings[trackable_class.name.to_sym] || default_settings
       end
+
+      def reset!
+        Mongoid::History.modifier_class_name = 'User'
+        Mongoid::History.trackable_class_options = {}
+        Mongoid::History.trackable_settings = {}
+        Mongoid::History.current_user_method ||= :current_user
+      end
     end
   end
 end
 
-Mongoid::History.modifier_class_name = 'User'
-Mongoid::History.trackable_class_options = {}
-Mongoid::History.trackable_settings = {}
-Mongoid::History.current_user_method ||= :current_user
+Mongoid::History.reset!

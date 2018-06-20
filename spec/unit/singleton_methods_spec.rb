@@ -2,12 +2,14 @@ require 'spec_helper'
 
 describe Mongoid::History::Trackable do
   describe 'SingletonMethods' do
-    before :all do
-      MyTrackableModel = Class.new do
+    before :each do
+      class MyTrackableModel
         include Mongoid::Document
         include Mongoid::History::Trackable
+
         field :foo
         field :b, as: :bar
+
         if Mongoid::Compatibility::Version.mongoid7_or_newer?
           embeds_one :my_embed_one_model
           embeds_one :my_untracked_embed_one_model
@@ -17,27 +19,37 @@ describe Mongoid::History::Trackable do
           embeds_one :my_untracked_embed_one_model, inverse_class_name: 'MyUntrackedEmbedOneModel'
           embeds_many :my_embed_many_models, inverse_class_name: 'MyEmbedManyModel'
         end
+
+        track_history on: %i[foo my_embed_one_model my_embed_many_models my_dynamic_field]
       end
 
-      MyEmbedOneModel = Class.new do
+      class MyEmbedOneModel
         include Mongoid::Document
+
         field :baz
         embedded_in :my_trackable_model
       end
 
-      MyUntrackedEmbedOneModel = Class.new do
+      class MyUntrackedEmbedOneModel
         include Mongoid::Document
+
         field :baz
         embedded_in :my_trackable_model
       end
 
-      MyEmbedManyModel = Class.new do
+      class MyEmbedManyModel
         include Mongoid::Document
+
         field :bla
         embedded_in :my_trackable_model
       end
+    end
 
-      MyTrackableModel.track_history(on: %i[foo my_embed_one_model my_embed_many_models my_dynamic_field])
+    after :each do
+      Object.send(:remove_const, :MyTrackableModel)
+      Object.send(:remove_const, :MyEmbedOneModel)
+      Object.send(:remove_const, :MyUntrackedEmbedOneModel)
+      Object.send(:remove_const, :MyEmbedManyModel)
     end
 
     describe '#tracked?' do
@@ -51,97 +63,116 @@ describe Mongoid::History::Trackable do
     end
 
     describe '#dynamic_field?' do
-      before(:all) do
+      before :each do
         class EmbOne
           include Mongoid::Document
+
           embedded_in :my_model
         end
       end
 
+      after :each do
+        Object.send(:remove_const, :EmbOne)
+      end
+
       context 'when dynamic enabled' do
         context 'with embeds one relation' do
-          let(:my_model) do
-            Class.new do
+          before :each do
+            class MyModel
               include Mongoid::Document
               include Mongoid::History::Trackable
+
               store_in collection: :my_models
+
               if Mongoid::Compatibility::Version.mongoid7_or_newer?
                 embeds_one :emb_one
               else
                 embeds_one :emb_one, inverse_class_name: 'EmbOne'
               end
+
               track_history
             end
           end
 
+          after :each do
+            Object.send(:remove_const, :MyModel)
+          end
+
           it 'should track dynamic field' do
-            # Using `let` to define class and use that class inside `before` block to stub a method raises following error.
-            # RuntimeError:
-            #   let declaration `my_model` accessed in a `before(:context)` hook at:
-            #     /Users/vmc/projects/mongoid-history/spec/unit/singleton_methods_spec.rb:51:in `block (6 levels) in <top (required)>'
-            #
-            #   `let` and `subject` declarations are not intended to be called
-            #   in a `before(:context)` hook, as they exist to define state that
-            #   is reset between each example, while `before(:context)` exists to
-            #   define state that is shared across examples in an example group.
-            allow(my_model).to receive(:dynamic_enabled?) { true }
-            expect(my_model.dynamic_field?(:foo)).to be true
+            allow(MyModel).to receive(:dynamic_enabled?) { true }
+            expect(MyModel.dynamic_field?(:foo)).to be true
           end
 
           it 'should not track embeds_one relation' do
-            allow(my_model).to receive(:dynamic_enabled?) { true }
-            expect(my_model.dynamic_field?(:emb_one)).to be false
+            allow(MyModel).to receive(:dynamic_enabled?) { true }
+            expect(MyModel.dynamic_field?(:emb_one)).to be false
           end
         end
 
         context 'with embeds one relation and alias' do
-          let(:my_model) do
-            Class.new do
+          before :each do
+            class MyModel
               include Mongoid::Document
               include Mongoid::History::Trackable
+
               store_in collection: :my_models
+
               if Mongoid::Compatibility::Version.mongoid7_or_newer?
                 embeds_one :emb_one, store_as: :emo
               else
                 embeds_one :emb_one, inverse_class_name: 'EmbOne', store_as: :emo
               end
+
               track_history
             end
           end
 
+          after :each do
+            Object.send(:remove_const, :MyModel)
+          end
+
           it 'should not track embeds_one relation' do
-            allow(my_model).to receive(:dynamic_enabled?) { true }
-            expect(my_model.dynamic_field?(:emo)).to be false
+            allow(MyModel).to receive(:dynamic_enabled?) { true }
+            expect(MyModel.dynamic_field?(:emo)).to be false
           end
         end
 
         context 'with embeds many relation' do
-          let(:my_model) do
-            Class.new do
+          before :each do
+            class MyModel
               include Mongoid::Document
               include Mongoid::History::Trackable
+
               store_in collection: :my_models
+
               if Mongoid::Compatibility::Version.mongoid7_or_newer?
                 embeds_many :emb_ones
               else
                 embeds_many :emb_ones, inverse_class_name: 'EmbOne'
               end
+
               track_history
             end
           end
 
+          after :each do
+            Object.send(:remove_const, :MyModel)
+          end
+
           it 'should not track embeds_many relation' do
-            allow(my_model).to receive(:dynamic_enabled?) { true }
-            expect(my_model.dynamic_field?(:emb_ones)).to be false
+            allow(MyModel).to receive(:dynamic_enabled?) { true }
+            expect(MyModel.dynamic_field?(:emb_ones)).to be false
           end
         end
 
         context 'with embeds many relation and alias' do
-          let(:my_model) do
-            Class.new do
+          before :each do
+            class MyModel
               include Mongoid::Document
               include Mongoid::History::Trackable
+
               store_in collection: :my_models
+
               if Mongoid::Compatibility::Version.mongoid7_or_newer?
                 embeds_many :emb_ones, store_as: :emos
               else
@@ -151,15 +182,15 @@ describe Mongoid::History::Trackable do
             end
           end
 
+          after :each do
+            Object.send(:remove_const, :MyModel)
+          end
+
           it 'should not track embeds_many relation' do
-            allow(my_model).to receive(:dynamic_enabled?) { true }
-            expect(my_model.dynamic_field?(:emos)).to be false
+            allow(MyModel).to receive(:dynamic_enabled?) { true }
+            expect(MyModel.dynamic_field?(:emos)).to be false
           end
         end
-      end
-
-      after(:all) do
-        Object.send(:remove_const, :EmbOne)
       end
     end
 
@@ -189,10 +220,11 @@ describe Mongoid::History::Trackable do
     end
 
     describe '#tracked_embeds_one_attributes' do
-      before(:all) do
-        ModelOne = Class.new do
+      before :each do
+        class ModelOne
           include Mongoid::Document
           include Mongoid::History::Trackable
+
           if Mongoid::Compatibility::Version.mongoid7_or_newer?
             embeds_one :emb_one
             embeds_one :emb_two, store_as: :emt
@@ -204,26 +236,36 @@ describe Mongoid::History::Trackable do
           end
         end
 
-        EmbOne = Class.new do
+        class EmbOne
           include Mongoid::Document
+
           field :em_foo
           field :em_bar
+
           embedded_in :model_one
         end
 
-        EmbTwo = Class.new do
+        class EmbTwo
           include Mongoid::Document
+
           field :em_bar
           embedded_in :model_one
         end
 
-        EmbThree = Class.new do
+        class EmbThree
           include Mongoid::Document
+
           field :em_baz
           embedded_in :model_one
         end
       end
-      before(:each) { ModelOne.instance_variable_set(:@history_trackable_options, nil) }
+
+      after :each do
+        Object.send(:remove_const, :ModelOne)
+        Object.send(:remove_const, :EmbOne)
+        Object.send(:remove_const, :EmbTwo)
+        Object.send(:remove_const, :EmbThree)
+      end
 
       context 'when relation tracked' do
         before(:each) { ModelOne.track_history(on: :emb_one) }
@@ -244,13 +286,6 @@ describe Mongoid::History::Trackable do
         before(:each) { ModelOne.track_history(on: :fields) }
         it { expect(ModelOne.tracked_embeds_one_attributes('emb_one')).to be_nil }
       end
-
-      after(:all) do
-        Object.send(:remove_const, :ModelOne)
-        Object.send(:remove_const, :EmbOne)
-        Object.send(:remove_const, :EmbTwo)
-        Object.send(:remove_const, :EmbThree)
-      end
     end
 
     describe '#tracked_embeds_many?' do
@@ -264,10 +299,11 @@ describe Mongoid::History::Trackable do
     end
 
     describe '#tracked_embeds_many_attributes' do
-      before(:all) do
-        ModelOne = Class.new do
+      before :each do
+        class ModelOne
           include Mongoid::Document
           include Mongoid::History::Trackable
+
           if Mongoid::Compatibility::Version.mongoid7_or_newer?
             embeds_many :emb_ones
             embeds_many :emb_twos, store_as: :emts
@@ -279,26 +315,36 @@ describe Mongoid::History::Trackable do
           end
         end
 
-        EmbOne = Class.new do
+        class EmbOne
           include Mongoid::Document
+
           field :em_foo
           field :em_bar
+
           embedded_in :model_one
         end
 
-        EmbTwo = Class.new do
+        class EmbTwo
           include Mongoid::Document
+
           field :em_bar
           embedded_in :model_one
         end
 
-        EmbThree = Class.new do
+        class EmbThree
           include Mongoid::Document
+
           field :em_baz
           embedded_in :model_one
         end
       end
-      before(:each) { ModelOne.instance_variable_set(:@history_trackable_options, nil) }
+
+      after :each do
+        Object.send(:remove_const, :ModelOne)
+        Object.send(:remove_const, :EmbOne)
+        Object.send(:remove_const, :EmbTwo)
+        Object.send(:remove_const, :EmbThree)
+      end
 
       context 'when relation tracked' do
         before(:each) { ModelOne.track_history(on: :emb_ones) }
@@ -319,30 +365,25 @@ describe Mongoid::History::Trackable do
         before(:each) { ModelOne.track_history(on: :fields) }
         it { expect(ModelOne.tracked_embeds_many_attributes('emb_ones')).to be_nil }
       end
-
-      after(:all) do
-        Object.send(:remove_const, :ModelOne)
-        Object.send(:remove_const, :EmbOne)
-        Object.send(:remove_const, :EmbTwo)
-        Object.send(:remove_const, :EmbThree)
-      end
     end
 
     describe '#trackable_scope' do
-      let(:model_one) do
-        Class.new do
+      before :each do
+        class ModelOne
           include Mongoid::Document
           include Mongoid::History::Trackable
+
           store_in collection: :model_ones
+
           track_history
         end
       end
 
-      it { expect(model_one.trackable_scope).to eq(:model_one) }
+      it { expect(ModelOne.trackable_scope).to eq(:model_one) }
     end
 
     describe '#clear_trackable_memoization' do
-      before do
+      before :each do
         MyTrackableModel.instance_variable_set(:@reserved_tracked_fields, %w[_id _type])
         MyTrackableModel.instance_variable_set(:@history_trackable_options, on: %w[fields])
         MyTrackableModel.instance_variable_set(:@trackable_settings, paranoia_field: 'deleted_at')
@@ -360,13 +401,6 @@ describe Mongoid::History::Trackable do
         expect(MyTrackableModel.instance_variable_get(:@tracked_embeds_one)).to be_nil
         expect(MyTrackableModel.instance_variable_get(:@tracked_embeds_many)).to be_nil
       end
-    end
-
-    after :all do
-      Object.send(:remove_const, :MyTrackableModel)
-      Object.send(:remove_const, :MyEmbedOneModel)
-      Object.send(:remove_const, :MyUntrackedEmbedOneModel)
-      Object.send(:remove_const, :MyEmbedManyModel)
     end
   end
 end

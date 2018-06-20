@@ -1,13 +1,16 @@
 require 'spec_helper'
 
 describe Mongoid::History::Options do
-  before :all do
-    ModelOne = Class.new do
+  before :each do
+    class ModelOne
       include Mongoid::Document
       include Mongoid::History::Trackable
+
       store_in collection: :model_ones
+
       field :foo
       field :b, as: :bar
+
       if Mongoid::Compatibility::Version.mongoid7_or_newer?
         embeds_one :emb_one
         embeds_one :emb_two, store_as: :emtw
@@ -19,34 +22,49 @@ describe Mongoid::History::Options do
         embeds_many :emb_threes, inverse_class_name: 'EmbThree'
         embeds_many :emb_fours, store_as: :emfs, inverse_class_name: 'EmbFour'
       end
+
       track_history
     end
 
-    EmbOne = Class.new do
+    class EmbOne
       include Mongoid::Document
+
       field :f_em_foo
       field :fmb, as: :f_em_bar
+
       embedded_in :model_one
     end
 
-    EmbTwo = Class.new do
+    class EmbTwo
       include Mongoid::Document
+
       field :f_em_baz
       embedded_in :model_one
     end
 
-    EmbThree = Class.new do
+    class EmbThree
       include Mongoid::Document
+
       field :f_em_foo
       field :fmb, as: :f_em_bar
+
       embedded_in :model_one
     end
 
-    EmbFour = Class.new do
+    class EmbFour
       include Mongoid::Document
+
       field :f_em_baz
       embedded_in :model_one
     end
+  end
+
+  after :each do
+    Object.send(:remove_const, :ModelOne)
+    Object.send(:remove_const, :EmbOne)
+    Object.send(:remove_const, :EmbTwo)
+    Object.send(:remove_const, :EmbThree)
+    Object.send(:remove_const, :EmbFour)
   end
 
   let(:options) { {} }
@@ -68,7 +86,8 @@ describe Mongoid::History::Options do
   describe '#parse' do
     describe '#default_options' do
       let(:expected_options) do
-        { on: :all,
+        {
+          on: :all,
           except: %i[created_at updated_at],
           tracker_class_name: nil,
           modifier_field: :modifier,
@@ -78,7 +97,8 @@ describe Mongoid::History::Options do
           track_create: true,
           track_update: true,
           track_destroy: true,
-          format: nil }
+          format: nil
+        }
       end
       it { expect(service.send(:default_options)).to eq expected_options }
     end
@@ -136,7 +156,8 @@ describe Mongoid::History::Options do
     describe '#parse_tracked_fields_and_relations' do
       context 'when options not passed' do
         let(:expected_options) do
-          { on: %i[foo b],
+          {
+            on: %i[foo b],
             except: %w[created_at updated_at],
             tracker_class_name: nil,
             modifier_field: :modifier,
@@ -149,7 +170,8 @@ describe Mongoid::History::Options do
             fields: %w[foo b],
             dynamic: [],
             relations: { embeds_one: {}, embeds_many: {} },
-            format: {} }
+            format: {}
+          }
         end
         it { expect(service.prepared).to eq expected_options }
       end
@@ -266,10 +288,12 @@ describe Mongoid::History::Options do
             context 'with relations' do
               let(:options) { { on: :embedded_relations } }
               it do
-                expect(subject[:relations]).to eq(embeds_many: { 'emb_threes' => %w[_id f_em_foo fmb],
-                                                                 'emfs'       => %w[_id f_em_baz] },
-                                                  embeds_one: { 'emb_one'    => %w[_id f_em_foo fmb],
-                                                                'emtw'       => %w[_id f_em_baz] })
+                expect(subject[:relations]).to eq(
+                  embeds_many: { 'emb_threes' => %w[_id f_em_foo fmb],
+                                 'emfs' => %w[_id f_em_baz] },
+                  embeds_one: { 'emb_one' => %w[_id f_em_foo fmb],
+                                'emtw' => %w[_id f_em_baz] }
+                )
               end
             end
           end
@@ -322,13 +346,5 @@ describe Mongoid::History::Options do
         end
       end
     end
-  end
-
-  after :all do
-    Object.send(:remove_const, :ModelOne)
-    Object.send(:remove_const, :EmbOne)
-    Object.send(:remove_const, :EmbTwo)
-    Object.send(:remove_const, :EmbThree)
-    Object.send(:remove_const, :EmbFour)
   end
 end

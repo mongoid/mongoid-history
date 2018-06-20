@@ -1,11 +1,7 @@
 require 'spec_helper'
 
 describe Mongoid::History::Tracker do
-  before :all do
-    class User
-      include Mongoid::Document
-    end
-
+  before :each do
     class Element
       include Mongoid::Document
       include Mongoid::Timestamps
@@ -22,7 +18,7 @@ describe Mongoid::History::Tracker do
         has_many :items, dependent: :restrict
       end
 
-      track_history on: [:body], track_create: true, track_update: true, track_destroy: true
+      track_history on: [:body]
     end
 
     class Item
@@ -35,12 +31,19 @@ describe Mongoid::History::Tracker do
     class Prompt < Element
     end
 
-    @persisted_history_options = Mongoid::History.trackable_class_options
+    class User
+      include Mongoid::Document
+    end
+  end
+
+  after :each do
+    Object.send(:remove_const, :Element)
+    Object.send(:remove_const, :Item)
+    Object.send(:remove_const, :Prompt)
+    Object.send(:remove_const, :User)
   end
 
   let(:user) { User.create! }
-
-  before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
 
   it 'does not track delete when parent class validation fails' do
     prompt = Prompt.new(title: 'first', modifier: user)

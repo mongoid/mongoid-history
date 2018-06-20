@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe Mongoid::History::Tracker do
-  before :all do
+  before :each do
     class Element
       include Mongoid::Document
       include Mongoid::Timestamps
@@ -9,7 +9,7 @@ describe Mongoid::History::Tracker do
 
       field :body
 
-      track_history on: [:body], track_create: true, track_update: true, track_destroy: true
+      track_history on: [:body]
     end
 
     class Prompt < Element
@@ -18,6 +18,12 @@ describe Mongoid::History::Tracker do
     class User
       include Mongoid::Document
     end
+  end
+
+  after :each do
+    Object.send(:remove_const, :Element)
+    Object.send(:remove_const, :Prompt)
+    Object.send(:remove_const, :User)
   end
 
   let(:user) { User.create! }
@@ -31,11 +37,5 @@ describe Mongoid::History::Tracker do
     prompt.redo! user, 2
     expect(prompt.body).to eq('one')
     expect { prompt.destroy }.to change(Tracker, :count).by(1)
-  end
-
-  after :all do
-    Object.send(:remove_const, :Element)
-    Object.send(:remove_const, :Prompt)
-    Object.send(:remove_const, :User)
   end
 end

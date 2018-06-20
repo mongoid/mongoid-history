@@ -180,12 +180,6 @@ module Mongoid
       def create_on_parent
         name = association_chain.last['name']
 
-        #
-        # TODO: modifier
-        # klass = trackable_parent.class.relation_class_of(name)
-        # klass.history_trackable_options[:modifier_field] if klass.respond_to?(:history_trackable_options)
-        #
-
         if trackable_parent.class.embeds_one?(name)
           trackable_parent._create_relation(name, localize_keys(original))
         elsif trackable_parent.class.embeds_many?(name)
