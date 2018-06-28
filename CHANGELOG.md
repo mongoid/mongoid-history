@@ -1,3 +1,7 @@
+### 0.8.2 (Next)
+
+* Your contribution here.
+
 ### 0.8.1 (2018/06/28)
 
 * [#221](https://github.com/mongoid/mongoid-history/pull/221): Mongoid 7 support - [@dblock](https://github.com/dblock).
