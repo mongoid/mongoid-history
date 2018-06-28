@@ -389,7 +389,7 @@ In your View, you might do something like (example in HAML format):
 
 **Adding Userstamp on History Trackers**
 
-To track the User in the application who created the HistoryTracker, please add the
+To track the User in the application who created the HistoryTracker, add the
 [Mongoid::Userstamp gem](https://github.com/tbpro/mongoid_userstamp) to your HistoryTracker class.
 This will add a field called `created_by` and an accessor `creator` to the model (you can rename these via gem config).
 
@@ -398,15 +398,6 @@ class MyHistoryTracker
   include Mongoid::History::Tracker
   include Mongoid::Userstamp
 end
-```
-
-*Migrating Userstamp from Previous Versions*
-
-Since October 2013 (mongoid-history version 0.4.1 and onwards), Mongoid::History itself no longer supports the userstamp natively. In order to migrate, follow the
-instructions above then run the following command:
-
-```
-MyHistoryTracker.all.rename(modifier_id: :created_by)
 ```
 
 **Setting Modifier Class Name**

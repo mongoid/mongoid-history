@@ -31,4 +31,23 @@ See [#202](https://github.com/mongoid/mongoid-history/pull/202) for more informa
 
 See [#189](https://github.com/mongoid/mongoid-history/pull/189) for more information.
 
-* Currently, the `:all` option behaves identically to `:fields`. Future versions will track all fields and relations of trackable class when using `:all`. 
+* Currently, the `:all` option behaves identically to `:fields`. Future versions will track all fields and relations of trackable class when using `:all`.
+
+### Upgrading to 0.4.1
+
+#### Migrate Userstamp
+
+`Mongoid::History` no longer supports the userstamp natively. To track the User in the application who created the HistoryTracker, add the [Mongoid::Userstamp gem](https://github.com/tbpro/mongoid_userstamp) to your HistoryTracker class.
+
+```ruby
+class MyHistoryTracker
+  include Mongoid::History::Tracker
+  include Mongoid::Userstamp
+end
+```
+
+Rename the field.
+
+```ruby
+MyHistoryTracker.all.rename(modifier_id: :created_by)
+```
