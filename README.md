@@ -3,7 +3,6 @@ mongoid-history
 
 [![Gem Version](https://badge.fury.io/rb/mongoid-history.svg)](http://badge.fury.io/rb/mongoid-history)
 [![Build Status](https://secure.travis-ci.org/mongoid/mongoid-history.svg?branch=master)](http://travis-ci.org/mongoid/mongoid-history)
-[![Dependency Status](https://gemnasium.com/mongoid/mongoid-history.svg)](https://gemnasium.com/mongoid/mongoid-history)
 [![Code Climate](https://codeclimate.com/github/mongoid/mongoid-history.svg)](https://codeclimate.com/github/mongoid/mongoid-history)
 [![Coverage Status](https://coveralls.io/repos/mongoid/mongoid-history/badge.svg)](https://coveralls.io/r/mongoid/mongoid-history?branch=coveralls)
 
