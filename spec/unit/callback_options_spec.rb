@@ -2,23 +2,25 @@ require 'spec_helper'
 
 describe Mongoid::History::Options do
   describe ':if' do
-    let(:dummy_model) do
-      Class.new do
+    before :each do
+      class DummyModel
         include Mongoid::Document
         include Mongoid::History::Trackable
+
         store_in collection: :model_ones
         field :foo
+
         attr_accessor :bar
-        track_history track_create: true,
-                      track_update: true,
-                      track_destroy: true,
-                      if: :bar
-        def self.name
-          'DummyModel'
-        end
+
+        track_history modifier_field_optional: true, if: :bar
       end
     end
-    let(:obj) { dummy_model.new(foo: 'Foo') }
+
+    after :each do
+      Object.send(:remove_const, :DummyModel)
+    end
+
+    let(:obj) { DummyModel.new(foo: 'Foo') }
 
     context 'when condition evaluates to true' do
       before { obj.bar = true }
@@ -44,23 +46,25 @@ describe Mongoid::History::Options do
   end
 
   describe ':unless' do
-    let(:dummy_model) do
-      Class.new do
+    before :each do
+      class DummyModel
         include Mongoid::Document
         include Mongoid::History::Trackable
+
         store_in collection: :model_ones
         field :foo
+
         attr_accessor :bar
-        track_history track_create: true,
-                      track_update: true,
-                      track_destroy: true,
-                      unless: ->(obj) { obj.bar }
-        def self.name
-          'DummyModel'
-        end
+
+        track_history modifier_field_optional: true, unless: ->(obj) { obj.bar }
       end
     end
-    let(:obj) { dummy_model.new(foo: 'Foo') }
+
+    after :each do
+      Object.send(:remove_const, :DummyModel)
+    end
+
+    let(:obj) { DummyModel.new(foo: 'Foo') }
 
     context 'when condition evaluates to true' do
       before { obj.bar = true }
@@ -86,23 +90,25 @@ describe Mongoid::History::Options do
   end
 
   describe ':if and :unless' do
-    let(:dummy_model) do
-      Class.new do
+    before :each do
+      class DummyModel
         include Mongoid::Document
         include Mongoid::History::Trackable
+
         store_in collection: :model_ones
         field :foo
+
         attr_accessor :bar, :baz
-        track_history track_create: true,
-                      track_update: true,
-                      track_destroy: true,
-                      if: :bar, unless: ->(obj) { obj.baz }
-        def self.name
-          'DummyModel'
-        end
+
+        track_history modifier_field_optional: true, if: :bar, unless: ->(obj) { obj.baz }
       end
     end
-    let(:obj) { dummy_model.new(foo: 'Foo') }
+
+    after :each do
+      Object.send(:remove_const, :DummyModel)
+    end
+
+    let(:obj) { DummyModel.new(foo: 'Foo') }
 
     context 'when :if condition evaluates to true' do
       before { obj.bar = true }

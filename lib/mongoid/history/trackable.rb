@@ -157,8 +157,10 @@ module Mongoid
             scope = _parent.collection_name.to_s.singularize.to_sym if scope.is_a?(Array)
             if Mongoid::Compatibility::Version.mongoid3?
               scope = metadata.inverse_class_name.tableize.singularize.to_sym if metadata.present? && scope == metadata.as
-            else
+            elsif Mongoid::Compatibility::Version.mongoid6_or_older?
               scope = relation_metadata.inverse_class_name.tableize.singularize.to_sym if relation_metadata.present? && scope == relation_metadata.as
+            elsif Mongoid::Compatibility::Version.mongoid7_or_newer?
+              scope = _association.inverse_class_name.tableize.singularize.to_sym if _association.present? && scope == _association.as
             end
           end
 
@@ -173,15 +175,18 @@ module Mongoid
 
         def association_hash(node = self)
           # We prefer to look up associations through the parent record because
-          # we're assured, through the object creation, it'll exist. Whereas we're not guarenteed
+          # we're assured, through the object creation, it'll exist. Whereas we're not guaranteed
           # the child to parent (embedded_in, belongs_to) relation will be defined
           if node._parent
             meta = node._parent.relations.values.find do |relation|
               if Mongoid::Compatibility::Version.mongoid3?
                 relation.class_name == node.metadata.class_name.to_s && relation.name == node.metadata.name
-              else
+              elsif Mongoid::Compatibility::Version.mongoid6_or_older?
                 relation.class_name == node.relation_metadata.class_name.to_s &&
                   relation.name == node.relation_metadata.name
+              elsif Mongoid::Compatibility::Version.mongoid7_or_newer?
+                relation.class_name == node._association.class_name.to_s &&
+                  relation.name == node._association.name
               end
             end
           end
@@ -316,7 +321,11 @@ module Mongoid
         #
         # @return [ Boolean ] true if there is an Embedded::One relation for the given embedded field.
         def embeds_one?(field)
-          relation_of(field) == Mongoid::Relations::Embedded::One
+          relation_of(field) == if Mongoid::Compatibility::Version.mongoid7_or_newer?
+                                  Mongoid::Association::Embedded::EmbedsOne::Proxy
+                                else
+                                  Mongoid::Relations::Embedded::One
+                                end
         end
 
         # Indicates whether there is an Embedded::Many relation for the given embedded field.
@@ -325,7 +334,11 @@ module Mongoid
         #
         # @return [ Boolean ] true if there is an Embedded::Many relation for the given embedded field.
         def embeds_many?(field)
-          relation_of(field) == Mongoid::Relations::Embedded::Many
+          relation_of(field) == if Mongoid::Compatibility::Version.mongoid7_or_newer?
+                                  Mongoid::Association::Embedded::EmbedsMany::Proxy
+                                else
+                                  Mongoid::Relations::Embedded::Many
+                                end
         end
 
         # Retrieves the database representation of an embedded field name, in case the :store_as option is used.
@@ -365,7 +378,8 @@ module Mongoid
         # @return [ Hash < String, String > ] hash of embedded aliases (keys) to database representations (values)
         def relation_aliases
           @relation_aliases ||= relations.inject(HashWithIndifferentAccess.new) do |h, (k, v)|
-            h[v[:store_as] || k] = k
+            store_as = Mongoid::Compatibility::Version.mongoid7_or_newer? ? v.store_as : v[:store_as]
+            h[store_as || k] = k
             h
           end
         end

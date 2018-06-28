@@ -2,71 +2,91 @@ require 'spec_helper'
 
 describe Mongoid::History::Trackable do
   describe 'MyInstanceMethods' do
-    before :all do
-      ModelOne = Class.new do
+    before :each do
+      class ModelOne
         include Mongoid::Document
         include Mongoid::History::Trackable
+
         store_in collection: :model_ones
+
         field :foo
         field :b, as: :bar
-        embeds_one :emb_one, inverse_class_name: 'EmbOne'
-        embeds_one :emb_two, store_as: :emt, inverse_class_name: 'EmbTwo'
-        embeds_many :emb_threes, inverse_class_name: 'EmbThree'
-        embeds_many :emb_fours, store_as: :emfs, inverse_class_name: 'EmbFour'
+
+        if Mongoid::Compatibility::Version.mongoid7_or_newer?
+          embeds_one :emb_one
+          embeds_one :emb_two, store_as: :emt
+          embeds_many :emb_threes
+          embeds_many :emb_fours, store_as: :emfs
+        else
+          embeds_one :emb_one, inverse_class_name: 'EmbOne'
+          embeds_one :emb_two, store_as: :emt, inverse_class_name: 'EmbTwo'
+          embeds_many :emb_threes, inverse_class_name: 'EmbThree'
+          embeds_many :emb_fours, store_as: :emfs, inverse_class_name: 'EmbFour'
+        end
       end
 
-      EmbOne = Class.new do
+      class EmbOne
         include Mongoid::Document
         include Mongoid::History::Trackable
+
         field :f_em_foo
         field :fmb, as: :f_em_bar
+
         embedded_in :model_one
       end
 
-      EmbTwo = Class.new do
+      class EmbTwo
         include Mongoid::Document
         include Mongoid::History::Trackable
+
         field :baz
         embedded_in :model_one
       end
 
-      EmbThree = Class.new do
+      class EmbThree
         include Mongoid::Document
         include Mongoid::History::Trackable
+
         field :f_em_foo
         field :fmb, as: :f_em_bar
+
         embedded_in :model_one
       end
 
-      EmbFour = Class.new do
+      class EmbFour
         include Mongoid::Document
         include Mongoid::History::Trackable
+
         field :baz
         embedded_in :model_one
       end
-
-      ModelOne.track_history(on: %i[foo emb_one emb_threes])
-      @persisted_history_options = Mongoid::History.trackable_class_options
     end
-    before(:each) { Mongoid::History.trackable_class_options = @persisted_history_options }
+
+    after :each do
+      Object.send(:remove_const, :ModelOne)
+      Object.send(:remove_const, :EmbOne)
+      Object.send(:remove_const, :EmbTwo)
+      Object.send(:remove_const, :EmbThree)
+      Object.send(:remove_const, :EmbFour)
+    end
 
     let(:bson_class) { defined?(BSON::ObjectId) ? BSON::ObjectId : Moped::BSON::ObjectId }
 
     let(:emb_one) { EmbOne.new(f_em_foo: 'Foo', f_em_bar: 'Bar') }
     let(:emb_threes) { [EmbThree.new(f_em_foo: 'Foo', f_em_bar: 'Bar')] }
-    let(:model_one) do
-      ModelOne.new(foo: 'Foo',
-                   bar: 'Bar',
-                   emb_one: emb_one,
-                   emb_threes: emb_threes)
-    end
+    let(:model_one) { ModelOne.new(foo: 'Foo', bar: 'Bar', emb_one: emb_one, emb_threes: emb_threes) }
 
     describe '#modified_attributes_for_create' do
-      before(:each) { ModelOne.clear_trackable_memoization }
+      before :each do
+        ModelOne.track_history modifier_field_optional: true, on: %i[foo emb_one emb_threes]
+      end
+
       subject { model_one.send(:modified_attributes_for_create) }
 
       context 'with tracked embeds_one object' do
-        before(:each) { ModelOne.track_history(on: { emb_one: :f_em_foo }) }
+        before :each do
+          ModelOne.track_history(modifier_field_optional: true, on: { emb_one: :f_em_foo })
+        end
         it 'should include tracked attributes only' do
           expect(subject['emb_one'][0]).to be_nil
 
@@ -77,14 +97,18 @@ describe Mongoid::History::Trackable do
       end
 
       context 'with untracked embeds_one object' do
-        before(:each) { ModelOne.track_history(on: :fields) }
+        before :each do
+          ModelOne.track_history(modifier_field_optional: true, on: :fields)
+        end
         it 'should not include embeds_one attributes' do
           expect(subject['emb_one']).to be_nil
         end
       end
 
       context 'with tracked embeds_many objects' do
-        before(:each) { ModelOne.track_history(on: { emb_threes: :f_em_foo }) }
+        before :each do
+          ModelOne.track_history(modifier_field_optional: true, on: { emb_threes: :f_em_foo })
+        end
         it 'should include tracked attributes only' do
           expect(subject['emb_threes'][0]).to be_nil
 
@@ -95,7 +119,9 @@ describe Mongoid::History::Trackable do
       end
 
       context 'with untracked embeds_many objects' do
-        before(:each) { ModelOne.track_history(on: :fields) }
+        before :each do
+          ModelOne.track_history(modifier_field_optional: true, on: :fields)
+        end
         it 'should include not tracked embeds_many attributes' do
           expect(subject['emb_threes']).to be_nil
         end
@@ -110,25 +136,34 @@ describe Mongoid::History::Trackable do
       end
 
       describe 'embeds_one' do
-        before(:all) do
-          Mail = Class.new do
+        before :each do
+          class Mail
             include Mongoid::Document
             include Mongoid::History::Trackable
+
             store_in collection: :mails
             field :provider
-            embeds_one :mail_subject, inverse_class_name: 'MailSubject'
+
+            if Mongoid::Compatibility::Version.mongoid7_or_newer?
+              embeds_one :mail_subject
+            else
+              embeds_one :mail_subject, inverse_class_name: 'MailSubject'
+            end
+
+            track_history on: :mail_subject
           end
 
-          MailSubject = Class.new do
+          class MailSubject
             include Mongoid::Document
+
             field :content
             embedded_in :mail
           end
         end
 
-        before(:each) do
-          Mail.instance_variable_set(:@history_trackable_options, nil)
-          Mail.track_history(on: :mail_subject)
+        after :each do
+          Object.send(:remove_const, :MailSubject)
+          Object.send(:remove_const, :Mail)
         end
 
         let(:mail) { Mail.new(mail_subject: mail_subject) }
@@ -145,46 +180,57 @@ describe Mongoid::History::Trackable do
         end
 
         context 'when obj not soft-deleted' do
-          before(:each) { allow(mail_subject).to receive(:deleted_at) { nil } }
+          before :each do
+            allow(mail_subject).to receive(:deleted_at) { nil }
+          end
           let(:mail_subject) { MailSubject.new(content: 'Content') }
           it { is_expected.to eq [nil, { '_id' => mail_subject._id, 'content' => 'Content' }] }
         end
 
         context 'when obj soft-deleted' do
-          before(:each) { allow(mail_subject).to receive(:deleted_at) { Time.now } }
+          before :each do
+            allow(mail_subject).to receive(:deleted_at) { Time.now }
+          end
           let(:mail_subject) { MailSubject.new(content: 'Content') }
           it { is_expected.to be_nil }
-        end
-
-        after(:all) do
-          Object.send(:remove_const, :MailSubject)
-          Object.send(:remove_const, :Mail)
         end
       end
 
       describe 'paranoia' do
-        before(:all) do
-          ModelParanoia = Class.new do
+        before :each do
+          class ModelParanoia
             include Mongoid::Document
             include Mongoid::History::Trackable
+
             store_in collection: :model_paranoias
-            embeds_many :emb_para_ones, inverse_class_name: 'EmbParaOne'
+
+            if Mongoid::Compatibility::Version.mongoid7_or_newer?
+              embeds_many :emb_para_ones
+            else
+              embeds_many :emb_para_ones, inverse_class_name: 'EmbParaOne'
+            end
           end
 
-          EmbParaOne = Class.new do
+          class EmbParaOne
             include Mongoid::Document
+
             field :em_foo
             field :deleted_at
+
             embedded_in :model_paranoia
           end
+        end
+
+        after :each do
+          Object.send(:remove_const, :ModelParanoia)
+          Object.send(:remove_const, :EmbParaOne)
         end
 
         let(:emb_para_one) { EmbParaOne.new(em_foo: 'Em-Foo') }
         let(:model_paranoia) { ModelParanoia.new(emb_para_ones: [emb_para_one]) }
 
         context 'when does not respond to paranoia_field' do
-          before(:each) do
-            ModelParanoia.instance_variable_set(:@history_trackable_options, nil)
+          before :each do
             ModelParanoia.track_history(on: :emb_para_ones)
           end
 
@@ -199,8 +245,7 @@ describe Mongoid::History::Trackable do
         end
 
         context 'when responds to paranoia_field' do
-          before(:each) do
-            ModelParanoia.instance_variable_set(:@history_trackable_options, nil)
+          before :each do
             ModelParanoia.track_history(on: :emb_para_ones)
             allow(emb_para_one).to receive(:deleted_at) { Time.now }
             allow(emb_para_one_2).to receive(:deleted_at) { nil }
@@ -217,18 +262,12 @@ describe Mongoid::History::Trackable do
             expect(subject['emb_para_ones'][1]).to eq [{ '_id' => emb_para_one_2._id, 'em_foo' => 'Em-Foo-2' }]
           end
         end
-
-        after(:all) do
-          Object.send(:remove_const, :ModelParanoia)
-          Object.send(:remove_const, :EmbParaOne)
-        end
       end
     end
 
     describe '#modified_attributes_for_update' do
-      before(:each) do
+      before :each do
         model_one.save!
-        ModelOne.clear_trackable_memoization
         allow(ModelOne).to receive(:dynamic_enabled?) { false }
         allow(model_one).to receive(:changes) { changes }
       end
@@ -236,76 +275,104 @@ describe Mongoid::History::Trackable do
       subject { model_one.send(:modified_attributes_for_update) }
 
       context 'when embeds_one attributes passed in options' do
-        before(:each) { ModelOne.track_history(on: { emb_one: :f_em_foo }) }
+        before :each do
+          ModelOne.track_history(modifier_field_optional: true, on: { emb_one: :f_em_foo })
+        end
         let(:changes) { { 'emb_one' => [{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }, { 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }] } }
         it { expect(subject['emb_one'][0]).to eq('f_em_foo' => 'Foo') }
         it { expect(subject['emb_one'][1]).to eq('f_em_foo' => 'Foo-new') }
       end
 
       context 'when embeds_one relation passed in options' do
-        before(:each) { ModelOne.track_history(on: :emb_one) }
+        before :each do
+          ModelOne.track_history(modifier_field_optional: true, on: :emb_one)
+        end
         let(:changes) { { 'emb_one' => [{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }, { 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }] } }
         it { expect(subject['emb_one'][0]).to eq('f_em_foo' => 'Foo', 'fmb' => 'Bar') }
         it { expect(subject['emb_one'][1]).to eq('f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new') }
       end
 
       context 'when embeds_one relation not tracked' do
-        before(:each) { ModelOne.track_history(on: :fields) }
+        before :each do
+          ModelOne.track_history(modifier_field_optional: true, on: :fields)
+        end
         let(:changes) { { 'emb_one' => [{ 'f_em_foo' => 'Foo' }, { 'f_em_foo' => 'Foo-new' }] } }
         it { expect(subject['emb_one']).to be_nil }
       end
 
       context 'when embeds_many attributes passed in options' do
-        before(:each) { ModelOne.track_history(on: { emb_threes: :f_em_foo }) }
+        before :each do
+          ModelOne.track_history(modifier_field_optional: true, on: { emb_threes: :f_em_foo })
+        end
         let(:changes) { { 'emb_threes' => [[{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }], [{ 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }]] } }
         it { expect(subject['emb_threes']).to eq [[{ 'f_em_foo' => 'Foo' }], [{ 'f_em_foo' => 'Foo-new' }]] }
       end
 
       context 'when embeds_many relation passed in options' do
-        before(:each) { ModelOne.track_history(on: :emb_threes) }
+        before :each do
+          ModelOne.track_history(modifier_field_optional: true, on: :emb_threes)
+        end
         let(:changes) { { 'emb_threes' => [[{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }], [{ 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }]] } }
         it { expect(subject['emb_threes']).to eq [[{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }], [{ 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }]] }
       end
 
       context 'when embeds_many relation not tracked' do
-        before(:each) { ModelOne.track_history(on: :fields) }
+        before :each do
+          ModelOne.track_history(modifier_field_optional: true, on: :fields)
+        end
         let(:changes) { { 'emb_threes' => [[{ 'f_em_foo' => 'Foo' }], [{ 'f_em_foo' => 'Foo-new' }]] } }
         it { expect(subject['emb_threes']).to be_nil }
       end
 
       context 'when field tracked' do
-        before(:each) { ModelOne.track_history(on: :foo) }
+        before :each do
+          ModelOne.track_history(modifier_field_optional: true, on: :foo)
+        end
         let(:changes) { { 'foo' => ['Foo', 'Foo-new'], 'b' => ['Bar', 'Bar-new'] } }
         it { is_expected.to eq('foo' => ['Foo', 'Foo-new']) }
       end
 
       context 'when field not tracked' do
-        before(:each) { ModelOne.track_history(on: []) }
+        before :each do
+          ModelOne.track_history(modifier_field_optional: true, on: [])
+        end
         let(:changes) { { 'foo' => ['Foo', 'Foo-new'] } }
         it { is_expected.to eq({}) }
       end
 
       describe 'embeds_one' do
-        before(:all) do
-          Email = Class.new do
+        before :each do
+          class Email
             include Mongoid::Document
             include Mongoid::History::Trackable
+
             store_in collection: :emails
             field :provider
-            embeds_one :email_subject, inverse_class_name: 'EmailSubject'
+
+            if Mongoid::Compatibility::Version.mongoid7_or_newer?
+              embeds_one :email_subject
+            else
+              embeds_one :email_subject, inverse_class_name: 'EmailSubject'
+            end
+
+            track_history on: :email_subject
           end
 
-          EmailSubject = Class.new do
+          class EmailSubject
             include Mongoid::Document
             include Mongoid::History::Trackable
+
             field :content
             embedded_in :email_subject
           end
         end
 
-        before(:each) do
-          Email.instance_variable_set(:@history_trackable_options, nil)
-          Email.track_history(on: :email_subject)
+        after :each do
+          Object.send(:remove_const, :EmailSubject)
+          Object.send(:remove_const, :Email)
+        end
+
+        before :each do
           allow(Email).to receive(:dynamic_enabled?) { false }
           allow(email).to receive(:changes) { changes }
         end
@@ -335,83 +402,92 @@ describe Mongoid::History::Trackable do
           end
           it { is_expected.to eq [{ 'content' => 'Content' }, { 'content' => 'Content-new' }] }
         end
-
-        after(:all) do
-          Object.send(:remove_const, :EmailSubject)
-          Object.send(:remove_const, :Email)
-        end
       end
 
       describe 'paranoia_field' do
         context 'when embeds_one has alias' do
-          before(:all) do
-            # Here i need class name constant in trackable.rb. So, not using `let` to define classes
-            ModelTwo = Class.new do
+          before :each do
+            class ModelTwo
               include Mongoid::Document
               include Mongoid::History::Trackable
+
               store_in collection: :model_twos
-              embeds_one :emb_two_one, inverse_class_name: 'EmbTwoOne'
+
+              if Mongoid::Compatibility::Version.mongoid7_or_newer?
+                embeds_one :emb_two_one
+              else
+                embeds_one :emb_two_one, inverse_class_name: 'EmbTwoOne'
+              end
+
+              track_history on: :emb_two_one
             end
 
-            EmbTwoOne = Class.new do
+            class EmbTwoOne
               include Mongoid::Document
               include Mongoid::History::Trackable
+
               field :foo
               field :cncl, as: :cancelled_at
+
               embedded_in :model_two
+
+              history_settings paranoia_field: :cancelled_at
             end
           end
 
-          before(:each) do
-            ModelTwo.instance_variable_set(:@history_trackable_options, nil)
-            ModelTwo.instance_variable_set(:@trackable_settings, nil)
-            EmbTwoOne.instance_variable_set(:@trackable_settings, nil)
+          after :each do
+            Object.send(:remove_const, :ModelTwo)
+            Object.send(:remove_const, :EmbTwoOne)
+          end
 
-            ModelTwo.track_history on: :emb_two_one
-            EmbTwoOne.history_settings paranoia_field: :cancelled_at
-
+          before :each do
             allow(ModelTwo).to receive(:dynamic_enabled?) { false }
             allow(model_two_obj).to receive(:changes) { changes }
           end
 
           let(:model_two_obj) { ModelTwo.new }
           let(:changes) { { 'emb_two_one' => [{ 'foo' => 'Foo', 'cncl' => Time.now }, { 'foo' => 'Foo-new' }] } }
+
           subject { model_two_obj.send(:modified_attributes_for_update)['emb_two_one'] }
           it { is_expected.to eq [{}, { 'foo' => 'Foo-new' }] }
-
-          after(:all) do
-            Object.send(:remove_const, :ModelTwo)
-            Object.send(:remove_const, :EmbTwoOne)
-          end
         end
 
         context 'when embeds_many has alias' do
-          before(:all) do
-            # Here i need class name constant in trackable.rb. So, not using `let` to define classes
-            ModelTwo = Class.new do
+          before :each do
+            class ModelTwo
               include Mongoid::Document
               include Mongoid::History::Trackable
+
               store_in collection: :model_twos
-              embeds_many :emb_two_ones, inverse_class_name: 'EmbTwoOne'
+
+              if Mongoid::Compatibility::Version.mongoid7_or_newer?
+                embeds_many :emb_two_ones
+              else
+                embeds_many :emb_two_ones, inverse_class_name: 'EmbTwoOne'
+              end
+
+              track_history on: :emb_two_ones
             end
 
-            EmbTwoOne = Class.new do
+            class EmbTwoOne
               include Mongoid::Document
               include Mongoid::History::Trackable
+
               field :foo
               field :cncl, as: :cancelled_at
+
               embedded_in :model_two
+
+              history_settings paranoia_field: :cancelled_at
             end
           end
 
-          before(:each) do
-            ModelTwo.instance_variable_set(:@history_trackable_options, nil)
-            ModelTwo.instance_variable_set(:@trackable_settings, nil)
-            EmbTwoOne.instance_variable_set(:@trackable_settings, nil)
+          after :each do
+            Object.send(:remove_const, :ModelTwo)
+            Object.send(:remove_const, :EmbTwoOne)
+          end
 
-            ModelTwo.track_history on: :emb_two_ones
-            EmbTwoOne.history_settings paranoia_field: :cancelled_at
-
+          before :each do
             allow(ModelTwo).to receive(:dynamic_enabled?) { false }
             allow(model_two_obj).to receive(:changes) { changes }
           end
@@ -420,25 +496,21 @@ describe Mongoid::History::Trackable do
           let(:changes) { { 'emb_two_ones' => [[{ 'foo' => 'Foo', 'cncl' => Time.now }], [{ 'foo' => 'Foo-new' }]] } }
           subject { model_two_obj.send(:modified_attributes_for_update)['emb_two_ones'] }
           it { is_expected.to eq [[], [{ 'foo' => 'Foo-new' }]] }
-
-          after(:all) do
-            Object.send(:remove_const, :ModelTwo)
-            Object.send(:remove_const, :EmbTwoOne)
-          end
         end
       end
     end
 
     describe '#modified_attributes_for_destroy' do
-      before(:each) do
+      before :each do
         allow(ModelOne).to receive(:dynamic_enabled?) { false }
         model_one.save!
-        ModelOne.clear_trackable_memoization
       end
       subject { model_one.send(:modified_attributes_for_destroy) }
 
       context 'with tracked embeds_one object' do
-        before(:each) { ModelOne.track_history(on: { emb_one: :f_em_foo }) }
+        before :each do
+          ModelOne.track_history(modifier_field_optional: true, on: { emb_one: :f_em_foo })
+        end
         it 'should include tracked attributes only' do
           expect(subject['emb_one'][0].keys.size).to eq 2
           expect(subject['emb_one'][0]['_id']).to eq emb_one._id
@@ -449,14 +521,18 @@ describe Mongoid::History::Trackable do
       end
 
       context 'with untracked embeds_one object' do
-        before(:each) { ModelOne.track_history(on: :fields) }
+        before :each do
+          ModelOne.track_history(modifier_field_optional: true, on: :fields)
+        end
         it 'should not include embeds_one attributes' do
           expect(subject['emb_one']).to be_nil
         end
       end
 
       context 'with tracked embeds_many objects' do
-        before(:each) { ModelOne.track_history(on: { emb_threes: :f_em_foo }) }
+        before :each do
+          ModelOne.track_history(modifier_field_optional: true, on: { emb_threes: :f_em_foo })
+        end
         it 'should include tracked attributes only' do
           expect(subject['emb_threes'][0][0].keys.count).to eq 2
           expect(subject['emb_threes'][0][0]['_id']).to eq emb_threes.first._id
@@ -467,19 +543,13 @@ describe Mongoid::History::Trackable do
       end
 
       context 'with untracked embeds_many objects' do
-        before(:each) { ModelOne.track_history(on: :fields) }
+        before :each do
+          ModelOne.track_history(modifier_field_optional: true, on: :fields)
+        end
         it 'should include not tracked embeds_many attributes' do
           expect(subject['emb_threes']).to be_nil
         end
       end
-    end
-
-    after :all do
-      Object.send(:remove_const, :ModelOne)
-      Object.send(:remove_const, :EmbOne)
-      Object.send(:remove_const, :EmbTwo)
-      Object.send(:remove_const, :EmbThree)
-      Object.send(:remove_const, :EmbFour)
     end
   end
 end

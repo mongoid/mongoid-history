@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 describe Mongoid::History::Tracker do
-  before :all do
-    class Modelone
+  before :each do
+    class ModelOne
       include Mongoid::Document
       include Mongoid::History::Trackable
 
@@ -10,15 +10,10 @@ describe Mongoid::History::Tracker do
       belongs_to :user
       embeds_one :one_embedded, as: :embedable
 
-      track_history on: :all,
-                    modifier_field: :modifier,
-                    version_field: :version,
-                    track_create: true,
-                    track_update: true,
-                    track_destroy: true
+      track_history
     end
 
-    class Modeltwo
+    class ModelTwo
       include Mongoid::Document
       include Mongoid::History::Trackable
 
@@ -26,12 +21,7 @@ describe Mongoid::History::Tracker do
       belongs_to :user
       embeds_one :one_embedded, as: :embedable
 
-      track_history on: :all,
-                    modifier_field: :modifier,
-                    version_field: :version,
-                    track_create: true,
-                    track_update: true,
-                    track_destroy: true
+      track_history
     end
 
     class OneEmbedded
@@ -42,13 +32,7 @@ describe Mongoid::History::Tracker do
       embeds_many :embedded_twos, store_as: :ems
       embedded_in :embedable, polymorphic: true
 
-      track_history on: :all,
-                    modifier_field: :modifier,
-                    version_field: :version,
-                    track_create: true,
-                    track_update: true,
-                    track_destroy: true,
-                    scope: %i[modelone modeltwo]
+      track_history scope: %i[model_one model_two]
     end
 
     class EmbeddedTwo
@@ -58,70 +42,74 @@ describe Mongoid::History::Tracker do
       field :name
       embedded_in :one_embedded
 
-      track_history on: :all,
-                    modifier_field: :modifier,
-                    version_field: :version,
-                    track_create: true,
-                    track_update: true,
-                    track_destroy: true,
-                    scope: %i[modelone modeltwo]
+      track_history scope: %i[model_one model_two]
     end
 
     class User
       include Mongoid::Document
-      has_many :modelones
-      has_many :modeltwos
+
+      has_many :model_ones
+      has_many :model_twos
     end
   end
 
+  after :each do
+    Object.send(:remove_const, :ModelOne)
+    Object.send(:remove_const, :ModelTwo)
+    Object.send(:remove_const, :OneEmbedded)
+    Object.send(:remove_const, :EmbeddedTwo)
+    Object.send(:remove_const, :User)
+  end
+
+  let (:user) { User.create! }
+
   it 'tracks history for nested embedded documents with polymorphic relations' do
-    user = User.new
-    user.save!
+    user = User.create!
 
-    modelone = user.modelones.build(name: 'modelone')
-    modelone.save!
-    modelone.build_one_embedded(name: 'modelone_one_embedded').save!
-    expect(modelone.history_tracks.count).to eq(2)
-    expect(modelone.one_embedded.history_tracks.count).to eq(1)
+    model_one = user.model_ones.build(name: 'model_one', modifier: user)
+    model_one.save!
+    model_one.build_one_embedded(name: 'model_one_one_embedded', modifier: user).save!
+    expect(model_one.history_tracks.count).to eq(2)
+    expect(model_one.one_embedded.history_tracks.count).to eq(1)
 
-    modelone.reload
-    modelone.one_embedded.update_attribute(:name, 'modelone_embedded_one!')
-    expect(modelone.history_tracks.count).to eq(3)
-    expect(modelone.one_embedded.history_tracks.count).to eq(2)
-    expect(modelone.history_tracks.last.action).to eq('update')
+    model_one.reload
+    model_one.one_embedded.update_attributes!(name: 'model_one_embedded_one!')
+    expect(model_one.history_tracks.count).to eq(3)
+    expect(model_one.one_embedded.history_tracks.count).to eq(2)
+    expect(model_one.history_tracks.last.action).to eq('update')
 
-    modelone.build_one_embedded(name: 'Lorem ipsum').save!
-    expect(modelone.history_tracks.count).to eq(4)
-    expect(modelone.one_embedded.history_tracks.count).to eq(1)
-    expect(modelone.one_embedded.history_tracks.last.action).to eq('create')
-    expect(modelone.one_embedded.history_tracks.last.association_chain.last['name']).to eq('one_embedded')
+    model_one.build_one_embedded(name: 'Lorem ipsum', modifier: user).save!
+    expect(model_one.history_tracks.count).to eq(4)
+    expect(model_one.one_embedded.history_tracks.count).to eq(1)
+    expect(model_one.one_embedded.history_tracks.last.action).to eq('create')
+    expect(model_one.one_embedded.history_tracks.last.association_chain.last['name']).to eq('one_embedded')
 
-    embedded_one1 = modelone.one_embedded.embedded_twos.create(name: 'modelone_one_embedded_1')
-    expect(modelone.history_tracks.count).to eq(5)
-    expect(modelone.one_embedded.history_tracks.count).to eq(2)
+    embedded_one1 = model_one.one_embedded.embedded_twos.create!(name: 'model_one_one_embedded_1', modifier: user)
+    expect(model_one.history_tracks.count).to eq(5)
+    expect(model_one.one_embedded.history_tracks.count).to eq(2)
     expect(embedded_one1.history_tracks.count).to eq(1)
 
-    modeltwo = user.modeltwos.build(name: 'modeltwo')
-    modeltwo.save!
-    modeltwo.build_one_embedded(name: 'modeltwo_one_embedded').save!
-    expect(modeltwo.history_tracks.count).to eq(2)
-    expect(modeltwo.one_embedded.history_tracks.count).to eq(1)
+    model_two = user.model_twos.build(name: 'model_two', modifier: user)
+    model_two.save!
+    model_two.build_one_embedded(name: 'model_two_one_embedded', modifier: user).save!
+    expect(model_two.history_tracks.count).to eq(2)
+    expect(model_two.one_embedded.history_tracks.count).to eq(1)
 
-    modeltwo.reload
-    modeltwo.one_embedded.update_attribute(:name, 'modeltwo_one_embedded!')
-    expect(modeltwo.history_tracks.count).to eq(3)
-    expect(modeltwo.one_embedded.history_tracks.count).to eq(2)
-    expect(modeltwo.history_tracks.last.action).to eq('update')
+    model_two.reload
+    model_two.one_embedded.update_attributes!(name: 'model_two_one_embedded!')
+    expect(model_two.history_tracks.count).to eq(3)
+    expect(model_two.one_embedded.history_tracks.count).to eq(2)
+    expect(model_two.history_tracks.last.action).to eq('update')
 
-    modeltwo.build_one_embedded(name: 'Lorem ipsum').save!
-    expect(modeltwo.history_tracks.count).to eq(4)
-    expect(modeltwo.one_embedded.history_tracks.count).to eq(1)
-    expect(modeltwo.one_embedded.history_tracks.last.action).to eq('create')
-    expect(modeltwo.one_embedded.history_tracks.last.association_chain.last['name']).to eq('one_embedded')
+    model_two.build_one_embedded(name: 'Lorem ipsum', modifier: user).save!
+    expect(model_two.history_tracks.count).to eq(4)
+    expect(model_two.one_embedded.history_tracks.count).to eq(1)
+    expect(model_two.one_embedded.history_tracks.last.action).to eq('create')
+    expect(model_two.one_embedded.history_tracks.last.association_chain.last['name']).to eq('one_embedded')
 
-    embedded_one2 = modeltwo.one_embedded.embedded_twos.create(name: 'modeltwo_one_embedded_1')
-    expect(modeltwo.history_tracks.count).to eq(5)
-    expect(modeltwo.one_embedded.history_tracks.count).to eq(2)
+    embedded_one2 = model_two.one_embedded.embedded_twos.create!(name: 'model_two_one_embedded_1', modifier: user)
+    expect(model_two.history_tracks.count).to eq(5)
+    expect(model_two.one_embedded.history_tracks.count).to eq(2)
     expect(embedded_one2.history_tracks.count).to eq(1)
   end
 end
