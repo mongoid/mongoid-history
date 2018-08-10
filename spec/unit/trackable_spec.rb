@@ -37,12 +37,6 @@ describe Mongoid::History::Trackable do
     expect(MyModel).to respond_to :track_history
   end
 
-  it 'should append trackable_class_options ONLY when #track_history is called' do
-    expect(Mongoid::History.trackable_class_options).to be_blank
-    MyModel.track_history
-    expect(Mongoid::History.trackable_class_options.keys).to eq([:my_model])
-  end
-
   describe '#track_history' do
     before :each do
       class MyModelWithNoModifier
@@ -85,7 +79,7 @@ describe Mongoid::History::Trackable do
     let(:reserved_fields) { %w[_id version modifier_id] }
 
     it 'should have default options' do
-      expect(Mongoid::History.trackable_class_options[:my_model].prepared).to eq(expected_option)
+      expect(MyModel.mongoid_history_options.prepared).to eq(expected_option)
     end
 
     it 'should define callback function #track_update' do
@@ -266,7 +260,7 @@ describe Mongoid::History::Trackable do
       end
 
       it 'should have default options' do
-        expect(Mongoid::History.trackable_class_options[:my_model].prepared).to eq(expected_option)
+        expect(MyModel.mongoid_history_options.prepared).to eq(expected_option)
       end
 
       it 'should define #history_trackable_options' do
@@ -782,6 +776,30 @@ describe Mongoid::History::Trackable do
       expect do
         expect { MyModel.create!(foo: 'bar') }.to raise_error(StandardError)
       end.to change(Tracker, :count).by(0)
+    end
+  end
+
+  describe 'changing collection' do
+    before :each do
+      class Fish
+        include Mongoid::Document
+        include Mongoid::History::Trackable
+
+        track_history on: [:species], modifier_field_optional: true
+        store_in collection: :animals
+
+        field :species
+      end
+    end
+
+    after :each do
+      Object.send(:remove_const, :Fish)
+    end
+
+    it 'should track history' do
+      expect do
+        expect { Fish.new.save! }.to_not raise_error
+      end.to change(Tracker, :count).by(1)
     end
   end
 end
