@@ -29,8 +29,11 @@ module Mongoid
           around_create :track_create, callback_options if history_options.options[:track_create]
           around_destroy :track_destroy, callback_options if history_options.options[:track_destroy]
 
-          Mongoid::History.trackable_class_options ||= {}
-          Mongoid::History.trackable_class_options[history_options.scope] = history_options
+          unless respond_to? :mongoid_history_options
+            class_attribute :mongoid_history_options, instance_accessor: false
+          end
+
+          self.mongoid_history_options = history_options
         end
 
         def history_settings(options = {})
@@ -518,7 +521,7 @@ module Mongoid
         end
 
         def history_trackable_options
-          @history_trackable_options ||= Mongoid::History.trackable_class_options[trackable_scope].prepared
+          @history_trackable_options ||= mongoid_history_options.prepared
         end
 
         def clear_trackable_memoization

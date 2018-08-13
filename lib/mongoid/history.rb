@@ -15,7 +15,6 @@ module Mongoid
 
     class << self
       attr_accessor :tracker_class_name
-      attr_accessor :trackable_class_options
       attr_accessor :trackable_settings
       attr_accessor :modifier_class_name
       attr_accessor :current_user_method
@@ -45,9 +44,19 @@ module Mongoid
 
       def reset!
         Mongoid::History.modifier_class_name = 'User'
-        Mongoid::History.trackable_class_options = {}
         Mongoid::History.trackable_settings = {}
         Mongoid::History.current_user_method ||= :current_user
+
+        Mongoid.models.each do |model|
+          next unless model.included_modules.include? Mongoid::History::Trackable
+
+          model.singleton_class.class_eval do
+            # Inverse of class_attribute
+            %i[mongoid_history_options
+               mongoid_history_options=
+               mongoid_history_options?].each { |m| remove_possible_method(m) }
+          end
+        end
       end
     end
   end

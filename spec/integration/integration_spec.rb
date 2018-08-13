@@ -950,5 +950,27 @@ describe Mongoid::History do
         expect(sausage.reload.flavour).to eq('Guinness')
       end
     end
+
+    describe 'changing collection' do
+      before :each do
+        class Fish
+          include Mongoid::Document
+          include Mongoid::History::Trackable
+
+          track_history on: [:species], modifier_field_optional: true
+          store_in collection: :animals
+
+          field :species
+        end
+      end
+
+      after :each do
+        Object.send(:remove_const, :Fish)
+      end
+
+      it 'should track history' do
+        Fish.new.save!
+      end
+    end
   end
 end

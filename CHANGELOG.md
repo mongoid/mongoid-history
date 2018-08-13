@@ -1,5 +1,6 @@
 ### 0.8.2 (Next)
 
+* [#227](https://github.com/mongoid/mongoid-history/pull/227): Store options in inheritable class attributes - [@jnfeinstein](https://github.com/jnfeinstein).
 * Your contribution here.
 
 ### 0.8.1 (2018/06/28)
