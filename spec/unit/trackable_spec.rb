@@ -779,7 +779,7 @@ describe Mongoid::History::Trackable do
     end
   end
 
-  describe 'changing collection' do
+  context 'changing collection' do
     before :each do
       class Fish
         include Mongoid::Document
@@ -803,7 +803,7 @@ describe Mongoid::History::Trackable do
     end
   end
 
-  context "extending a #{Mongoid::History::Trackable}" do
+  context "extending a #{described_class}" do
     before :each do
       MyModel.track_history
 
