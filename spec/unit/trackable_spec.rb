@@ -779,7 +779,7 @@ describe Mongoid::History::Trackable do
     end
   end
 
-  describe 'changing collection' do
+  context 'changing collection' do
     before :each do
       class Fish
         include Mongoid::Document
@@ -800,6 +800,40 @@ describe Mongoid::History::Trackable do
       expect do
         expect { Fish.new.save! }.to_not raise_error
       end.to change(Tracker, :count).by(1)
+    end
+  end
+
+  context "extending a #{described_class}" do
+    before :each do
+      MyModel.track_history
+
+      class CustomTracker < MyModel
+        field :key
+
+        track_history on: :key, changes_method: :my_changes, track_create: true
+
+        def my_changes
+          changes.merge('key' => "Save history-#{key}")
+        end
+      end
+
+      MyModel.history_trackable_options
+    end
+
+    after :each do
+      Object.send(:remove_const, :CustomTracker)
+    end
+
+    it 'should not override in parent class' do
+      expect(MyModel.history_trackable_options[:changes_method]).to eq :changes
+      expect(CustomTracker.history_trackable_options[:changes_method]).to eq :my_changes
+    end
+
+    it 'should default to :changes' do
+      m = MyModel.create!(modifier: user)
+      expect(m).to receive(:changes).exactly(3).times.and_call_original
+      expect(m).not_to receive(:my_changes)
+      m.save!
     end
   end
 end
