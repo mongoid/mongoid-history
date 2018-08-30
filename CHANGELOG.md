@@ -1,8 +1,11 @@
-### 0.8.2 (Next)
+### 0.9.1 (Next)
+
+* Your contribution here.
+
+### 0.9.0 (2018/08/30)
 
 * [#227](https://github.com/mongoid/mongoid-history/pull/227): Store options in inheritable class attributes - [@jnfeinstein](https://github.com/jnfeinstein).
 * [#229](https://github.com/mongoid/mongoid-history/pull/229), [#225](https://github.com/mongoid/mongoid-history/pull/225): Fixed inheritance of `history_trackable_options` - [@jnfeinstein](https://github.com/jnfeinstein).
-* Your contribution here.
 
 ### 0.8.1 (2018/06/28)
 

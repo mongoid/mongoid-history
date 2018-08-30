@@ -1,5 +1,18 @@
 ## Upgrading Mongoid History
 
+### Upgrading to 0.9.0
+
+#### Inheritance of `track_history` configuration
+
+Prior releases of Mongoid History would potentially apply a sub-classes's configuration
+to its parent class and any additional sub-classes. This behavior has been corrected such
+that a class and its sub-classes may have separate configurations.
+
+Deployments that rely on the sub-classes's configuration applying to its parent
+class and/or other sub-classes will need to migrate the configuration to the parent class.
+
+See [#225](https://github.com/mongoid/mongoid-history/pull/225) for more information.
+
 ### Upgrading to 0.8.0
 
 #### History is now tracked on create and destroy by default
