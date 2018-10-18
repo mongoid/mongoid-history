@@ -24,6 +24,7 @@ gem 'mongoid-compatibility'
 
 group :development, :test do
   gem 'bundler'
+  gem 'byebug'
   gem 'pry'
   gem 'rake', '< 11.0'
 end
