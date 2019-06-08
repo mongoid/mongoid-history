@@ -6,13 +6,11 @@ module Mongoid
         #
         #   {
         #     'foo' => ['foo_before_changes', 'foo_after_changes']
-        #     'nested_bar' => {
-        #       'baz' => ['nested_bar_baz_before_changes', 'nested_bar_baz_after_changes']
+        #     'nested_bar.baz' => ['nested_bar_baz_before_changes', 'nested_bar_baz_after_changes']
         #     }
         #   }
         #
-        # @return [Hash<String, ?>] Hash of changes
-        #   ? can be either a pair or a hash for embedded documents
+        # @return [Hash<String, Array<(?,?)>>] Hash of changes
         def attributes
           changes_from_parent.deep_merge(changes_from_children)
         end
@@ -44,7 +42,7 @@ module Mongoid
         #
         #   {"child"=>{"name"=>["todd", "mario"]}}
         #
-        # @return [Hash<String, Array<?,?>] changes of embeds_ones from embedded documents
+        # @return [Hash<String, Array<(?,?)>] changes of embeds_ones from embedded documents
         def embeds_one_changes_from_embedded_documents
           embedded_doc_changes = {}
           trackable_class.tracked_embeds_one.each do |rel|
@@ -61,8 +59,8 @@ module Mongoid
           embedded_doc_changes
         end
 
-        # @param [String] relation <description>
-        # @param [String] value <description>
+        # @param [String] relation
+        # @param [String] value
         #
         # @return [Hash<String, Array<(?,?)>>]
         def embeds_one_changes_from_parent(relation, value)
@@ -76,8 +74,8 @@ module Mongoid
           { relation => [original_value, modified_value] }
         end
 
-        # @param [String] relation <description>
-        # @param [String] value <description>
+        # @param [String] relation
+        # @param [String] value
         #
         # @return [Hash<Array<(?,?)>>]
         def embeds_many_changes_from_parent(relation, value)
