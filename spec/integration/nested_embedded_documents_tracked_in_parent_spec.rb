@@ -41,26 +41,27 @@ describe Mongoid::History::Tracker do
     end
 
     it 'tracks history for nested embedded documents in parent' do
-      p = Parent.new(name: 'bowser')
-      p.child = Child.new(name: 'todd')
-      p.save!
-      expect(p.history_tracks.length).to eq(1)
-      change = p.history_tracks.last
+      parent = Parent.new(name: 'bowser')
+      parent.child = Child.new(name: 'todd')
+      parent.save!
+      expect(parent.history_tracks.length).to eq(1)
+      change = parent.history_tracks.last
       aggregate_failures do
         expect(change.modified['name']).to eq('bowser')
         expect(change.modified['child']['name']).to eq('todd')
       end
 
-      p.update_attributes(name: 'brow')
-      expect(p.history_tracks.length).to eq(2)
+      parent.update_attributes(name: 'brow')
+      expect(parent.history_tracks.length).to eq(2)
 
-      p.child.name = 'mario'
-      p.save!
-      expect(p.history_tracks.length).to eq(3)
-      require 'byebug'
+      parent.child.name = 'mario'
+      parent.save!
+      expect(parent.history_tracks.length).to eq(3)
+
       aggregate_failures do
-        expect(p.history_tracks.last.original['child']['name']).to eq('todd')
-        expect(p.history_tracks.last.modified['child']['name']).to eq('mario')
+        track = parent.history_tracks.last
+        expect(track.original['child']['name']).to eq('todd')
+        expect(track.modified['child']['name']).to eq('mario')
       end
     end
   end

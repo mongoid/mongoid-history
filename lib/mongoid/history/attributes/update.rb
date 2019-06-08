@@ -14,8 +14,6 @@ module Mongoid
         # @return [Hash<String, ?>] Hash of changes
         #   ? can be either a pair or a hash for embedded documents
         def attributes
-          require 'byebug'
-          byebug
           changes_from_parent.deep_merge(changes_from_children)
         end
 
@@ -42,6 +40,10 @@ module Mongoid
           embeds_one_changes_from_embedded_documents
         end
 
+        # @example for Parent has_one child's name changed from "todd" to "mario"
+        #
+        #   {"child"=>{"name"=>["todd", "mario"]}}
+        #
         # @return [Hash<String, Array<?,?>] changes of embeds_ones from embedded documents
         def embeds_one_changes_from_embedded_documents
           embedded_doc_changes = {}
@@ -52,10 +54,9 @@ module Mongoid
             rel = aliased_fields.key(rel) || rel
             obj = trackable.send(rel)
             next if !obj || (obj.respond_to?(paranoia_field) && obj.public_send(paranoia_field).present?)
-            embedded_doc_field_changes = obj.changes.map do |k,v|
-              [{ k => v.first }, { k => v.last }]
+            embedded_doc_field_changes = obj.changes.each do |k,v|
+              embedded_doc_changes["#{rel}.#{k}"] = [v.first, v.last]
             end
-            embedded_doc_changes[rel] = embedded_doc_field_changes if embedded_doc_field_changes.any?
           end
           embedded_doc_changes
         end
@@ -72,7 +73,6 @@ module Mongoid
           modified_value = value[1][paranoia_field].present? ? {} : format_embeds_one_relation(relation, value[1])
           return if original_value == modified_value
           [original_value, modified_value]
-          byebug
           { relation => [original_value, modified_value] }
         end
 
