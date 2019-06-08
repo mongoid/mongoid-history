@@ -294,7 +294,7 @@ module Mongoid
         # @return [Hash<String, ?>]
         def expand_nested_document_key_value(document_key, value)
           expanded_key = value
-          document_key.split('.').reverse.each do |key|
+          document_key.to_s.split('.').reverse.each do |key|
             expanded_key = { key => expanded_key }
           end
           expanded_key
