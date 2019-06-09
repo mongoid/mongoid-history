@@ -2,7 +2,7 @@ module Mongoid
   module History
     module Attributes
       class Update < ::Mongoid::History::Attributes::Base
-        # @example
+        # @example when both an attribute `foo` and a child's attribute `nested_bar.baz` are changed
         #
         #   {
         #     'foo' => ['foo_before_changes', 'foo_after_changes']
@@ -38,9 +38,16 @@ module Mongoid
           embeds_one_changes_from_embedded_documents
         end
 
-        # @example for Parent has_one child's name changed from "todd" to "mario"
+        # Retrieve the list of changes applied directly to the nested documents
         #
-        #   {"child"=>{"name"=>["todd", "mario"]}}
+        # @example when a child's name is changed from "todd" to "mario"
+        #
+        #   child = Child.new(name: 'todd')
+        #   Parent.create(child: child)
+        #   child.name = "Mario"
+        #
+        #   embeds_one_changes_from_embedded_documents # when called from "Parent"
+        #   # => { "child.name"=>["todd", "mario"] }
         #
         # @return [Hash<String, Array<(?,?)>] changes of embeds_ones from embedded documents
         def embeds_one_changes_from_embedded_documents
@@ -52,7 +59,8 @@ module Mongoid
             rel = aliased_fields.key(rel) || rel
             obj = trackable.send(rel)
             next if !obj || (obj.respond_to?(paranoia_field) && obj.public_send(paranoia_field).present?)
-            embedded_doc_field_changes = obj.changes.each do |k,v|
+
+            obj.changes.each do |k, v|
               embedded_doc_changes["#{rel}.#{k}"] = [v.first, v.last]
             end
           end
@@ -70,7 +78,7 @@ module Mongoid
           original_value = value[0][paranoia_field].present? ? {} : format_embeds_one_relation(relation, value[0])
           modified_value = value[1][paranoia_field].present? ? {} : format_embeds_one_relation(relation, value[1])
           return if original_value == modified_value
-          [original_value, modified_value]
+
           { relation => [original_value, modified_value] }
         end
 
@@ -87,6 +95,7 @@ module Mongoid
           modified_value = value[1].reject { |rel| rel[paranoia_field].present? }
                                    .map { |v_attrs| format_embeds_many_relation(relation, v_attrs) }
           return if original_value == modified_value
+
           { relation => [original_value, modified_value] }
         end
       end
