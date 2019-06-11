@@ -263,16 +263,41 @@ module Mongoid
           @history_tracks = nil
         end
 
+        # Transform hash of pair of changes into an `original` and `modified` hash
+        # Nested document keys (key name with dots) are expanded
+        #
+        # @param [Hash<Array>] changes
+        #
+        # @return [Array<Hash<?>,Hash<?>>] <description>
         def transform_changes(changes)
           original = {}
           modified = {}
-          changes.each_pair do |k, v|
-            o, m = v
-            original[k] = o unless o.nil?
-            modified[k] = m unless m.nil?
+          changes.each_pair do |k, modification_pair|
+            o, m = modification_pair
+            original.deep_merge!(expand_nested_document_key_value(k, o)) unless o.nil?
+            modified.deep_merge!(expand_nested_document_key_value(k, m)) unless m.nil?
           end
 
           [original, modified]
+        end
+
+        # Handle nested document tracking of changes
+        #
+        # @example
+        #
+        #   expand_nested_document_key('embedded.document.changed_field', 'old'])
+        #   #=> { 'embedded' => {'document' => { 'changed_field' => 'old' }}}
+        #
+        # @param [String] document_key key with dots
+        # @param [?] value
+        #
+        # @return [Hash<String, ?>]
+        def expand_nested_document_key_value(document_key, value)
+          expanded_key = value
+          document_key.to_s.split('.').reverse.each do |key|
+            expanded_key = { key => expanded_key }
+          end
+          expanded_key
         end
 
         def increment_current_version
@@ -290,7 +315,10 @@ module Mongoid
         def track_history_for_action(action)
           if track_history_for_action?(action)
             current_version = increment_current_version
-            last_track = self.class.tracker_class.create!(history_tracker_attributes(action.to_sym).merge(version: current_version, action: action.to_s, trackable: self))
+            last_track = self.class.tracker_class.create!(
+              history_tracker_attributes(action.to_sym)
+              .merge(version: current_version, action: action.to_s, trackable: self)
+            )
           end
 
           clear_trackable_memoization
