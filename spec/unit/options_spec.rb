@@ -275,6 +275,15 @@ describe Mongoid::History::Options do
               it { expect(subject[:relations][:embeds_many]).to eq('emb_threes' => %w[_id fmb]) }
             end
 
+            context 'with fields, and multiple embeds_one, and embeds_many relations' do
+              let(:options) { { on: [:foo, :bar, :emb_two, { emb_threes: %i[f_em_foo f_em_bar], emb_fours: :f_em_baz }] } }
+              it 'should categorize fields and associations correctly' do
+                expect(subject[:fields]).to eq(%w[foo b])
+                expect(subject[:relations][:embeds_one]).to eq('emtw' => %w[_id f_em_baz])
+                expect(subject[:relations][:embeds_many]).to eq('emb_threes' => %w[_id f_em_foo fmb], 'emfs' => %w[_id f_em_baz])
+              end
+            end
+
             context 'with field alias' do
               let(:options) { { on: :bar } }
               it { expect(subject[:fields]).to eq %w[b] }

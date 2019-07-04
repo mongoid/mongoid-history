@@ -1,5 +1,6 @@
 ### 0.8.2 (Next)
 
+* [#233](https://github.com/mongoid/mongoid-history/pull/233): Bug fix-Track ALL embedded relations when used with fields and filtered attributes on embedded objects - [@jagdeepsingh](https://github.com/jagdeepsingh).
 * [#232](https://github.com/mongoid/mongoid-history/pull/232): Bug/187 track changes from embedded documents (not deeply nested) - [@Startouf](https://github.com/Startouf).
 * [#227](https://github.com/mongoid/mongoid-history/pull/227): Store options in inheritable class attributes - [@jnfeinstein](https://github.com/jnfeinstein).
 * [#229](https://github.com/mongoid/mongoid-history/pull/229), [#225](https://github.com/mongoid/mongoid-history/pull/225): Fixed inheritance of `history_trackable_options` - [@jnfeinstein](https://github.com/jnfeinstein).

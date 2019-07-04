@@ -95,10 +95,18 @@ module Mongoid
         @options[:relations] = { embeds_one: {}, embeds_many: {} }
 
         options[:on].each do |option|
-          field = get_database_field_name(option)
-          field_options = get_field_options(option)
-          categorize_tracked_option(field, field_options)
+          if option.is_a?(Hash)
+            option.each { |k, v| split_and_categorize(k => v) }
+          else
+            split_and_categorize(option)
+          end
         end
+      end
+
+      def split_and_categorize(field_and_options)
+        field = get_database_field_name(field_and_options)
+        field_options = get_field_options(field_and_options)
+        categorize_tracked_option(field, field_options)
       end
 
       # Returns the database_field_name key for tracked option
