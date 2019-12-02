@@ -1,3 +1,7 @@
+### 0.8.3 (Next)
+
+* Your contribution here.
+
 ### 0.8.2 (2019/12/02)
 
 * [#233](https://github.com/mongoid/mongoid-history/pull/233): Bug fix-Track ALL embedded relations when used with fields and filtered attributes on embedded objects - [@jagdeepsingh](https://github.com/jagdeepsingh).
