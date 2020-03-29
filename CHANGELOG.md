@@ -1,6 +1,7 @@
 ### 0.8.3 (Next)
 
 * Your contribution here.
+* [#236](https://github.com/mongoid/mongoid-history/pull/236): Fix Ruby 2.7 keyword argument warnings - [@vasilysn](https://github.com/vasilysn).
 
 ### 0.8.2 (2019/12/02)
 
