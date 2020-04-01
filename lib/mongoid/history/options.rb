@@ -13,13 +13,12 @@ module Mongoid
       end
 
       def prepared
-        @prepared ||= begin
-          @prepared = options.dup
-          prepare_skipped_fields
-          prepare_formatted_fields
-          parse_tracked_fields_and_relations
-          @prepared
-        end
+        return @prepared if @prepared
+        @prepared = options.dup
+        prepare_skipped_fields
+        prepare_formatted_fields
+        parse_tracked_fields_and_relations
+        @prepared
       end
 
       private
