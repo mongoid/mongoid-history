@@ -836,4 +836,25 @@ describe Mongoid::History::Trackable do
       m.save!
     end
   end
+
+  context "subclassing a #{described_class}" do
+    before :each do
+      MyModel.track_history(track_destroy: false)
+
+      class MySubclassModel < MyModel
+      end
+    end
+
+    after :each do
+      Object.send(:remove_const, :MySubclassModel)
+    end
+
+    describe '.inherited' do
+      it 'creates new history options for the subclass' do
+        options = MySubclassModel.mongoid_history_options
+        expect(options.trackable).to eq MySubclassModel
+        expect(options.options).to eq MyModel.mongoid_history_options.options
+      end
+    end
+  end
 end

@@ -84,6 +84,12 @@ describe Mongoid::History::Options do
   end
 
   describe '#parse' do
+    it 'does not mutate the original options' do
+      original_options = service.options.dup
+      service.prepared
+      expect(service.options).to eq original_options
+    end
+
     describe '#default_options' do
       let(:expected_options) do
         {
