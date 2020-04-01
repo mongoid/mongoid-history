@@ -559,7 +559,11 @@ module Mongoid
           @tracked_fields = nil
           @tracked_embeds_one = nil
           @tracked_embeds_many = nil
-          @obfuscated_fields = nil
+        end
+
+        def inherited(subclass)
+          super
+          subclass.mongoid_history_options = Mongoid::History::Options.new(subclass, mongoid_history_options.options)
         end
       end
     end

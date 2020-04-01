@@ -7,12 +7,16 @@ describe Mongoid::History::Tracker do
       include Mongoid::Timestamps
       include Mongoid::History::Trackable
 
+      track_history
+
       field :body
 
-      track_history on: [:body]
+      # force preparation of options
+      history_trackable_options
     end
 
     class Prompt < Element
+      field :head
     end
 
     class User
@@ -31,11 +35,13 @@ describe Mongoid::History::Tracker do
   it 'tracks subclass create and update' do
     prompt = Prompt.new(modifier: user)
     expect { prompt.save! }.to change(Tracker, :count).by(1)
-    expect { prompt.update_attributes!(body: 'one') }.to change(Tracker, :count).by(1)
+    expect { prompt.update_attributes!(body: 'one', head: 'two') }.to change(Tracker, :count).by(1)
     prompt.undo! user
     expect(prompt.body).to be_blank
+    expect(prompt.head).to be_blank
     prompt.redo! user, 2
     expect(prompt.body).to eq('one')
+    expect(prompt.head).to eq('two')
     expect { prompt.destroy }.to change(Tracker, :count).by(1)
   end
 end

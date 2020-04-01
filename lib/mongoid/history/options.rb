@@ -13,29 +13,28 @@ module Mongoid
       end
 
       def prepared
-        @prepared ||= begin
-          prepare_skipped_fields
-          prepare_formatted_fields
-          parse_tracked_fields_and_relations
-          options
-        end
+        return @prepared if @prepared
+        @prepared = options.dup
+        prepare_skipped_fields
+        prepare_formatted_fields
+        parse_tracked_fields_and_relations
+        @prepared
       end
 
       private
 
       def default_options
-        @default_options ||=
-          { on: :all,
-            except: %i[created_at updated_at],
-            tracker_class_name: nil,
-            modifier_field: :modifier,
-            version_field: :version,
-            changes_method: :changes,
-            scope: scope,
-            track_create: true,
-            track_update: true,
-            track_destroy: true,
-            format: nil }
+        { on: :all,
+          except: %i[created_at updated_at],
+          tracker_class_name: nil,
+          modifier_field: :modifier,
+          version_field: :version,
+          changes_method: :changes,
+          scope: scope,
+          track_create: true,
+          track_update: true,
+          track_destroy: true,
+          format: nil }
       end
 
       # Sets the :except attributes and relations in `options` to be an [ Array <String> ]
@@ -43,15 +42,15 @@ module Mongoid
       # Removes the `nil` and duplicate entries from skipped attributes/relations list
       def prepare_skipped_fields
         # normalize :except fields to an array of database field strings
-        @options[:except] = Array(options[:except])
-        @options[:except] = options[:except].map { |field| trackable.database_field_name(field) }.compact.uniq
+        @prepared[:except] = Array(@prepared[:except])
+        @prepared[:except] = @prepared[:except].map { |field| trackable.database_field_name(field) }.compact.uniq
       end
 
       def prepare_formatted_fields
         formats = {}
 
-        if options[:format].class == Hash
-          options[:format].each do |field, format|
+        if @prepared[:format].class == Hash
+          @prepared[:format].each do |field, format|
             next if field.nil?
 
             field = trackable.database_field_name(field)
@@ -68,7 +67,7 @@ module Mongoid
           end
         end
 
-        options[:format] = formats
+        @prepared[:format] = formats
       end
 
       def parse_tracked_fields_and_relations
@@ -76,25 +75,25 @@ module Mongoid
         # when `posts: [:id, :title]`, then it will convert it to `[[:posts, [:id, :title]]]`
         # when `:foo`, then `[:foo]`
         # when `[:foo, { posts: [:id, :title] }]`, then return as is
-        @options[:on] = Array(options[:on])
+        @prepared[:on] = Array(@prepared[:on])
 
-        @options[:on] = options[:on].map { |opt| opt == :all ? :fields : opt }
+        @prepared[:on] = @prepared[:on].map { |opt| opt == :all ? :fields : opt }
 
-        if options[:on].include?(:fields)
-          @options[:on] = options[:on].reject { |opt| opt == :fields }
-          @options[:on] = options[:on] | trackable.fields.keys.map(&:to_sym) - reserved_fields.map(&:to_sym)
+        if @prepared[:on].include?(:fields)
+          @prepared[:on] = @prepared[:on].reject { |opt| opt == :fields }
+          @prepared[:on] = @prepared[:on] | trackable.fields.keys.map(&:to_sym) - reserved_fields.map(&:to_sym)
         end
 
-        if options[:on].include?(:embedded_relations)
-          @options[:on] = options[:on].reject { |opt| opt == :embedded_relations }
-          @options[:on] = options[:on] | trackable.embedded_relations.keys
+        if @prepared[:on].include?(:embedded_relations)
+          @prepared[:on] = @prepared[:on].reject { |opt| opt == :embedded_relations }
+          @prepared[:on] = @prepared[:on] | trackable.embedded_relations.keys
         end
 
-        @options[:fields] = []
-        @options[:dynamic] = []
-        @options[:relations] = { embeds_one: {}, embeds_many: {} }
+        @prepared[:fields] = []
+        @prepared[:dynamic] = []
+        @prepared[:relations] = { embeds_one: {}, embeds_many: {} }
 
-        options[:on].each do |option|
+        @prepared[:on].each do |option|
           if option.is_a?(Hash)
             option.each { |k, v| split_and_categorize(k => v) }
           else
@@ -145,7 +144,7 @@ module Mongoid
       # @param [ String ] field The database field name of field or relation to track
       # @param [ nil | Array <String | Symbol> ] field_options The tracked fields for embedded relations
       def categorize_tracked_option(field, field_options = nil)
-        return if options[:except].include?(field)
+        return if @prepared[:except].include?(field)
         return if reserved_fields.include?(field)
 
         field_options = Array(field_options)
@@ -155,23 +154,23 @@ module Mongoid
         elsif trackable.embeds_many?(field)
           track_relation(field, :embeds_many, field_options)
         elsif trackable.fields.keys.include?(field)
-          @options[:fields] << field
+          @prepared[:fields] << field
         else
-          @options[:dynamic] << field
+          @prepared[:dynamic] << field
         end
       end
 
       def track_relation(field, kind, field_options)
         relation_class = trackable.relation_class_of(field)
-        @options[:relations][kind][field] = if field_options.blank?
-                                              relation_class.fields.keys
-                                            else
-                                              %w[_id] | field_options.map { |opt| relation_class.database_field_name(opt) }
-                                               end
+        @prepared[:relations][kind][field] = if field_options.blank?
+                                               relation_class.fields.keys
+                                             else
+                                               %w[_id] | field_options.map { |opt| relation_class.database_field_name(opt) }
+                                             end
       end
 
       def reserved_fields
-        @reserved_fields ||= ['_id', '_type', options[:version_field].to_s, "#{options[:modifier_field]}_id"]
+        @reserved_fields ||= ['_id', '_type', @prepared[:version_field].to_s, "#{@prepared[:modifier_field]}_id"]
       end
     end
   end
