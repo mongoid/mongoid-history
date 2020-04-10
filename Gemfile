@@ -29,6 +29,7 @@ group :development, :test do
 end
 
 group :test do
+  gem 'benchmark-ips', require: false
   gem 'coveralls'
   gem 'gem-release'
   gem 'mongoid-danger', '~> 0.1.0', require: false
