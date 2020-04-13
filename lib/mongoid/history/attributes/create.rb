@@ -4,14 +4,9 @@ module Mongoid
       class Create < ::Mongoid::History::Attributes::Base
         def attributes
           @attributes = {}
-          trackable.attributes.each do |k, v|
+          changes.each do |k, v|
             next unless trackable_class.tracked_field?(k, :create)
-            modified = if changes[k]
-                         changes[k].class == Array ? changes[k].last : changes[k]
-                       else
-                         v
-                       end
-            @attributes[k] = [nil, format_field(k, modified)]
+            @attributes[k] = format_field(k, v)
           end
           insert_embeds_one_changes
           insert_embeds_many_changes

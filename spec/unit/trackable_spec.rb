@@ -412,7 +412,7 @@ describe Mongoid::History::Trackable do
             track_history on: :key, changes_method: :my_changes, track_create: true
 
             def my_changes
-              changes.merge('key' => "Save history-#{key}")
+              changes.merge('key' => ["Save history-#{key}", "Save history-#{key}"])
             end
           end
         end
@@ -813,7 +813,7 @@ describe Mongoid::History::Trackable do
         track_history on: :key, changes_method: :my_changes, track_create: true
 
         def my_changes
-          changes.merge('key' => "Save history-#{key}")
+          changes.merge('key' => ["Save history-#{key}", "Save history-#{key}"])
         end
       end
 
