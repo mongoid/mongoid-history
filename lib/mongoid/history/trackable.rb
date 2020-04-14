@@ -52,11 +52,20 @@ module Mongoid
           Mongoid::Compatibility::Version.mongoid3? || (self < Mongoid::Attributes::Dynamic).present?
         end
 
-        def disable_tracking(&_block)
-          Mongoid::History.store[track_history_flag] = false
-          yield
+        def disable_tracking(&block)
+          with_tracking(false, &block)
+        end
+
+        def enable_tracking(&block)
+          with_tracking(true, &block)
+        end
+
+        def with_tracking(state)
+          original_flag = Mongoid::History.store[track_history_flag]
+          Mongoid::History.store[track_history_flag] = state
+          yield if block_given?
         ensure
-          Mongoid::History.store[track_history_flag] = true
+          Mongoid::History.store[track_history_flag] = original_flag if block_given?
         end
 
         def track_history_flag

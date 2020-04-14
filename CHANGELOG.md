@@ -4,6 +4,7 @@
 * [#236](https://github.com/mongoid/mongoid-history/pull/236): Fix Ruby 2.7 keyword argument warnings - [@vasilysn](https://github.com/vasilysn).
 * [#237](https://github.com/mongoid/mongoid-history/pull/237): Fix tracking subclasses with additional fields - [@getaroom](https://github.com/getaroom).
 * [#239](https://github.com/mongoid/mongoid-history/pull/239): Optimize `modified_attributes_for_create` 6-7x - [@getaroom](https://github.com/getaroom).
+* [#240](https://github.com/mongoid/mongoid-history/pull/240): `Mongoid::History.disable` and `disable_tracking` now restore the original state if given a block and can be run without a block plus `Mongoid::History.enable` and `enable_tracking` have been added - [@getaroom](https://github.com/getaroom).
 
 ### 0.8.2 (2019/12/02)
 
