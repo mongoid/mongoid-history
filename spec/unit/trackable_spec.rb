@@ -346,14 +346,14 @@ describe Mongoid::History::Trackable do
           end
 
           it 'should stay disabled if disable_tracking called without a block' do
-            MyModel.disable_tracking
+            MyModel.disable_tracking!
             expect(Mongoid::History.enabled?).to eq(true)
             expect(MyModel.new.track_history?).to eq(false)
           end
 
           it 'should stay enabled if enable_tracking called without a block' do
             MyModel.disable_tracking do
-              MyModel.enable_tracking
+              MyModel.enable_tracking!
               expect(Mongoid::History.enabled?).to eq(true)
               expect(MyModel.new.track_history?).to eq(true)
             end
@@ -461,14 +461,14 @@ describe Mongoid::History::Trackable do
           end
 
           it 'should stay disabled if disable called without a block' do
-            Mongoid::History.disable
+            Mongoid::History.disable!
             expect(Mongoid::History.enabled?).to eq(false)
             expect(MyModel.new.track_history?).to eq(false)
           end
 
           it 'should stay enabled if enable called without a block' do
             Mongoid::History.disable do
-              Mongoid::History.enable
+              Mongoid::History.enable!
               expect(Mongoid::History.enabled?).to eq(true)
               expect(MyModel.new.track_history?).to eq(true)
             end

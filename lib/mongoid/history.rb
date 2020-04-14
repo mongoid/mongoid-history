@@ -35,6 +35,9 @@ module Mongoid
         store[GLOBAL_TRACK_HISTORY_FLAG] = original_flag if block_given?
       end
 
+      alias disable! disable
+      alias enable! enable
+
       def enabled?
         store[GLOBAL_TRACK_HISTORY_FLAG] != false
       end

@@ -68,6 +68,9 @@ module Mongoid
           Mongoid::History.store[track_history_flag] = original_flag if block_given?
         end
 
+        alias disable_tracking! disable_tracking
+        alias enable_tracking! enable_tracking
+
         def track_history_flag
           "mongoid_history_#{name.underscore}_trackable_enabled".to_sym
         end

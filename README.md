@@ -150,7 +150,7 @@ Comment.disable_tracking do
 end
 
 # disable tracking for comments by default
-Comment.disable_tracking
+Comment.disable_tracking!
 
 # enable tracking for comments within a block
 Comment.enable_tracking do
@@ -158,7 +158,7 @@ Comment.enable_tracking do
 end
 
 # renable tracking for comments by default
-Comment.enable_tracking
+Comment.enable_tracking!
 
 # globally disable all history tracking within a block
 Mongoid::History.disable do
@@ -167,7 +167,7 @@ Mongoid::History.disable do
 end
 
 # globally disable all history tracking by default
-Mongoid::History.disable
+Mongoid::History.disable!
 
 # globally enable all history tracking within a block
 Mongoid::History.enable do
@@ -176,7 +176,7 @@ Mongoid::History.enable do
 end
 
 # globally renable all history tracking by default
-Mongoid::History.enable
+Mongoid::History.enable!
 ```
 
 You may want to track changes on all fields.
