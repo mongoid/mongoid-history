@@ -149,11 +149,34 @@ Comment.disable_tracking do
   comment.update_attributes(:title => "Test 3")
 end
 
-# globally disable all history tracking
+# disable tracking for comments by default
+Comment.disable_tracking!
+
+# enable tracking for comments within a block
+Comment.enable_tracking do
+  comment.update_attributes(:title => "Test 3")
+end
+
+# renable tracking for comments by default
+Comment.enable_tracking!
+
+# globally disable all history tracking within a block
 Mongoid::History.disable do
   comment.update_attributes(:title => "Test 3")
   user.update_attributes(:name => "Eddie Van Halen")
 end
+
+# globally disable all history tracking by default
+Mongoid::History.disable!
+
+# globally enable all history tracking within a block
+Mongoid::History.enable do
+  comment.update_attributes(:title => "Test 3")
+  user.update_attributes(:name => "Eddie Van Halen")
+end
+
+# globally renable all history tracking by default
+Mongoid::History.enable!
 ```
 
 You may want to track changes on all fields.

@@ -270,6 +270,11 @@ describe Mongoid::History::Trackable do
 
     describe '#track_history?' do
       shared_examples_for 'history tracking' do
+        after do
+          Mongoid::History.store[Mongoid::History::GLOBAL_TRACK_HISTORY_FLAG] = true
+          Mongoid::History.store[MyModel.track_history_flag] = true
+        end
+
         context 'when tracking is globally enabled' do
           it 'should be enabled on the current thread' do
             expect(Mongoid::History.enabled?).to eq(true)
@@ -283,7 +288,40 @@ describe Mongoid::History::Trackable do
             end
           end
 
-          it 'should be rescued if an exception occurs' do
+          it 'should be enabled within enable_tracking' do
+            MyModel.disable_tracking do
+              MyModel.enable_tracking do
+                expect(Mongoid::History.enabled?).to eq(true)
+                expect(MyModel.new.track_history?).to eq(true)
+              end
+            end
+          end
+
+          it 'should still be disabled after completing a nested disable_tracking' do
+            MyModel.disable_tracking do
+              MyModel.disable_tracking {}
+              expect(Mongoid::History.enabled?).to eq(true)
+              expect(MyModel.new.track_history?).to eq(false)
+            end
+          end
+
+          it 'should still be enabled after completing a nested enable_tracking' do
+            MyModel.enable_tracking do
+              MyModel.enable_tracking {}
+              expect(Mongoid::History.enabled?).to eq(true)
+              expect(MyModel.new.track_history?).to eq(true)
+            end
+          end
+
+          it 'should restore the original state after completing enable_tracking' do
+            MyModel.disable_tracking do
+              MyModel.enable_tracking {}
+              expect(Mongoid::History.enabled?).to eq(true)
+              expect(MyModel.new.track_history?).to eq(false)
+            end
+          end
+
+          it 'should be rescued if an exception occurs in disable_tracking' do
             begin
               MyModel.disable_tracking do
                 raise 'exception'
@@ -292,6 +330,33 @@ describe Mongoid::History::Trackable do
             end
             expect(Mongoid::History.enabled?).to eq(true)
             expect(MyModel.new.track_history?).to eq(true)
+          end
+
+          it 'should be rescued if an exception occurs in enable_tracking' do
+            MyModel.disable_tracking do
+              begin
+                MyModel.enable_tracking do
+                  raise 'exception'
+                end
+              rescue
+              end
+              expect(Mongoid::History.enabled?).to eq(true)
+              expect(MyModel.new.track_history?).to eq(false)
+            end
+          end
+
+          it 'should stay disabled if disable_tracking called without a block' do
+            MyModel.disable_tracking!
+            expect(Mongoid::History.enabled?).to eq(true)
+            expect(MyModel.new.track_history?).to eq(false)
+          end
+
+          it 'should stay enabled if enable_tracking called without a block' do
+            MyModel.disable_tracking do
+              MyModel.enable_tracking!
+              expect(Mongoid::History.enabled?).to eq(true)
+              expect(MyModel.new.track_history?).to eq(true)
+            end
           end
 
           context 'with multiple classes' do
@@ -317,11 +382,46 @@ describe Mongoid::History::Trackable do
           end
         end
 
-        context 'when tracking is globally disabled' do
+        context 'when changing global tracking' do
           it 'should be disabled by the global disablement' do
             Mongoid::History.disable do
               expect(Mongoid::History.enabled?).to eq(false)
               expect(MyModel.new.track_history?).to eq(false)
+            end
+          end
+
+          it 'should be enabled by the global enablement' do
+            Mongoid::History.disable do
+              Mongoid::History.enable do
+                expect(Mongoid::History.enabled?).to eq(true)
+                expect(MyModel.new.track_history?).to eq(true)
+              end
+            end
+          end
+
+          it 'should restore the original state after completing enable' do
+            Mongoid::History.disable do
+              Mongoid::History.enable {}
+              expect(Mongoid::History.enabled?).to eq(false)
+              expect(MyModel.new.track_history?).to eq(false)
+            end
+          end
+
+          it 'should still be disabled after completing a nested disable' do
+            Mongoid::History.disable do
+              Mongoid::History.disable {}
+              expect(Mongoid::History.enabled?).to eq(false)
+              expect(MyModel.new.track_history?).to eq(false)
+            end
+          end
+
+          it 'should still be enabled after completing a nested enable' do
+            Mongoid::History.disable do
+              Mongoid::History.enable do
+                Mongoid::History.enable {}
+                expect(Mongoid::History.enabled?).to eq(true)
+                expect(MyModel.new.track_history?).to eq(true)
+              end
             end
           end
 
@@ -334,7 +434,7 @@ describe Mongoid::History::Trackable do
             end
           end
 
-          it 'should be rescued if an exception occurs' do
+          it 'should be rescued if an exception occurs in disable' do
             Mongoid::History.disable do
               begin
                 MyModel.disable_tracking do
@@ -344,6 +444,33 @@ describe Mongoid::History::Trackable do
               end
               expect(Mongoid::History.enabled?).to eq(false)
               expect(MyModel.new.track_history?).to eq(false)
+            end
+          end
+
+          it 'should be rescued if an exception occurs in enable' do
+            Mongoid::History.disable do
+              begin
+                Mongoid::History.enable do
+                  raise 'exception'
+                end
+              rescue
+              end
+              expect(Mongoid::History.enabled?).to eq(false)
+              expect(MyModel.new.track_history?).to eq(false)
+            end
+          end
+
+          it 'should stay disabled if disable called without a block' do
+            Mongoid::History.disable!
+            expect(Mongoid::History.enabled?).to eq(false)
+            expect(MyModel.new.track_history?).to eq(false)
+          end
+
+          it 'should stay enabled if enable called without a block' do
+            Mongoid::History.disable do
+              Mongoid::History.enable!
+              expect(Mongoid::History.enabled?).to eq(true)
+              expect(MyModel.new.track_history?).to eq(true)
             end
           end
 
@@ -361,7 +488,7 @@ describe Mongoid::History::Trackable do
               Object.send(:remove_const, :MyModel2)
             end
 
-            it 'should be disabled only for the class that calls disable_tracking' do
+            it 'should be disabled for all classes' do
               Mongoid::History.disable do
                 MyModel.disable_tracking do
                   expect(Mongoid::History.enabled?).to eq(false)
