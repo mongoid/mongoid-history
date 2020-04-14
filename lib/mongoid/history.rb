@@ -19,17 +19,17 @@ module Mongoid
       attr_accessor :modifier_class_name
       attr_accessor :current_user_method
 
-      def disable(&block)
-        track(false, &block)
-      end
-
-      def enable(&block)
-        track(true, &block)
-      end
-
-      def track(state)
+      def disable
         original_flag = store[GLOBAL_TRACK_HISTORY_FLAG]
-        store[GLOBAL_TRACK_HISTORY_FLAG] = state
+        store[GLOBAL_TRACK_HISTORY_FLAG] = false
+        yield if block_given?
+      ensure
+        store[GLOBAL_TRACK_HISTORY_FLAG] = original_flag if block_given?
+      end
+
+      def enable
+        original_flag = store[GLOBAL_TRACK_HISTORY_FLAG]
+        store[GLOBAL_TRACK_HISTORY_FLAG] = true
         yield if block_given?
       ensure
         store[GLOBAL_TRACK_HISTORY_FLAG] = original_flag if block_given?
