@@ -539,7 +539,7 @@ For more examples, check out [spec/integration/integration_spec.rb](spec/integra
 
 You can have different trackers for different classes like so.
 
-```
+``` ruby
 class First
   include Mongoid::Document
   include Mongoid::History::Trackable
