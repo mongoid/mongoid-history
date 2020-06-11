@@ -5,6 +5,8 @@ gemspec
 case version = ENV['MONGOID_VERSION'] || '~> 7.0.0'
 when 'HEAD'
   gem 'mongoid', github: 'mongodb/mongoid'
+when /\b71/
+  gem 'mongoid', '~> 7.1.0'
 when /\b7/
   gem 'mongoid', '~> 7.0.0'
 when /\b6/
