@@ -1,6 +1,7 @@
 ### 0.8.3 (Next)
 
 * Your contribution here.
+* [#243](https://github.com/mongoid/mongoid-history/pull/243): Support Mongoid 7.1 - [@p](https://github.com/p).
 * [#236](https://github.com/mongoid/mongoid-history/pull/236): Fix Ruby 2.7 keyword argument warnings - [@vasilysn](https://github.com/vasilysn).
 * [#237](https://github.com/mongoid/mongoid-history/pull/237): Fix tracking subclasses with additional fields - [@getaroom](https://github.com/getaroom).
 * [#239](https://github.com/mongoid/mongoid-history/pull/239): Optimize `modified_attributes_for_create` 6-7x - [@getaroom](https://github.com/getaroom).
