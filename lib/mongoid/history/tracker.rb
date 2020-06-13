@@ -95,7 +95,7 @@ module Mongoid
         @tracked_changes ||= (modified.keys | original.keys).inject(HashWithIndifferentAccess.new) do |h, k|
           h[k] = { from: original[k], to: modified[k] }.delete_if { |_, vv| vv.nil? }
           h
-        end.delete_if { |k, v| v.blank? || !trackable_parent_class.tracked?(k) }
+        end.delete_if { |k, v| v.blank? } #|| !trackable_parent_class.tracked?(k) }
       end
 
       # Outputs summary of edit actions performed: :add, :modify, :remove, or :array.
