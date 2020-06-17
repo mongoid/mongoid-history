@@ -603,6 +603,6 @@ You're encouraged to contribute to this library. See [CONTRIBUTING](CONTRIBUTING
 Copyright
 ---------
 
-Copyright (c) 2011-2018 Aaron Qian and Contributors.
+Copyright (c) 2011-2020 Aaron Qian and Contributors.
 
 MIT License. See [LICENSE.txt](LICENSE.txt) for further details.

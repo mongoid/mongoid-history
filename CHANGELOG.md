@@ -2,7 +2,7 @@
 
 * Your contribution here.
 
-### 0.8.3 (2020/05/17)
+### 0.8.3 (2020/06/17)
 
 * [#236](https://github.com/mongoid/mongoid-history/pull/236): Fix Ruby 2.7 keyword argument warnings - [@vasilysn](https://github.com/vasilysn).
 * [#237](https://github.com/mongoid/mongoid-history/pull/237): Fix tracking subclasses with additional fields - [@getaroom](https://github.com/getaroom).
