@@ -19,6 +19,7 @@ module Mongoid
 
         def changes_from_parent
           parent_changes = {}
+          puts changes.inspect.red
           changes.each do |k, v|
             change_value = begin
               if trackable_class.tracked_embeds_one?(k)
@@ -90,8 +91,14 @@ module Mongoid
           relation = trackable_class.database_field_name(relation)
           relation_class = trackable_class.relation_class_of(relation)
           paranoia_field = Mongoid::History.trackable_class_settings(relation_class)[:paranoia_field]
-          original_value = value[0].reject { |rel| rel[paranoia_field].present? }
-                                   .map { |v_attrs| format_embeds_many_relation(relation, v_attrs) }
+
+          # DVB only process if the original value of the embedded relation is not nil
+          original_value = if value[0].present?
+            value[0].reject { |rel| rel[paranoia_field].present? }
+              .map { |v_attrs| format_embeds_many_relation(relation, v_attrs) }
+            else
+              nil
+            end
           modified_value = value[1].reject { |rel| rel[paranoia_field].present? }
                                    .map { |v_attrs| format_embeds_many_relation(relation, v_attrs) }
           return if original_value == modified_value
