@@ -19,7 +19,6 @@ module Mongoid
 
         def changes_from_parent
           parent_changes = {}
-          puts changes.inspect.red
           changes.each do |k, v|
             change_value = begin
               if trackable_class.tracked_embeds_one?(k)
