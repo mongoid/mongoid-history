@@ -139,6 +139,10 @@ module Mongoid
 
         private
 
+        def ancestor_flagged_for_destroy?(doc)
+          doc && doc.flagged_for_destroy? || ancestor_flagged_for_destroy?(doc._parent)
+        end
+
         def get_versions_criteria(options_or_version)
           if options_or_version.is_a? Hash
             options = options_or_version
@@ -321,7 +325,7 @@ module Mongoid
         protected
 
         def track_history_for_action?(action)
-          track_history? && !(action.to_sym == :update && modified_attributes_for_update.blank?)
+          track_history? && !(action.to_sym == :update && modified_attributes_for_update.blank?) && !ancestor_flagged_for_destroy?(_parent)
         end
 
         def track_history_for_action(action)

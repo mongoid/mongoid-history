@@ -15,6 +15,26 @@ describe Mongoid::History::Trackable do
       include Mongoid::Attributes::Dynamic unless Mongoid::Compatibility::Version.mongoid3?
     end
 
+    class MyDeeplyNestedModel
+      include Mongoid::Document
+      include Mongoid::History::Trackable
+
+      embeds_many :children, class_name: 'MyNestableModel', cascade_callbacks: true # The problem only occurs if callbacks are cascaded
+      accepts_nested_attributes_for :children, allow_destroy: true
+      track_history modifier_field: nil
+    end
+
+    class MyNestableModel
+      include Mongoid::Document
+      include Mongoid::History::Trackable
+
+      embedded_in :parent, class_name: 'MyDeeplyNestedModel'
+      embeds_many :children, class_name: 'MyNestableModel', cascade_callbacks: true
+      accepts_nested_attributes_for :children, allow_destroy: true
+      field :name, type: String
+      track_history modifier_field: nil
+    end
+
     class HistoryTracker
       include Mongoid::History::Tracker
     end
@@ -29,6 +49,8 @@ describe Mongoid::History::Trackable do
     Object.send(:remove_const, :MyDynamicModel)
     Object.send(:remove_const, :HistoryTracker)
     Object.send(:remove_const, :User)
+    Object.send(:remove_const, :MyDeeplyNestedModel)
+    Object.send(:remove_const, :MyNestableModel)
   end
 
   let(:user) { User.create! }
@@ -866,6 +888,71 @@ describe Mongoid::History::Trackable do
       expect do
         expect { m.destroy }.to raise_error(StandardError)
       end.to change(Tracker, :count).by(0)
+    end
+
+    context 'with a deeply nested model' do
+      let(:m) do
+        MyDeeplyNestedModel.create!(
+          children: [
+            MyNestableModel.new(
+              name: 'grandparent',
+              children: [
+                MyNestableModel.new(
+                  name: 'parent 1',
+                  children: [
+                    MyNestableModel.new(name: 'child 1')
+                  ]
+                ),
+                MyNestableModel.new(
+                  name: 'parent 2',
+                  children: [
+                    MyNestableModel.new(name: 'child 2')
+                  ]
+                )
+              ]
+            )
+          ]
+        )
+      end
+
+      it 'does not corrupt embedded models' do
+        m.update_attributes(
+          'children_attributes' => [
+            {
+              'id' =>  m.children[0].id,
+              'name' => 'grandparent',
+              'children_attributes' => [
+                {
+                  'id' => m.children[0].children[0].id,
+                  '_destroy' => '0',
+                  'name' => 'parent 1',
+                  'children_attributes' => [
+                    {
+                      'id' => m.children[0].children[0].children[0].id,
+                      'name' => 'child 1'
+                    }
+                  ]
+                },
+                {
+                  'id' => m.children[0].children[1].id,
+                  '_destroy' => '1',
+                  'name' => 'parent 2',
+                  'children_attributes' => [
+                    {
+                      'id' => m.children[0].children[1].children[0].id,
+                      'name' => 'child 2'
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        )
+
+        # When the problem occurs, the 2nd child will continue to be
+        # present, but will only contain the version attribute
+        expect(m.reload.children[0].children.count).to eq 1
+      end
     end
   end
 
