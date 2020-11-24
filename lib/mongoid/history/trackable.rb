@@ -311,10 +311,12 @@ module Mongoid
           expanded_key
         end
 
+        def next_version
+          (send(history_trackable_options[:version_field]) || 0) + 1
+        end
+
         def increment_current_version
-          current_version = (send(history_trackable_options[:version_field]) || 0) + 1
-          send("#{history_trackable_options[:version_field]}=", current_version)
-          current_version
+          next_version.tap { |version| send("#{history_trackable_options[:version_field]}=", version) }
         end
 
         protected
@@ -325,7 +327,7 @@ module Mongoid
 
         def track_history_for_action(action)
           if track_history_for_action?(action)
-            current_version = ancestor_flagged_for_destroy?(_parent) ? send(history_trackable_options[:version_field]) : increment_current_version
+            current_version = ancestor_flagged_for_destroy?(_parent) ? next_version : increment_current_version
             last_track = self.class.tracker_class.create!(
               history_tracker_attributes(action.to_sym)
               .merge(version: current_version, action: action.to_s, trackable: self)
