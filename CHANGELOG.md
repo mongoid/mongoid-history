@@ -9,6 +9,7 @@
 * [#239](https://github.com/mongoid/mongoid-history/pull/239): Optimize `modified_attributes_for_create` 6-7x - [@getaroom](https://github.com/getaroom).
 * [#240](https://github.com/mongoid/mongoid-history/pull/240): `Mongoid::History.disable` and `disable_tracking` now restore the original state - [@getaroom](https://github.com/getaroom).
 * [#240](https://github.com/mongoid/mongoid-history/pull/240): Added `Mongoid::History.enable`, `Mongoid::History.enable!`, `Mongoid::History.disable!`, `enable_tracking`, `enable_tracking!`, and `disable_tracking!` - [@getaroom](https://github.com/getaroom).
+* [](): Don't track changes on embedded documents if an ancestor is being destroyed in the same operation - [@getaroom](https://github.com/getaroom).
 
 ### 0.8.2 (2019/12/02)
 
