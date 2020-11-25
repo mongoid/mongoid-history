@@ -914,9 +914,8 @@ describe Mongoid::History::Trackable do
           ]
         )
       end
-
-      it 'does not corrupt embedded models' do
-        m.update_attributes(
+      let(:attributes) do
+        {
           'children_attributes' => [
             {
               'id' =>  m.children[0].id,
@@ -947,11 +946,32 @@ describe Mongoid::History::Trackable do
               ]
             }
           ]
-        )
+        }
+      end
 
+      subject(:updated) do
+        m.update_attributes attributes
+        m.reload
+      end
+
+      let(:names_of_destroyed) do
+        destroy_track_names = MyDeeplyNestedModel.tracker_class
+          .where('association_chain.id' => updated.id, 'action' => 'destroy')
+          .map { |track| track.original['name'] }
+      end
+
+      it 'does not corrupt embedded models' do
         # When the problem occurs, the 2nd child will continue to be
         # present, but will only contain the version attribute
-        expect(m.reload.children[0].children.count).to eq 1
+        expect(updated.children[0].children.count).to eq 1
+      end
+
+      it 'creates a history track for the doc explicitly destroyed' do
+        expect(names_of_destroyed).to include 'parent 2'
+      end
+
+      it 'creates a history track for the doc implicitly destroyed' do
+        expect(names_of_destroyed).to include 'child 2'
       end
     end
   end
