@@ -15,6 +15,26 @@ describe Mongoid::History::Trackable do
       include Mongoid::Attributes::Dynamic unless Mongoid::Compatibility::Version.mongoid3?
     end
 
+    class MyDeeplyNestedModel
+      include Mongoid::Document
+      include Mongoid::History::Trackable
+
+      embeds_many :children, class_name: 'MyNestableModel', cascade_callbacks: true # The problem only occurs if callbacks are cascaded
+      accepts_nested_attributes_for :children, allow_destroy: true
+      track_history modifier_field: nil
+    end
+
+    class MyNestableModel
+      include Mongoid::Document
+      include Mongoid::History::Trackable
+
+      embedded_in :parent, class_name: 'MyDeeplyNestedModel'
+      embeds_many :children, class_name: 'MyNestableModel', cascade_callbacks: true
+      accepts_nested_attributes_for :children, allow_destroy: true
+      field :name, type: String
+      track_history modifier_field: nil
+    end
+
     class HistoryTracker
       include Mongoid::History::Tracker
     end
@@ -29,6 +49,8 @@ describe Mongoid::History::Trackable do
     Object.send(:remove_const, :MyDynamicModel)
     Object.send(:remove_const, :HistoryTracker)
     Object.send(:remove_const, :User)
+    Object.send(:remove_const, :MyDeeplyNestedModel)
+    Object.send(:remove_const, :MyNestableModel)
   end
 
   let(:user) { User.create! }
@@ -322,24 +344,14 @@ describe Mongoid::History::Trackable do
           end
 
           it 'should be rescued if an exception occurs in disable_tracking' do
-            begin
-              MyModel.disable_tracking do
-                raise 'exception'
-              end
-            rescue
-            end
+            ignore_errors { MyModel.disable_tracking { raise 'exception' } }
             expect(Mongoid::History.enabled?).to eq(true)
             expect(MyModel.new.track_history?).to eq(true)
           end
 
           it 'should be rescued if an exception occurs in enable_tracking' do
             MyModel.disable_tracking do
-              begin
-                MyModel.enable_tracking do
-                  raise 'exception'
-                end
-              rescue
-              end
+              ignore_errors { MyModel.enable_tracking { raise 'exception' } }
               expect(Mongoid::History.enabled?).to eq(true)
               expect(MyModel.new.track_history?).to eq(false)
             end
@@ -436,12 +448,7 @@ describe Mongoid::History::Trackable do
 
           it 'should be rescued if an exception occurs in disable' do
             Mongoid::History.disable do
-              begin
-                MyModel.disable_tracking do
-                  raise 'exception'
-                end
-              rescue
-              end
+              ignore_errors { MyModel.disable_tracking { raise 'exception' } }
               expect(Mongoid::History.enabled?).to eq(false)
               expect(MyModel.new.track_history?).to eq(false)
             end
@@ -449,12 +456,7 @@ describe Mongoid::History::Trackable do
 
           it 'should be rescued if an exception occurs in enable' do
             Mongoid::History.disable do
-              begin
-                Mongoid::History.enable do
-                  raise 'exception'
-                end
-              rescue
-              end
+              ignore_errors { Mongoid::History.enable { raise 'exception' } }
               expect(Mongoid::History.enabled?).to eq(false)
               expect(MyModel.new.track_history?).to eq(false)
             end
@@ -500,14 +502,7 @@ describe Mongoid::History::Trackable do
         end
 
         it 'should rescue errors through both local and global tracking scopes' do
-          begin
-            Mongoid::History.disable do
-              MyModel.disable_tracking do
-                raise 'exception'
-              end
-            end
-          rescue
-          end
+          ignore_errors { Mongoid::History.disable { MyModel.disable_tracking { raise 'exception' } } }
           expect(Mongoid::History.enabled?).to eq(true)
           expect(MyModel.new.track_history?).to eq(true)
         end
@@ -698,13 +693,9 @@ describe Mongoid::History::Trackable do
         end
       end
 
-      after :each do
-        Object.send(:remove_const, :ModelTwo)
-      end
+      after(:each) { Object.send(:remove_const, :ModelTwo) }
 
-      before :each do
-        ModelTwo.history_settings paranoia_field: :neglected_at
-      end
+      before(:each) { ModelTwo.history_settings paranoia_field: :neglected_at }
 
       it { expect(Mongoid::History.trackable_settings[:ModelTwo]).to eq(paranoia_field: 'nglt') }
     end
@@ -716,9 +707,7 @@ describe Mongoid::History::Trackable do
       end
     end
 
-    after :each do
-      Object.send(:remove_const, :MyTrackerClass)
-    end
+    after(:each) { Object.send(:remove_const, :MyTrackerClass) }
 
     context 'when options contain tracker_class_name' do
       context 'when underscored' do
@@ -767,9 +756,7 @@ describe Mongoid::History::Trackable do
         Object.send(:remove_const, :EmbOne)
       end
 
-      before :each do
-        model_one.save!
-      end
+      before(:each) { model_one.save! }
 
       let(:model_one) { ModelOne.new(foo: 'Foo') }
       let(:changes) { {} }
@@ -832,9 +819,7 @@ describe Mongoid::History::Trackable do
   end
 
   describe '#track_update' do
-    before :each do
-      MyModel.track_history(on: :foo, track_update: true)
-    end
+    before(:each) { MyModel.track_history(on: :foo, track_update: true) }
 
     let!(:m) { MyModel.create!(foo: 'bar', modifier: user) }
 
@@ -851,9 +836,7 @@ describe Mongoid::History::Trackable do
   end
 
   describe '#track_destroy' do
-    before :each do
-      MyModel.track_history(on: :foo, track_destroy: true)
-    end
+    before(:each) { MyModel.track_history(on: :foo, track_destroy: true) }
 
     let!(:m) { MyModel.create!(foo: 'bar', modifier: user) }
 
@@ -867,6 +850,58 @@ describe Mongoid::History::Trackable do
         expect { m.destroy }.to raise_error(StandardError)
       end.to change(Tracker, :count).by(0)
     end
+
+    context 'with a deeply nested model' do
+      let(:m) do
+        MyDeeplyNestedModel.create!(
+          children: [
+            MyNestableModel.new(
+              name: 'grandparent',
+              children: [
+                MyNestableModel.new(name: 'parent 1', children: [MyNestableModel.new(name: 'child 1')]),
+                MyNestableModel.new(name: 'parent 2', children: [MyNestableModel.new(name: 'child 2')])
+              ]
+            )
+          ]
+        )
+      end
+      let(:attributes) do
+        {
+          'children_attributes' => [
+            {
+              'id' =>  m.children[0].id,
+              'children_attributes' => [
+                { 'id' => m.children[0].children[0].id, '_destroy' => '0' },
+                { 'id' => m.children[0].children[1].id, '_destroy' => '1' }
+              ]
+            }
+          ]
+        }
+      end
+
+      subject(:updated) do
+        m.update_attributes attributes
+        m.reload
+      end
+
+      let(:names_of_destroyed) do
+        MyDeeplyNestedModel.tracker_class
+                           .where('association_chain.id' => updated.id, 'action' => 'destroy')
+                           .map { |track| track.original['name'] }
+      end
+
+      it 'does not corrupt embedded models' do
+        expect(updated.children[0].children.count).to eq 1 # When the problem occurs, the 2nd child will continue to be present, but will only contain the version attribute
+      end
+
+      it 'creates a history track for the doc explicitly destroyed' do
+        expect(names_of_destroyed).to include 'parent 2'
+      end
+
+      it 'creates a history track for the doc implicitly destroyed' do
+        expect(names_of_destroyed).to include 'child 2'
+      end
+    end
   end
 
   describe '#track_create' do
@@ -879,9 +914,7 @@ describe Mongoid::History::Trackable do
       end
     end
 
-    after :each do
-      Object.send(:remove_const, :MyModelWithNoModifier)
-    end
+    after(:each) { Object.send(:remove_const, :MyModelWithNoModifier) }
 
     before :each do
       MyModel.track_history(on: :foo, track_create: true)
@@ -919,9 +952,7 @@ describe Mongoid::History::Trackable do
       end
     end
 
-    after :each do
-      Object.send(:remove_const, :Fish)
-    end
+    after(:each) { Object.send(:remove_const, :Fish) }
 
     it 'should track history' do
       expect do
@@ -947,9 +978,7 @@ describe Mongoid::History::Trackable do
       MyModel.history_trackable_options
     end
 
-    after :each do
-      Object.send(:remove_const, :CustomTracker)
-    end
+    after(:each) { Object.send(:remove_const, :CustomTracker) }
 
     it 'should not override in parent class' do
       expect(MyModel.history_trackable_options[:changes_method]).to eq :changes

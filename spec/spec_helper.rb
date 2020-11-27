@@ -27,4 +27,6 @@ RSpec.configure do |config|
   config.before :each do
     Mongoid::History.reset!
   end
+
+  config.include ErrorHelpers
 end

@@ -139,6 +139,10 @@ module Mongoid
 
         private
 
+        def ancestor_flagged_for_destroy?(doc)
+          doc && (doc.flagged_for_destroy? || ancestor_flagged_for_destroy?(doc._parent))
+        end
+
         def get_versions_criteria(options_or_version)
           if options_or_version.is_a? Hash
             options = options_or_version
@@ -183,9 +187,7 @@ module Mongoid
         end
 
         def traverse_association_chain(node = self)
-          list = node._parent ? traverse_association_chain(node._parent) : []
-          list << association_hash(node)
-          list
+          (node._parent ? traverse_association_chain(node._parent) : []).tap { |list| list << association_hash(node) }
         end
 
         def association_hash(node = self)
@@ -269,10 +271,7 @@ module Mongoid
         end
 
         def clear_trackable_memoization
-          @history_tracker_attributes = nil
-          @modified_attributes_for_create = nil
-          @modified_attributes_for_update = nil
-          @history_tracks = nil
+          @history_tracker_attributes = @modified_attributes_for_create = @modified_attributes_for_update = @history_tracks = nil
         end
 
         # Transform hash of pair of changes into an `original` and `modified` hash
@@ -312,10 +311,12 @@ module Mongoid
           expanded_key
         end
 
+        def next_version
+          (send(history_trackable_options[:version_field]) || 0) + 1
+        end
+
         def increment_current_version
-          current_version = (send(history_trackable_options[:version_field]) || 0) + 1
-          send("#{history_trackable_options[:version_field]}=", current_version)
-          current_version
+          next_version.tap { |version| send("#{history_trackable_options[:version_field]}=", version) }
         end
 
         protected
@@ -326,7 +327,7 @@ module Mongoid
 
         def track_history_for_action(action)
           if track_history_for_action?(action)
-            current_version = increment_current_version
+            current_version = ancestor_flagged_for_destroy?(_parent) ? next_version : increment_current_version
             last_track = self.class.tracker_class.create!(
               history_tracker_attributes(action.to_sym)
               .merge(version: current_version, action: action.to_s, trackable: self)
