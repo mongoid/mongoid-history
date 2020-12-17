@@ -902,6 +902,47 @@ describe Mongoid::History::Trackable do
         expect(names_of_destroyed).to include 'child 2'
       end
     end
+
+    context 'with multiple embeds_many models' do
+      let(:m) do
+        MyDeeplyNestedModel.create!(
+          children: [
+            MyNestableModel.new(
+              name: 'parent',
+              children: [
+                MyNestableModel.new(name: 'child 1'),
+                MyNestableModel.new(name: 'child 2'),
+                MyNestableModel.new(name: 'child 3')
+              ]
+            )
+          ]
+        )
+      end
+
+      let(:attributes) do
+        {
+          'children_attributes' => [
+            {
+              'id' =>  m.children[0].id,
+              'children_attributes' => [
+                { 'id' => m.children[0].children[0].id, '_destroy' => '0' },
+                { 'id' => m.children[0].children[1].id, '_destroy' => '1' },
+                { 'id' => m.children[0].children[2].id, '_destroy' => '1' }
+              ]
+            }
+          ]
+        }
+      end
+
+      subject(:updated) do
+        m.update_attributes attributes
+        m.reload
+      end
+
+      it 'does not corrupt the document' do
+        expect(updated.children[0].children.length).to eq(1)
+      end
+    end
   end
 
   describe '#track_create' do

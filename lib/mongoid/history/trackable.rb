@@ -325,9 +325,13 @@ module Mongoid
           track_history? && !(action.to_sym == :update && modified_attributes_for_update.blank?)
         end
 
+        def increment_current_version?(action)
+          action != :destroy && !ancestor_flagged_for_destroy?(_parent)
+        end
+
         def track_history_for_action(action)
           if track_history_for_action?(action)
-            current_version = ancestor_flagged_for_destroy?(_parent) ? next_version : increment_current_version
+            current_version = increment_current_version?(action) ? increment_current_version : next_version
             last_track = self.class.tracker_class.create!(
               history_tracker_attributes(action.to_sym)
               .merge(version: current_version, action: action.to_s, trackable: self)
