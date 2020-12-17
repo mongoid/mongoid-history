@@ -509,8 +509,8 @@ describe Mongoid::History do
 
       it 'should be possible to destroy after re-create embedded from parent' do
         comment.destroy
-        post.history_tracks.last.undo!(user)
-        post.history_tracks.last.undo!(user)
+        post.history_tracks[-1].undo!(user)
+        post.history_tracks[-1].undo!(user)
         post.reload
         expect(post.comments.count).to eq(0)
       end

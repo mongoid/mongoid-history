@@ -1,5 +1,6 @@
 ### 0.8.4 (Next)
 
+* [#249](https://github.com/mongoid/mongoid-history/pull/249): Don't update version on embedded documents if the document itself is being destroyed - [@getaroom](https://github.com/getaroom).
 * [#248](https://github.com/mongoid/mongoid-history/pull/248): Don't update version on embedded documents if an ancestor is being destroyed in the same operation - [@getaroom](https://github.com/getaroom).
 * Your contribution here.
 
