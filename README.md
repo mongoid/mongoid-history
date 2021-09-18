@@ -14,6 +14,7 @@ Mongoid History supports the following dependency versions:
 
 * Ruby 2.3+
 * Mongoid 3.1+
+* Recent JRuby and TruffleRuby versions
 
 Earlier Ruby versions may work but are untested.
 
