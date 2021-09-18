@@ -20,16 +20,28 @@ jobs:
         include:
           - ruby: 2.3
             mongoid: 3
-            experimental: true
+            experimental: false
           - ruby: 2.4
             mongoid: 4
-            experimental: true
+            experimental: false
           - ruby: 2.5
             mongoid: 5
-            experimental: true
+            experimental: false
           - ruby: 2.6
             mongoid: 6
-            experimental: true
+            experimental: false
+          - ruby: 2.7
+            mongoid: 7.0
+            experimental: false
+          - ruby: 2.7
+            mongoid: 7.1
+            experimental: false
+          - ruby: 2.7
+            mongoid: 7.2
+            experimental: false
+          - ruby: 2.7
+            mongoid: 7.3
+            experimental: false
           - ruby: head
             mongoid: 7
             experimental: true
