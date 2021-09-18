@@ -1,9 +1,8 @@
-Contributing to Mongoid-History
-===============================
+# Contributing to Mongoid-History
 
 Mongoid-History is work of [many of contributors](https://github.com/mongoid/mongoid-history/graphs/contributors). You're encouraged to submit [pull requests](https://github.com/mongoid/mongoid-history/pulls), [propose features, ask questions and discuss issues](https://github.com/mongoid/mongoid-history/issues).
 
-#### Fork the Project
+### Fork the Project
 
 Fork the [project on Github](https://github.com/mongoid/mongoid-history) and check out your copy.
 
@@ -13,7 +12,7 @@ cd mongoid-history
 git remote add upstream https://github.com/mongoid/mongoid-history.git
 ```
 
-#### Create a Topic Branch
+### Create a Topic Branch
 
 Make sure your fork is up-to-date and create a topic branch for your feature or bug fix.
 
@@ -23,7 +22,7 @@ git pull upstream master
 git checkout -b my-feature-branch
 ```
 
-#### Bundle Install and Test
+### Bundle Install and Test
 
 Ensure that you can build the project and run tests.
 
@@ -32,13 +31,13 @@ bundle install
 bundle exec rake
 ```
 
-#### Write Tests
+### Write Tests
 
 Try to write a test that reproduces the problem you're trying to fix or describes a feature that you want to build. Add to [spec/mongoid-history](spec/mongoid-history).
 
 We definitely appreciate pull requests that highlight or reproduce a problem, even without a fix.
 
-#### Write Code
+### Write Code
 
 Implement your feature or bug fix.
 
@@ -46,15 +45,15 @@ Ruby style is enforced with [Rubocop](https://github.com/bbatsov/rubocop), run `
 
 Make sure that `bundle exec rake` completes without errors.
 
-#### Write Documentation
+### Write Documentation
 
 Document any external behavior in the [README](README.md).
 
-#### Update Changelog
+### Update Changelog
 
 Add a line to [CHANGELOG](CHANGELOG.md) under *Next Release*. Make it look like every other line, including your name and link to your Github account.
 
-#### Commit Changes
+### Commit Changes
 
 Make sure git knows your name and email address:
 
@@ -70,17 +69,17 @@ git add ...
 git commit
 ```
 
-#### Push
+### Push
 
 ```
 git push origin my-feature-branch
 ```
 
-#### Make a Pull Request
+### Make a Pull Request
 
 Go to https://github.com/contributor/mongoid-history and select your feature branch. Click the 'Pull Request' button and fill out the form. Pull requests are usually reviewed within a few days.
 
-#### Rebase
+### Rebase
 
 If you've been working on a change for a while, rebase with upstream/master.
 
@@ -90,7 +89,7 @@ git rebase upstream/master
 git push origin my-feature-branch -f
 ```
 
-#### Update CHANGELOG Again
+### Update CHANGELOG Again
 
 Update the [CHANGELOG](CHANGELOG.md) with the pull request number. A typical entry looks as follows.
 
@@ -105,14 +104,14 @@ git commit --amend
 git push origin my-feature-branch -f
 ```
 
-#### Check on Your Pull Request
+### Check on Your Pull Request
 
 Go back to your pull request after a few minutes and see whether it passed muster with Travis-CI. Everything should look green, otherwise fix issues and amend your commit as described above.
 
-#### Be Patient
+### Be Patient
 
 It's likely that your change will not be merged and that the nitpicky maintainers will ask you to do more, or fix seemingly benign problems. Hang on there!
 
-#### Thank You
+### Thank You
 
 Please do know that we really appreciate and value your time and work. We love you, really.

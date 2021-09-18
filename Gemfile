@@ -2,30 +2,31 @@ source 'https://rubygems.org'
 
 gemspec
 
-case version = ENV['MONGOID_VERSION'] || '~> 7.0.0'
+case version = ENV['MONGOID_VERSION'] || '~> 7.0'
 when 'HEAD'
   gem 'mongoid', github: 'mongodb/mongoid'
 when /\b7/
-  gem 'mongoid', '~> 7.0.0'
+  gem 'mongoid', '~> 7.0'
 when /\b6/
-  gem 'mongoid', '~> 6.0.0'
+  gem 'mongoid', '~> 6.0'
 when /\b5/
   gem 'mongoid', '~> 5.0'
-  gem 'mongoid-observers', '~> 0.2.0'
+  gem 'mongoid-observers', '~> 0.2'
 when /\b4/
   gem 'mongoid', '~> 4.0'
-  gem 'mongoid-observers', '~> 0.2.0'
+  gem 'mongoid-observers', '~> 0.2'
 when /\b3/
-  gem 'mongoid', '~> 3.1.7'
+  gem 'mongoid', '~> 3.1'
 else
   gem 'mongoid', version
 end
+
 gem 'mongoid-compatibility'
 
 group :development, :test do
   gem 'bundler'
   gem 'pry'
-  gem 'rake', '< 11.0'
+  gem 'rake'
 end
 
 group :test do
