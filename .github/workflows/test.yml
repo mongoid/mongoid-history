@@ -1,0 +1,60 @@
+name: CI RSpec Test
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: >-
+      ${{ matrix.ruby }}
+    env:
+      CI: true
+      TESTOPTS: -v
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      fail-fast: true
+      matrix:
+        ruby: [2.5, 2.6, 2.7, 3.0, jruby, truffleruby]
+        mongoid: [7]
+        experimental: [false]
+        include:
+          - ruby: 2.3
+            mongoid: 3
+            experimental: true
+          - ruby: 2.4
+            mongoid: 4
+            experimental: true
+          - ruby: 2.5
+            mongoid: 5
+            experimental: true
+          - ruby: 2.6
+            mongoid: 6
+            experimental: true
+          - ruby: head
+            mongoid: 7
+            experimental: true
+          - ruby: jruby-head
+            mongoid: 7
+            experimental: true
+          - ruby: truffleruby-head
+            mongoid: 7
+            experimental: true
+    steps:
+      - name: repo checkout
+        uses: actions/checkout@v2
+      - name: start mongodb
+        uses: supercharge/mongodb-github-action@1.6.0
+        with:
+          mongodb-version: 4.4
+          mongodb-replica-set: rs0
+      - name: load ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler: 2
+      - name: bundle install
+        run:  bundle install --jobs 4 --retry 3
+      - name: test
+        timeout-minutes: 10
+        run: bundle exec rake spec
+        continue-on-error: ${{ matrix.experimental }}
