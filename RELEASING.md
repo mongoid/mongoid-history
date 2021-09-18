@@ -1,9 +1,9 @@
-Releasing Mongoid::History
-========================
+# Releasing Mongoid::History
 
-There're no particular rules about when to release mongoid-history. Release bug fixes frequently, features not so frequently and breaking API changes rarely.
+There are no particular rules about when to release Mongoid History.
+Release bug fixes frequently, features not so frequently and breaking API changes rarely.
 
-### Release
+### Release Procedure
 
 Run tests, check that all tests succeed locally.
 
@@ -12,12 +12,11 @@ bundle install
 bundle exec rake
 ```
 
-Check that the last build succeeded in [Travis CI](https://travis-ci.org/mongoid/mongoid-history) for all supported platforms.
+Check that the last build succeeded in [Travis CI](https://travis-ci.org/mongoid/mongoid-history)
+for all supported platforms.
 
 Increment the version, modify [lib/mongoid/history/version.rb](lib/mongoid/history/version.rb).
-
-*  Increment the third number if the release has bug fixes and/or very minor features, only (eg. change `0.5.1` to `0.5.2`).
-*  Increment the second number if the release contains major features or breaking API changes (eg. change `0.5.1` to `0.4.0`).
+Mongoid History versions should follow [Semantic Versioning (SemVer)](https://semver.org/).
 
 Change "Next Release" in [CHANGELOG.md](CHANGELOG.md) to the new version.
 
