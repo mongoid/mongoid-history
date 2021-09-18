@@ -1,9 +1,12 @@
-### 0.8.4 (Next)
+### 0.8.5 (Next)
+
+* Your contribution here.
+
+### 0.8.4 (2021/09/18)
 
 * [#250](https://github.com/mongoid/mongoid-history/pull/250): Migrate to Github actions - [@johnnyshields](https://github.com/johnnyshields).
 * [#249](https://github.com/mongoid/mongoid-history/pull/249): Don't update version on embedded documents if the document itself is being destroyed - [@getaroom](https://github.com/getaroom).
 * [#248](https://github.com/mongoid/mongoid-history/pull/248): Don't update version on embedded documents if an ancestor is being destroyed in the same operation - [@getaroom](https://github.com/getaroom).
-* Your contribution here.
 
 ### 0.8.3 (2020/06/17)
 
