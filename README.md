@@ -8,9 +8,16 @@ Mongoid History tracks historical changes for any document, including embedded o
 
 This gem also implements multi-user undo, which allows users to undo any history change in any order. Undoing a document also creates a new history track. This is great for auditing and preventing vandalism, but is probably not suitable for use cases such as a wiki (but we won't stop you either).
 
-## Install
+### Version Support
 
-This gem supports Mongoid 3, 4, 5 on Ruby 1.9.3 or newer and Mongoid 6 and 7 on Ruby 2.2.2+. Add it to your `Gemfile` or run `gem install mongoid-history`.
+Mongoid History supports the following dependency versions:
+
+* Ruby 2.3+
+* Mongoid 3.1+
+
+Earlier Ruby versions may work but are untested.
+
+## Install
 
 ```ruby
 gem 'mongoid-history'
