@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        ruby: [2.5, 2.6, 2.7, 3.0, jruby, truffleruby]
+        ruby: [2.5, 2.6, 2.7, 3.0, jruby] # truffleruby
         mongoid: [7]
         experimental: [false]
         include:
@@ -36,9 +36,9 @@ jobs:
           - ruby: jruby-head
             mongoid: 7
             experimental: true
-          - ruby: truffleruby-head
-            mongoid: 7
-            experimental: true
+          # - ruby: truffleruby-head
+          #   mongoid: 7
+          #   experimental: true
     steps:
       - name: repo checkout
         uses: actions/checkout@v2
