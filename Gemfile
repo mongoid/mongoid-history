@@ -44,6 +44,6 @@ group :test do
   gem 'mongoid-danger', '~> 0.1.0', require: false
   gem 'request_store'
   gem 'rspec', '~> 3.1'
-  gem 'rubocop', '0.48.1'
+  gem 'rubocop', '~> 0.49.0'
   gem 'yard'
 end
