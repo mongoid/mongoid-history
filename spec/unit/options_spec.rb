@@ -356,6 +356,11 @@ describe Mongoid::History::Options do
           it { expect(subject[:track_destroy]).to be true }
         end
 
+        describe ':track_blank_changes' do
+          let(:options) { { track_blank_changes: true } }
+          it { expect(subject[:track_blank_changes]).to be true }
+        end
+
         describe '#remove_reserved_fields' do
           let(:options) { { on: %i[_id _type foo version modifier_id] } }
           it { expect(subject[:fields]).to eq %w[foo] }
