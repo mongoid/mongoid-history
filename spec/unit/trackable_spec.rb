@@ -90,6 +90,7 @@ describe Mongoid::History::Trackable do
         track_create: true,
         track_update: true,
         track_destroy: true,
+        track_blank_changes: false,
         fields: %w[foo],
         relations: { embeds_one: {}, embeds_many: {} },
         dynamic: [],
