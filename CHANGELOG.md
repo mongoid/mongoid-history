@@ -1,8 +1,8 @@
-### 0.8.7 (Next)
+### 0.9.1 (Next)
 
 * Your contribution here.
 
-### 0.8.6 (2024/08/07)
+### 0.9.0 (2024/08/07)
 
 * [#257](https://github.com/mongoid/mongoid-history/pull/257): Add track_blank_changes option - [@BrianLMatthews](https://github.com/BrianLMatthews).
 
