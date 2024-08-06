@@ -75,7 +75,8 @@ class Post
                   :version_field => :version,   # adds "field :version, :type => Integer" to track current version, default is :version
                   :track_create  => true,       # track document creation, default is true
                   :track_update  => true,       # track document updates, default is true
-                  :track_destroy => true        # track document destruction, default is true
+                  :track_destroy => true,       # track document destruction, default is true
+                  :track_blank_changes => false # track changes from blank? to blank?, default is false
 end
 
 class Comment
@@ -282,6 +283,32 @@ end
 ```
 
 It will now track only `_id` (Mandatory), `title` and `content` attributes for `pages` relation.
+
+### Track all blank changes
+
+Normally changes where both the original and modified values respond with `true` to `blank?` (for example `nil` to `false`) aren't tracked. However, there may be cases where it's important to track such changes, for example when a field isn't present (so appears to be `nil`) then is set to `false`. To track such changes, set the `track_blank_changes` option to `true` (it defaults to `false`) when turning on history tracking:
+
+```ruby
+class Book
+  include Mongoid::Document
+  ...
+  field :summary
+  track_history # Use default of false for track_blank_changes
+end
+
+# summary change not tracked if summary hasn't been set (or has been set to something that responds true to blank?)
+Book.find(id).update_attributes(:summary => '')
+
+class Chapter
+  include Mongoid::Document
+  ...
+  field :title
+  track_history :track_blank_changes => true
+end
+
+# title change tracked even if title hasn't been set
+Chapter.find(id).update_attributes(:title => '')
+```
 
 ### Retrieving the list of tracked static and dynamic fields
 
@@ -604,6 +631,6 @@ You're encouraged to contribute to Mongoid History. See [CONTRIBUTING.md](CONTRI
 
 ## Copyright
 
-Copyright (c) 2011-2020 Aaron Qian and Contributors.
+Copyright (c) 2011-2024 Aaron Qian and Contributors.
 
 MIT License. See [LICENSE.txt](LICENSE.txt) for further details.
