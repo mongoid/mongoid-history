@@ -18,6 +18,7 @@ module Mongoid
         private
 
         def changes_from_parent
+          track_blank_changes = trackable_class.history_trackable_options[:track_blank_changes]
           parent_changes = {}
           changes.each do |k, v|
             change_value = begin
@@ -26,7 +27,7 @@ module Mongoid
               elsif trackable_class.tracked_embeds_many?(k)
                 embeds_many_changes_from_parent(k, v)
               elsif trackable_class.tracked?(k, :update)
-                { k => format_field(k, v) } unless v.all?(&:blank?)
+                { k => format_field(k, v) } unless !track_blank_changes && v.all?(&:blank?)
               end
             end
             parent_changes.merge!(change_value) if change_value.present?
