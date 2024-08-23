@@ -103,6 +103,7 @@ describe Mongoid::History::Options do
           track_create: true,
           track_update: true,
           track_destroy: true,
+          track_blank_changes: false,
           format: nil
         }
       end
@@ -173,6 +174,7 @@ describe Mongoid::History::Options do
             track_create: true,
             track_update: true,
             track_destroy: true,
+            track_blank_changes: false,
             fields: %w[foo b],
             dynamic: [],
             relations: { embeds_one: {}, embeds_many: {} },
@@ -352,6 +354,11 @@ describe Mongoid::History::Options do
         describe ':track_destroy' do
           let(:options) { { track_destroy: true } }
           it { expect(subject[:track_destroy]).to be true }
+        end
+
+        describe ':track_blank_changes' do
+          let(:options) { { track_blank_changes: true } }
+          it { expect(subject[:track_blank_changes]).to be true }
         end
 
         describe '#remove_reserved_fields' do

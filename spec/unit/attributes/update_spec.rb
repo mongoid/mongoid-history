@@ -305,37 +305,69 @@ describe Mongoid::History::Attributes::Update do
       end
     end
 
-    context 'when original and modified values blank' do
-      before :each do
-        class DummyParent
-          include Mongoid::Document
-          include Mongoid::History::Trackable
-          store_in collection: :dummy_parents
-          has_and_belongs_to_many :other_dummy_parents
-          track_history on: :fields
+    [false, true].each do |original_nil|
+      context "when original value #{original_nil ? 'nil' : 'blank'} and modified value #{original_nil ? 'blank' : 'nil'}" do
+        [nil, false, true].each do |track_blank_changes|
+          context "when track_blank_changes #{track_blank_changes.nil? ? 'default' : track_blank_changes}" do
+            before :each do
+              class DummyParent
+                include Mongoid::Document
+                include Mongoid::History::Trackable
+                store_in collection: :dummy_parents
+                has_and_belongs_to_many :other_dummy_parents
+                field :boolean, type: Boolean
+                field :string, type: String
+                field :hash, type: Hash
+              end
+
+              class OtherDummyParent
+                include Mongoid::Document
+                has_and_belongs_to_many :dummy_parents
+              end
+
+              if track_blank_changes.nil?
+                DummyParent.track_history on: :fields
+              else
+                DummyParent.track_history \
+                  on: :fields,
+                  track_blank_changes: track_blank_changes
+              end
+
+              allow(base).to receive(:changes) { changes }
+            end
+
+            after :each do
+              Object.send(:remove_const, :DummyParent)
+              Object.send(:remove_const, :OtherDummyParent)
+            end
+
+            let(:base) { described_class.new(DummyParent.new) }
+            subject { base.attributes.keys }
+
+            # These can't be memoizing methods (i.e. lets) because of limits
+            # on where those can be used.
+
+            cmp = track_blank_changes ? 'should' : 'should_not'
+            cmp_name = cmp.humanize capitalize: false
+
+            [
+              { n: 'many-to-many', f: 'other_dummy_parent_ids', v: [] },
+              { n: 'boolean', f: 'boolean', v: false },
+              { n: 'empty string', f: 'string', v: '' },
+              { n: 'all whitespace string', f: 'string', v: " 	\t\n\r\f\v" }
+              # The second character in that string is an actual tab (0x9).
+            ].each do |d|
+              context "#{d[:n]} field" do
+                let(:changes) do
+                  { d[:f] => original_nil ? [nil, d[:v]] : [d[:v], nil] }
+                end
+                it "changes #{cmp_name} include #{d[:f]}" do
+                  send(cmp, include(d[:f]))
+                end
+              end
+            end
+          end
         end
-
-        class OtherDummyParent
-          include Mongoid::Document
-          has_and_belongs_to_many :dummy_parents
-        end
-      end
-
-      before :each do
-        allow(base).to receive(:changes) { changes }
-        DummyParent.track_history on: :other_dummy_parent_ids
-      end
-
-      let(:base) { described_class.new(DummyParent.new) }
-      let(:changes) do
-        { 'other_dummy_parent_ids' => [nil, []] }
-      end
-      subject { base.attributes }
-      it { expect(subject.keys).to_not include 'other_dummy_parent_ids' }
-
-      after :each do
-        Object.send(:remove_const, :DummyParent)
-        Object.send(:remove_const, :OtherDummyParent)
       end
     end
   end

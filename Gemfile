@@ -45,5 +45,6 @@ group :test do
   gem 'request_store'
   gem 'rspec', '~> 3.1'
   gem 'rubocop', '~> 0.49.0'
+  gem 'term-ansicolor', '~> 1.3.0'
   gem 'yard'
 end
