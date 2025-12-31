@@ -21,15 +21,14 @@ module Mongoid
           track_blank_changes = trackable_class.history_trackable_options[:track_blank_changes]
           parent_changes = {}
           changes.each do |k, v|
-            change_value = begin
-              if trackable_class.tracked_embeds_one?(k)
-                embeds_one_changes_from_parent(k, v)
-              elsif trackable_class.tracked_embeds_many?(k)
-                embeds_many_changes_from_parent(k, v)
-              elsif trackable_class.tracked?(k, :update)
-                { k => format_field(k, v) } unless !track_blank_changes && v.all?(&:blank?)
-              end
-            end
+            change_value = if trackable_class.tracked_embeds_one?(k)
+                             embeds_one_changes_from_parent(k, v)
+                           elsif trackable_class.tracked_embeds_many?(k)
+                             embeds_many_changes_from_parent(k, v)
+                           elsif trackable_class.tracked?(k, :update)
+                             { k => format_field(k, v) } unless !track_blank_changes && v.all?(&:blank?)
+                           end
+
             parent_changes.merge!(change_value) if change_value.present?
           end
           parent_changes

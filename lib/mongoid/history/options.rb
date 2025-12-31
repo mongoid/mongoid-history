@@ -14,6 +14,7 @@ module Mongoid
 
       def prepared
         return @prepared if @prepared
+
         @prepared = options.dup
         prepare_skipped_fields
         prepare_formatted_fields
@@ -58,10 +59,14 @@ module Mongoid
 
             if format.class == Hash && trackable.embeds_many?(field)
               relation_class = trackable.relation_class_of(field)
-              formats[field] = format.inject({}) { |a, e| a.merge(relation_class.database_field_name(e.first) => e.last) }
+              formats[field] = format.inject({}) do |a, e|
+                a.merge(relation_class.database_field_name(e.first) => e.last)
+              end
             elsif format.class == Hash && trackable.embeds_one?(field)
               relation_class = trackable.relation_class_of(field)
-              formats[field] = format.inject({}) { |a, e| a.merge(relation_class.database_field_name(e.first) => e.last) }
+              formats[field] = format.inject({}) do |a, e|
+                a.merge(relation_class.database_field_name(e.first) => e.last)
+              end
             else
               formats[field] = format
             end
@@ -166,7 +171,9 @@ module Mongoid
         @prepared[:relations][kind][field] = if field_options.blank?
                                                relation_class.fields.keys
                                              else
-                                               %w[_id] | field_options.map { |opt| relation_class.database_field_name(opt) }
+                                               %w[_id] | field_options.map do |opt|
+                                                 relation_class.database_field_name(opt)
+                                               end
                                              end
       end
 

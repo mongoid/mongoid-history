@@ -13,8 +13,13 @@ module Mongoid
 
           unless history_options.options[:modifier_field].nil?
             belongs_to_modifier_options = { class_name: Mongoid::History.modifier_class_name }
-            belongs_to_modifier_options[:inverse_of] = history_options.options[:modifier_field_inverse_of] if history_options.options.key?(:modifier_field_inverse_of)
-            belongs_to_modifier_options[:optional] = true if history_options.options[:modifier_field_optional] && Mongoid::Compatibility::Version.mongoid6_or_newer?
+            if history_options.options.key?(:modifier_field_inverse_of)
+              belongs_to_modifier_options[:inverse_of] =
+                history_options.options[:modifier_field_inverse_of]
+            end
+            if history_options.options[:modifier_field_optional] && Mongoid::Compatibility::Version.mongoid6_or_newer?
+              belongs_to_modifier_options[:optional] = true
+            end
             belongs_to history_options.options[:modifier_field].to_sym, belongs_to_modifier_options
           end
 
@@ -29,9 +34,7 @@ module Mongoid
           around_create :track_create, **callback_options if history_options.options[:track_create]
           around_destroy :track_destroy, **callback_options if history_options.options[:track_destroy]
 
-          unless respond_to? :mongoid_history_options
-            class_attribute :mongoid_history_options, instance_accessor: false
-          end
+          class_attribute :mongoid_history_options, instance_accessor: false unless respond_to? :mongoid_history_options
 
           self.mongoid_history_options = history_options
         end
@@ -175,11 +178,17 @@ module Mongoid
           else
             scope = _parent.collection_name.to_s.singularize.to_sym if scope.is_a?(Array)
             if Mongoid::Compatibility::Version.mongoid3?
-              scope = metadata.inverse_class_name.tableize.singularize.to_sym if metadata.present? && scope == metadata.as
+              if metadata.present? && scope == metadata.as
+                scope = metadata.inverse_class_name.tableize.singularize.to_sym
+              end
             elsif Mongoid::Compatibility::Version.mongoid6_or_older?
-              scope = relation_metadata.inverse_class_name.tableize.singularize.to_sym if relation_metadata.present? && scope == relation_metadata.as
+              if relation_metadata.present? && scope == relation_metadata.as
+                scope = relation_metadata.inverse_class_name.tableize.singularize.to_sym
+              end
             elsif Mongoid::Compatibility::Version.mongoid7_or_newer?
-              scope = _association.inverse_class_name.tableize.singularize.to_sym if _association.present? && scope == _association.as
+              if _association.present? && scope == _association.as
+                scope = _association.inverse_class_name.tableize.singularize.to_sym
+              end
             end
           end
 
@@ -342,7 +351,7 @@ module Mongoid
 
           begin
             yield
-          rescue => e
+          rescue StandardError => e
             if track_history_for_action?(action)
               send("#{history_trackable_options[:version_field]}=", current_version - 1)
               last_track.destroy
@@ -360,7 +369,7 @@ module Mongoid
         # @return [ nil | Constant ] Class being related.
         def relation_class_of(field)
           meta = meta_of(field)
-          return meta.class_name.constantize if meta
+          meta.class_name.constantize if meta
         end
 
         # Indicates whether there is an Embedded::One relation for the given embedded field.
@@ -408,6 +417,7 @@ module Mongoid
         def meta_of(field)
           @meta_of ||= {}
           return @meta_of[field] if @meta_of.key?(field)
+
           @meta_of[field] = reflect_on_association(relation_alias(field))
         end
 
@@ -425,10 +435,9 @@ module Mongoid
         #
         # @return [ Hash < String, String > ] hash of embedded aliases (keys) to database representations (values)
         def relation_aliases
-          @relation_aliases ||= relations.inject(HashWithIndifferentAccess.new) do |h, (k, v)|
+          @relation_aliases ||= relations.each_with_object(HashWithIndifferentAccess.new) do |(k, v), h|
             store_as = Mongoid::Compatibility::Version.mongoid7_or_newer? ? v.store_as : v[:store_as]
             h[store_as || k] = k
-            h
           end
         end
       end
@@ -493,11 +502,11 @@ module Mongoid
         # @return [ Array < String > ] the list of reserved database field names
         def reserved_tracked_fields
           @reserved_tracked_fields ||= begin
-                                         fields = ['_id', history_trackable_options[:version_field].to_s]
-                                         modifier_field = history_trackable_options[:modifier_field]
-                                         fields << "#{modifier_field}_id" if modifier_field
-                                         fields
-                                       end
+            fields = ['_id', history_trackable_options[:version_field].to_s]
+            modifier_field = history_trackable_options[:modifier_field]
+            fields << "#{modifier_field}_id" if modifier_field
+            fields
+          end
         end
 
         def field_formats
@@ -526,11 +535,9 @@ module Mongoid
         #
         # @return [ Array < String > ] the list of tracked embeds_one relations
         def tracked_embeds_one
-          @tracked_embeds_one ||= begin
-            reflect_on_all_associations(:embeds_one)
-              .map(&:key)
-              .select { |rel| history_trackable_options[:relations][:embeds_one].include? rel }
-          end
+          @tracked_embeds_one ||= reflect_on_all_associations(:embeds_one)
+                                  .map(&:key)
+                                  .select { |rel| history_trackable_options[:relations][:embeds_one].include? rel }
         end
 
         def tracked_embeds_one_attributes(relation)
@@ -550,11 +557,9 @@ module Mongoid
         #
         # @return [ Array < String > ] the list of tracked embeds_many relations
         def tracked_embeds_many
-          @tracked_embeds_many ||= begin
-            reflect_on_all_associations(:embeds_many)
-              .map(&:key)
-              .select { |rel| history_trackable_options[:relations][:embeds_many].include? rel }
-          end
+          @tracked_embeds_many ||= reflect_on_all_associations(:embeds_many)
+                                   .map(&:key)
+                                   .select { |rel| history_trackable_options[:relations][:embeds_many].include? rel }
         end
 
         def tracked_embeds_many_attributes(relation)

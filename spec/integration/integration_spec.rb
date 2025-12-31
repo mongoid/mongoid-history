@@ -30,7 +30,8 @@ describe Mongoid::History do
       field :body
       embedded_in :commentable, polymorphic: true
       # BUG: see https://github.com/mongoid/mongoid-history/issues/223, modifier_field_optional should not be necessary
-      track_history on: %i[title body], scope: :post, track_create: true, track_destroy: true, modifier_field_optional: true
+      track_history on: %i[title body], scope: :post, track_create: true, track_destroy: true,
+                    modifier_field_optional: true
     end
 
     class Section
@@ -82,7 +83,10 @@ describe Mongoid::History do
     Object.send(:remove_const, :Foo)
   end
 
-  let(:user) { User.create!(name: 'Aaron', email: 'aaron@randomemail.com', aliases: ['bob'], country: 'Canada', city: 'Toronto', address: '21 Jump Street') }
+  let(:user) do
+    User.create!(name: 'Aaron', email: 'aaron@randomemail.com', aliases: ['bob'], country: 'Canada', city: 'Toronto',
+                 address: '21 Jump Street')
+  end
   let(:another_user) { User.create!(name: 'Another Guy', email: 'anotherguy@randomemail.com') }
   let(:post) { Post.create!(title: 'Test', body: 'Post', modifier: user, views: 100) }
   let(:comment) { post.comments.create!(title: 'test', body: 'comment', modifier: user) }
@@ -272,7 +276,8 @@ describe Mongoid::History do
       context 'update action' do
         subject { user.history_tracks.last.tracked_changes }
         before do
-          user.update_attributes!(name: 'Aaron2', email: nil, country: '',  city: nil, phone: '867-5309', aliases: ['', 'bill', 'james'])
+          user.update_attributes!(name: 'Aaron2', email: nil, country: '', city: nil, phone: '867-5309',
+                                  aliases: ['', 'bill', 'james'])
         end
         it { is_expected.to be_a HashWithIndifferentAccess }
         it 'should track changed field' do
@@ -318,7 +323,8 @@ describe Mongoid::History do
       context 'update action' do
         subject { user.history_tracks.last.tracked_edits }
         before do
-          user.update_attributes!(name: 'Aaron2', email: nil, country: '', city: nil, phone: '867-5309', aliases: ['', 'bill', 'james'])
+          user.update_attributes!(name: 'Aaron2', email: nil, country: '', city: nil, phone: '867-5309',
+                                  aliases: ['', 'bill', 'james'])
         end
         it { is_expected.to be_a HashWithIndifferentAccess }
         it 'should track changed field' do
@@ -331,7 +337,8 @@ describe Mongoid::History do
           expect(subject[:remove]).to eq({ city: 'Toronto', country: 'Canada' }.with_indifferent_access)
         end
         it 'should track changed array field' do
-          expect(subject[:array]).to eq({ aliases: { remove: ['bob'], add: ['', 'bill', 'james'] } }.with_indifferent_access)
+          expect(subject[:array]).to eq({ aliases: { remove: ['bob'],
+                                                     add: ['', 'bill', 'james'] } }.with_indifferent_access)
         end
         it 'should not track unmodified field' do
           %w[add modify remove array].each do |edit|
@@ -351,7 +358,9 @@ describe Mongoid::History do
         end
         subject { Tracker.new }
         it 'should skip empty values' do
-          allow(subject).to receive(:tracked_changes) { { name: { to: '', from: [] }, city: { to: 'Toronto', from: '' } } }
+          allow(subject).to receive(:tracked_changes) {
+            { name: { to: '', from: [] }, city: { to: 'Toronto', from: '' } }
+          }
           expect(subject.tracked_edits).to eq({ add: { city: 'Toronto' } }.with_indifferent_access)
         end
       end
@@ -541,7 +550,8 @@ describe Mongoid::History do
         tag_foo
         tag_bar # initialize
         expect(post.tags.count).to eq(2)
-        update_hash = { 'post' => { 'tags_attributes' => { '1234' => { 'id' => tag_bar.id, 'title' => 'baz', '_destroy' => 'true' } } } }
+        update_hash = { 'post' => { 'tags_attributes' => { '1234' => { 'id' => tag_bar.id, 'title' => 'baz',
+                                                                       '_destroy' => 'true' } } } }
         post.update_attributes!(update_hash['post'])
         expect(post.tags.count).to eq(1)
         expect(post.history_tracks.to_a.last.action).to eq('destroy')
@@ -803,12 +813,15 @@ describe Mongoid::History do
         class Post
           default_scope -> { where(title: nil) }
         end
+
         class Comment
           default_scope -> { where(title: nil) }
         end
+
         class User
           default_scope -> { where(name: nil) }
         end
+
         class Tag
           default_scope -> { where(title: nil) }
         end

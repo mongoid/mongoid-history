@@ -278,7 +278,9 @@ describe Mongoid::History::Trackable do
         before :each do
           ModelOne.track_history(modifier_field_optional: true, on: { emb_one: :f_em_foo })
         end
-        let(:changes) { { 'emb_one' => [{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }, { 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }] } }
+        let(:changes) do
+          { 'emb_one' => [{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }, { 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }] }
+        end
         it { expect(subject['emb_one'][0]).to eq('f_em_foo' => 'Foo') }
         it { expect(subject['emb_one'][1]).to eq('f_em_foo' => 'Foo-new') }
       end
@@ -287,7 +289,9 @@ describe Mongoid::History::Trackable do
         before :each do
           ModelOne.track_history(modifier_field_optional: true, on: :emb_one)
         end
-        let(:changes) { { 'emb_one' => [{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }, { 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }] } }
+        let(:changes) do
+          { 'emb_one' => [{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }, { 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }] }
+        end
         it { expect(subject['emb_one'][0]).to eq('f_em_foo' => 'Foo', 'fmb' => 'Bar') }
         it { expect(subject['emb_one'][1]).to eq('f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new') }
       end
@@ -304,7 +308,10 @@ describe Mongoid::History::Trackable do
         before :each do
           ModelOne.track_history(modifier_field_optional: true, on: { emb_threes: :f_em_foo })
         end
-        let(:changes) { { 'emb_threes' => [[{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }], [{ 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }]] } }
+        let(:changes) do
+          { 'emb_threes' => [[{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }],
+                             [{ 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }]] }
+        end
         it { expect(subject['emb_threes']).to eq [[{ 'f_em_foo' => 'Foo' }], [{ 'f_em_foo' => 'Foo-new' }]] }
       end
 
@@ -312,8 +319,14 @@ describe Mongoid::History::Trackable do
         before :each do
           ModelOne.track_history(modifier_field_optional: true, on: :emb_threes)
         end
-        let(:changes) { { 'emb_threes' => [[{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }], [{ 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }]] } }
-        it { expect(subject['emb_threes']).to eq [[{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }], [{ 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }]] }
+        let(:changes) do
+          { 'emb_threes' => [[{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }],
+                             [{ 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }]] }
+        end
+        it {
+          expect(subject['emb_threes']).to eq [[{ 'f_em_foo' => 'Foo', 'fmb' => 'Bar' }],
+                                               [{ 'f_em_foo' => 'Foo-new', 'fmb' => 'Bar-new' }]]
+        }
       end
 
       context 'when embeds_many relation not tracked' do
@@ -328,15 +341,15 @@ describe Mongoid::History::Trackable do
         before :each do
           ModelOne.track_history(modifier_field_optional: true, on: :foo)
         end
-        let(:changes) { { 'foo' => ['Foo', 'Foo-new'], 'b' => ['Bar', 'Bar-new'] } }
-        it { is_expected.to eq('foo' => ['Foo', 'Foo-new']) }
+        let(:changes) { { 'foo' => %w[Foo Foo-new], 'b' => %w[Bar Bar-new] } }
+        it { is_expected.to eq('foo' => %w[Foo Foo-new]) }
       end
 
       context 'when field not tracked' do
         before :each do
           ModelOne.track_history(modifier_field_optional: true, on: [])
         end
-        let(:changes) { { 'foo' => ['Foo', 'Foo-new'] } }
+        let(:changes) { { 'foo' => %w[Foo Foo-new] } }
         it { is_expected.to eq({}) }
       end
 
@@ -387,18 +400,25 @@ describe Mongoid::History::Trackable do
         end
 
         context 'when older soft-deleted' do
-          let(:changes) { { 'email_subject' => [{ 'content' => 'Content', 'deleted_at' => Time.now }, { 'content' => 'Content-new' }] } }
+          let(:changes) do
+            { 'email_subject' => [{ 'content' => 'Content', 'deleted_at' => Time.now },
+                                  { 'content' => 'Content-new' }] }
+          end
           it { is_expected.to eq [{}, { 'content' => 'Content-new' }] }
         end
 
         context 'when new soft-deleted' do
-          let(:changes) { { 'email_subject' => [{ 'content' => 'Content' }, { 'content' => 'Content-new', 'deleted_at' => Time.now }] } }
+          let(:changes) do
+            { 'email_subject' => [{ 'content' => 'Content' },
+                                  { 'content' => 'Content-new', 'deleted_at' => Time.now }] }
+          end
           it { is_expected.to eq [{ 'content' => 'Content' }, {}] }
         end
 
         context 'when not soft-deleted' do
           let(:changes) do
-            { 'email_subject' => [{ 'content' => 'Content', 'deleted_at' => nil }, { 'content' => 'Content-new', 'deleted_at' => nil }] }
+            { 'email_subject' => [{ 'content' => 'Content', 'deleted_at' => nil },
+                                  { 'content' => 'Content-new', 'deleted_at' => nil }] }
           end
           it { is_expected.to eq [{ 'content' => 'Content' }, { 'content' => 'Content-new' }] }
         end

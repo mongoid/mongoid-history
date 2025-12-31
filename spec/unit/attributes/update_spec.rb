@@ -37,7 +37,8 @@ describe Mongoid::History::Attributes::Update do
         let(:obj_one) { ModelOne.new }
         let(:base) { described_class.new(obj_one) }
         let(:changes) do
-          { 'emb_one' => [{ 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' }, { 'em_foo' => 'Em-Foo-new', 'em_bar' => 'Em-Bar-new' }] }
+          { 'emb_one' => [{ 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' },
+                          { 'em_foo' => 'Em-Foo-new', 'em_bar' => 'Em-Bar-new' }] }
         end
         subject { base.attributes }
 
@@ -52,7 +53,10 @@ describe Mongoid::History::Attributes::Update do
           before :each do
             ModelOne.track_history on: :emb_one
           end
-          it { expect(subject['emb_one']).to eq [{ 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' }, { 'em_foo' => 'Em-Foo-new', 'em_bar' => 'Em-Bar-new' }] }
+          it {
+            expect(subject['emb_one']).to eq [{ 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' },
+                                              { 'em_foo' => 'Em-Foo-new', 'em_bar' => 'Em-Bar-new' }]
+          }
         end
 
         context 'when old value soft-deleted' do
@@ -60,7 +64,8 @@ describe Mongoid::History::Attributes::Update do
             ModelOne.track_history on: :emb_one
           end
           let(:changes) do
-            { 'emb_one' => [{ 'em_foo' => 'Em-Foo', 'deleted_at' => Time.now }, { 'em_foo' => 'Em-Foo-new', 'em_bar' => 'Em-Bar-new' }] }
+            { 'emb_one' => [{ 'em_foo' => 'Em-Foo', 'deleted_at' => Time.now },
+                            { 'em_foo' => 'Em-Foo-new', 'em_bar' => 'Em-Bar-new' }] }
           end
           it { expect(subject['emb_one']).to eq [{}, { 'em_foo' => 'Em-Foo-new', 'em_bar' => 'Em-Bar-new' }] }
         end
@@ -118,7 +123,10 @@ describe Mongoid::History::Attributes::Update do
           { 'emb_one' => [{ 'em_foo' => 'Em-Foo' }, { 'em_foo' => 'Em-Foo-new', 'em_bar' => 'Em-Bar-new' }] }
         end
         subject { base.attributes }
-        it { expect(subject['eon']).to eq [{ 'em_foo' => 'Em-Foo' }, { 'em_foo' => 'Em-Foo-new', 'em_bar' => 'Em-Bar-new' }] }
+        it {
+          expect(subject['eon']).to eq [{ 'em_foo' => 'Em-Foo' },
+                                        { 'em_foo' => 'Em-Foo-new', 'em_bar' => 'Em-Bar-new' }]
+        }
       end
 
       context 'when original and modified value same' do
@@ -152,7 +160,8 @@ describe Mongoid::History::Attributes::Update do
         let(:obj_one) { DummyUpdateModel.new }
         let(:base) { described_class.new(obj_one) }
         let(:changes) do
-          { 'dummy_embedded_model' => [{ 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' }, { 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' }] }
+          { 'dummy_embedded_model' => [{ 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' },
+                                       { 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' }] }
         end
         subject { base.attributes }
         it { expect(subject.keys).to_not include 'dummy_embedded_model' }
@@ -195,7 +204,8 @@ describe Mongoid::History::Attributes::Update do
             ModelOne.track_history on: { emb_ones: :em_foo }
           end
           let(:changes) do
-            { 'emb_ones' => [[{ 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' }], [{ 'em_foo' => 'Em-Foo-new', 'em_bar' => 'Em-Bar-new' }]] }
+            { 'emb_ones' => [[{ 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' }],
+                             [{ 'em_foo' => 'Em-Foo-new', 'em_bar' => 'Em-Bar-new' }]] }
           end
           it 'should track only whitelisted attributes' do
             expect(subject['emb_ones']).to eq [[{ 'em_foo' => 'Em-Foo' }], [{ 'em_foo' => 'Em-Foo-new' }]]
@@ -207,7 +217,8 @@ describe Mongoid::History::Attributes::Update do
             ModelOne.track_history(on: :emb_ones)
           end
           let(:changes) do
-            { 'emb_ones' => [[{ 'em_foo' => 'Em-Foo', 'deleted_at' => Time.now }], [{ 'em_foo' => 'Em-Foo-new', 'em_bar' => 'Em-Bar-new' }]] }
+            { 'emb_ones' => [[{ 'em_foo' => 'Em-Foo', 'deleted_at' => Time.now }],
+                             [{ 'em_foo' => 'Em-Foo-new', 'em_bar' => 'Em-Bar-new' }]] }
           end
           it 'should ignore soft-deleted objects' do
             expect(subject['emb_ones']).to eq [[], [{ 'em_foo' => 'Em-Foo-new', 'em_bar' => 'Em-Bar-new' }]]
@@ -254,7 +265,8 @@ describe Mongoid::History::Attributes::Update do
         end
         subject { base.attributes }
         it 'should save audit history under relation alias' do
-          expect(subject['eons']).to eq [[{ 'em_foo' => 'Em-Foo' }], [{ 'em_foo' => 'Em-Foo-new', 'em_bar' => 'Em-Bar-new' }]]
+          expect(subject['eons']).to eq [[{ 'em_foo' => 'Em-Foo' }],
+                                         [{ 'em_foo' => 'Em-Foo-new', 'em_bar' => 'Em-Bar-new' }]]
         end
 
         after :each do
@@ -293,7 +305,8 @@ describe Mongoid::History::Attributes::Update do
         let(:obj_one) { ModelOne.new }
         let(:base) { described_class.new(obj_one) }
         let(:changes) do
-          { 'emb_ones' => [[{ 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' }], [{ 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' }]] }
+          { 'emb_ones' => [[{ 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' }],
+                           [{ 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' }]] }
         end
         subject { base.attributes }
         it { expect(subject.keys).to_not include 'emb_ones' }

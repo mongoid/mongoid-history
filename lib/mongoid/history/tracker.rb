@@ -92,9 +92,8 @@ module Mongoid
       # @return [ HashWithIndifferentAccess ] a change set in the format:
       #   { field_1: {to: new_val}, field_2: {from: old_val, to: new_val} }
       def tracked_changes
-        @tracked_changes ||= (modified.keys | original.keys).inject(HashWithIndifferentAccess.new) do |h, k|
+        @tracked_changes ||= (modified.keys | original.keys).each_with_object(HashWithIndifferentAccess.new) do |k, h|
           h[k] = { from: original[k], to: modified[k] }.delete_if { |_, vv| vv.nil? }
-          h
         end.delete_if { |k, v| v.blank? || !trackable_parent_class.tracked?(k) }
       end
 
@@ -109,6 +108,7 @@ module Mongoid
       #     array: { field_4: {add: ['foo', 'bar'], remove: ['baz']} } }
       def tracked_edits
         return @tracked_edits if @tracked_edits
+
         @tracked_edits = HashWithIndifferentAccess.new
 
         tracked_changes.each do |k, v|
@@ -147,9 +147,8 @@ module Mongoid
       #   { field_1: value, field_2: value }
       def affected
         target = action.to_sym == :destroy ? :from : :to
-        @affected ||= tracked_changes.inject(HashWithIndifferentAccess.new) do |h, (k, v)|
+        @affected ||= tracked_changes.each_with_object(HashWithIndifferentAccess.new) do |(k, v), h|
           h[k] = v[target]
-          h
         end
       end
 
@@ -235,12 +234,20 @@ module Mongoid
         value[:from] ||= []
         value[:to] ||= []
         modify_ids = value[:from].map { |vv| vv['_id'] }.compact & value[:to].map { |vv| vv['_id'] }.compact
-        modify_values = modify_ids.map { |id| { from: value[:from].detect { |vv| vv['_id'] == id }, to: value[:to].detect { |vv| vv['_id'] == id } } }
+        modify_values = modify_ids.map do |id|
+          { from: value[:from].detect do |vv|
+            vv['_id'] == id
+          end, to: value[:to].detect do |vv|
+                 vv['_id'] == id
+               end }
+        end
         modify_values.delete_if { |vv| vv[:from] == vv[:to] }
         ignore_values = modify_values.map { |vv| [vv[:from], vv[:to]] }.flatten
         old_values = value[:from] - value[:to] - ignore_values
         new_values = value[:to] - value[:from] - ignore_values
-        @tracked_edits[:embeds_many][key] = { add: new_values, remove: old_values, modify: modify_values }.delete_if { |_, vv| vv.blank? }
+        @tracked_edits[:embeds_many][key] = { add: new_values, remove: old_values, modify: modify_values }.delete_if do |_, vv|
+          vv.blank?
+        end
       end
     end
   end

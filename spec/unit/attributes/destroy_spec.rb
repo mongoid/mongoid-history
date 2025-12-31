@@ -72,7 +72,10 @@ describe Mongoid::History::Attributes::Destroy do
           ModelTwo.track_history on: :emb_two, modifier_field_optional: true
           obj_two.save!
         end
-        it { expect(subject['emb_two']).to eq [{ '_id' => emb_obj_two._id, 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' }, nil] }
+        it {
+          expect(subject['emb_two']).to eq [{ '_id' => emb_obj_two._id, 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' },
+                                            nil]
+        }
       end
 
       context 'when relation not tracked' do
@@ -174,7 +177,11 @@ describe Mongoid::History::Attributes::Destroy do
           before :each do
             ModelTwo.track_history on: :em_twos
           end
-          it { expect(subject['em_twos']).to eq [[{ '_id' => em_obj_two._id, 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' }], nil] }
+          it {
+            expect(subject['em_twos']).to eq [
+              [{ '_id' => em_obj_two._id, 'em_foo' => 'Em-Foo', 'em_bar' => 'Em-Bar' }], nil
+            ]
+          }
         end
 
         context 'when relation not tracked' do

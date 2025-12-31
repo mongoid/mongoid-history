@@ -1,7 +1,7 @@
 require 'coveralls'
 Coveralls.wear!
 
-$LOAD_PATH.push File.expand_path('../../lib', __FILE__)
+$LOAD_PATH.push File.expand_path('../lib', __dir__)
 
 require 'active_support/all'
 require 'mongoid'

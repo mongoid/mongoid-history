@@ -6,6 +6,7 @@ module Mongoid
           @attributes = {}
           changes.each do |k, v|
             next unless trackable_class.tracked_field?(k, :create)
+
             @attributes[k] = format_field(k, v)
           end
           insert_embeds_one_changes
@@ -23,6 +24,7 @@ module Mongoid
             rel = aliased_fields.key(rel) || rel
             obj = trackable.send(rel)
             next if !obj || (obj.respond_to?(paranoia_field) && obj.public_send(paranoia_field).present?)
+
             @attributes[rel] = [nil, format_embeds_one_relation(rel, obj.attributes)]
           end
         end

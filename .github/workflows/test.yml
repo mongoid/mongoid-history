@@ -14,20 +14,20 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        ruby: [2.5, 2.6, 2.7, 3.0, jruby] # truffleruby
+        ruby: [2.7, 3.0] # truffleruby, jruby
         mongoid: [7]
         experimental: [false]
         include:
-          - ruby: 2.3
+          - ruby: 2.7
             mongoid: 3
             experimental: false
-          - ruby: 2.4
+          - ruby: 2.7
             mongoid: 4
             experimental: false
-          - ruby: 2.5
+          - ruby: 2.7
             mongoid: 5
             experimental: false
-          - ruby: 2.6
+          - ruby: 2.7
             mongoid: 6
             experimental: false
           - ruby: 2.7
@@ -45,9 +45,9 @@ jobs:
           - ruby: head
             mongoid: 7
             experimental: true
-          - ruby: jruby-head
-            mongoid: 7
-            experimental: true
+          # - ruby: jruby-head
+          #   mongoid: 7
+          #   experimental: true
           # - ruby: truffleruby-head
           #   mongoid: 7
           #   experimental: true

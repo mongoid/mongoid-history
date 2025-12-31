@@ -1,4 +1,4 @@
-$LOAD_PATH.push File.expand_path('../lib', __FILE__)
+$LOAD_PATH.push File.expand_path('lib', __dir__)
 require 'mongoid/history/version'
 
 Gem::Specification.new do |s|
@@ -18,8 +18,8 @@ Gem::Specification.new do |s|
 
   s.post_install_message = File.read('UPGRADING') if File.exist?('UPGRADING')
 
+  s.add_runtime_dependency 'activesupport'
   s.add_runtime_dependency 'easy_diff'
   s.add_runtime_dependency 'mongoid', '>= 3.0'
   s.add_runtime_dependency 'mongoid-compatibility', '>= 0.5.1'
-  s.add_runtime_dependency 'activesupport'
 end
