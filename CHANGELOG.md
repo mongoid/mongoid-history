@@ -1,5 +1,6 @@
 ### 0.9.0 (Next)
 
+* [#259](https://github.com/mongoid/mongoid-history/pull/259): Migrate Danger to danger-pr-comment workflow - [@dblock](https://github.com/dblock).
 * [#257](https://github.com/mongoid/mongoid-history/pull/257): Add track_blank_changes option - [@BrianLMatthews](https://github.com/BrianLMatthews).
 * Your contribution here.
 
@@ -8,10 +9,6 @@
 * [#250](https://github.com/mongoid/mongoid-history/pull/250): Migrate to Github actions - [@johnnyshields](https://github.com/johnnyshields).
 * [#249](https://github.com/mongoid/mongoid-history/pull/249): Don't update version on embedded documents if the document itself is being destroyed - [@getaroom](https://github.com/getaroom).
 * [#248](https://github.com/mongoid/mongoid-history/pull/248): Don't update version on embedded documents if an ancestor is being destroyed in the same operation - [@getaroom](https://github.com/getaroom).
-
-### 0.8.4 (2021/09/18)
-
-* Not released.
 
 ### 0.8.3 (2020/06/17)
 

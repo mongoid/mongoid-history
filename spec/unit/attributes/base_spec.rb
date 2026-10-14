@@ -54,10 +54,10 @@ describe Mongoid::History::Attributes::Base do
   describe '#changes' do
     before(:each) do
       ModelOne.track_history
-      allow(obj_one).to receive(:changes) { { 'foo' => ['Foo', 'Foo-new'] } }
+      allow(obj_one).to receive(:changes) { { 'foo' => %w[Foo Foo-new] } }
     end
     subject { base.send(:changes) }
-    it { is_expected.to eq('foo' => ['Foo', 'Foo-new']) }
+    it { is_expected.to eq('foo' => %w[Foo Foo-new]) }
   end
 
   describe '#format_field' do

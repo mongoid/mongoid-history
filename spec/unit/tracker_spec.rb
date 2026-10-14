@@ -165,7 +165,8 @@ describe Mongoid::History::Tracker do
           it 'should include :add, and :remove' do
             expect(subject['add']).to eq([{ 'em_foo' => 'Em-Foo-2-new' }, { 'em_foo' => 'Em-Foo-3' }])
             expect(subject['modify']).to be_nil
-            expect(subject['remove']).to eq [{ 'em_foo' => 'Em-Foo' }, { '_id' => emb_one_2._id, 'em_foo' => 'Em-Foo-2' }]
+            expect(subject['remove']).to eq [{ 'em_foo' => 'Em-Foo' },
+                                             { '_id' => emb_one_2._id, 'em_foo' => 'Em-Foo-2' }]
           end
         end
 

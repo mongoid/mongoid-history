@@ -14,10 +14,7 @@ module Mongoid
     GLOBAL_TRACK_HISTORY_FLAG = 'mongoid_history_trackable_enabled'.freeze
 
     class << self
-      attr_accessor :tracker_class_name
-      attr_accessor :trackable_settings
-      attr_accessor :modifier_class_name
-      attr_accessor :current_user_method
+      attr_accessor :tracker_class_name, :trackable_settings, :modifier_class_name, :current_user_method
 
       def disable
         original_flag = store[GLOBAL_TRACK_HISTORY_FLAG]

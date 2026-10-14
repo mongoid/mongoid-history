@@ -61,7 +61,7 @@ describe Mongoid::History::Tracker do
     Object.send(:remove_const, :User)
   end
 
-  let (:user) { User.create! }
+  let(:user) { User.create! }
 
   it 'tracks history for nested embedded documents with polymorphic relations' do
     user = User.create!

@@ -807,8 +807,8 @@ describe Mongoid::History::Trackable do
             allow(model_one).to receive(:my_changes_method) { changes }
           end
 
-          let(:changes) { { 'foo' => ['Foo', 'Foo-new'], 'bar' => ['Bar', 'Bar-new'] } }
-          it { is_expected.to eq('foo' => ['Foo', 'Foo-new']) }
+          let(:changes) { { 'foo' => %w[Foo Foo-new], 'bar' => %w[Bar Bar-new] } }
+          it { is_expected.to eq('foo' => %w[Foo Foo-new]) }
         end
       end
     end
@@ -870,7 +870,7 @@ describe Mongoid::History::Trackable do
         {
           'children_attributes' => [
             {
-              'id' =>  m.children[0].id,
+              'id' => m.children[0].id,
               'children_attributes' => [
                 { 'id' => m.children[0].children[0].id, '_destroy' => '0' },
                 { 'id' => m.children[0].children[1].id, '_destroy' => '1' }
@@ -924,7 +924,7 @@ describe Mongoid::History::Trackable do
         {
           'children_attributes' => [
             {
-              'id' =>  m.children[0].id,
+              'id' => m.children[0].id,
               'children_attributes' => [
                 { 'id' => m.children[0].children[0].id, '_destroy' => '0' },
                 { 'id' => m.children[0].children[1].id, '_destroy' => '1' },

@@ -1,4 +1,4 @@
-$LOAD_PATH.push File.expand_path('../../lib', __FILE__)
+$LOAD_PATH.push File.expand_path('../lib', __dir__)
 
 require 'mongoid'
 require 'mongoid/history'
@@ -18,6 +18,7 @@ module ZeroPointEight
       @attributes = {}
       trackable.attributes.each do |k, v|
         next unless trackable_class.tracked_field?(k, :create)
+
         modified = if changes[k]
                      changes[k].class == Array ? changes[k].last : changes[k]
                    else
@@ -58,7 +59,9 @@ Benchmark.ips do |bm|
   end
 
   bm.report('v0.5.0') do
-    new_person.attributes.each_with_object({}) { |(k, v), h| h[k] = [nil, v] }.select { |k, _| new_person.class.tracked_field?(k, :create) }
+    new_person.attributes.each_with_object({}) do |(k, v), h|
+      h[k] = [nil, v]
+    end.select { |k, _| new_person.class.tracked_field?(k, :create) }
   end
 
   bm.compare!
