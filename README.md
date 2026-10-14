@@ -1,8 +1,8 @@
 # Mongoid History
 
 [![Gem Version](https://badge.fury.io/rb/mongoid-history.svg)](http://badge.fury.io/rb/mongoid-history)
-[![Build Status](https://github.com/mongoid/mongoid-history/actions/workflows/test.yml/badge.svg?query=branch%3Amaster)](https://github.com/mongoid/mongoid-history/actions/workflows/test.yml?query=branch%3Amaster)
-[![Code Climate](https://codeclimate.com/github/mongoid/mongoid-history.svg)](https://codeclimate.com/github/mongoid/mongoid-history)
+[![CI](https://github.com/mongoid/mongoid-history/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/mongoid/mongoid-history/actions/workflows/test.yml?query=branch%3Amaster)
+[![Coverage Status](https://coveralls.io/repos/github/mongoid/mongoid-history/badge.svg?branch=master)](https://coveralls.io/github/mongoid/mongoid-history?branch=master)
 
 Mongoid History tracks historical changes for any document, including embedded ones. It achieves this by storing all history tracks in a single collection that you define. Embedded documents are referenced by storing an association path, which is an array of `document_name` and `document_id` fields starting from the top most parent document and down to the embedded document that should track history.
 
@@ -635,5 +635,7 @@ Copyright (c) 2011-2024 Aaron Qian and Contributors.
 
 MIT License. See [LICENSE.txt](LICENSE.txt) for further details.
 # CI compatibility
+
+Set `COVERAGE=true` to measure library coverage with SimpleCov; CI uploads the Ruby 4.0/Mongoid 9 result set once through the official Coveralls action using `GITHUB_TOKEN`, and the coverage badge reflects upstream `master` reports when the repository is enabled on Coveralls.
 
 CI preserves representative Mongoid 3–7 combinations and tests Mongoid 8 and 9 through Ruby 4.0 and MongoDB 8.0; set `MONGOID_VERSION` to select a dependency family, and set `Mongoid.around_callbacks_for_embeds = true` and `Mongoid.prevent_multiple_calls_of_embedded_callbacks = false` on Mongoid 9 to preserve cascading history callbacks for deeply embedded documents.
