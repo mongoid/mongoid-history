@@ -4,6 +4,7 @@
 
 ### 0.9.0 (2026/10/14)
 
+* [#261](https://github.com/mongoid/mongoid-history/pull/261): Report library coverage to Coveralls from one modern CI job and replace obsolete coverage integration and badges - [@dblock](https://github.com/dblock).
 * [#260](https://github.com/mongoid/mongoid-history/pull/260): Modernize CI through Ruby 4.0, Mongoid 9 and MongoDB 8 while retaining legacy boundary coverage; fix modern dependency and embedded callback compatibility - [@dblock](https://github.com/dblock).
 * [#259](https://github.com/mongoid/mongoid-history/pull/259): Migrate Danger to danger-pr-comment workflow - [@dblock](https://github.com/dblock).
 * [#257](https://github.com/mongoid/mongoid-history/pull/257): Add track_blank_changes option - [@BrianLMatthews](https://github.com/BrianLMatthews).

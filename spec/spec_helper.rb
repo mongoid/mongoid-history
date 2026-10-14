@@ -1,6 +1,12 @@
+if ENV['COVERAGE'] == 'true'
+  require 'simplecov'
+  SimpleCov.start do
+    track_files 'lib/**/*.rb'
+    add_filter '/spec/'
+  end
+end
+
 require 'logger'
-require 'simplecov'
-SimpleCov.start
 
 $LOAD_PATH.push File.expand_path('../lib', __dir__)
 

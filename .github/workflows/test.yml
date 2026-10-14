@@ -25,7 +25,7 @@ jobs:
           - { ruby: '3.2', mongoid: '8', mongodb: '6.0' }
           - { ruby: '3.3', mongoid: '9', mongodb: '7.0' }
           - { ruby: '3.4', mongoid: '9', mongodb: '8.0' }
-          - { ruby: '4.0', mongoid: '9', mongodb: '8.0' }
+          - { ruby: '4.0', mongoid: '9', mongodb: '8.0', coverage: 'true' }
     services:
       mongodb:
         image: mongo:${{ matrix.mongodb }}
@@ -37,6 +37,7 @@ jobs:
           --health-retries 10
     env:
       MONGOID_VERSION: ${{ matrix.mongoid }}
+      COVERAGE: ${{ matrix.coverage }}
     steps:
       - uses: actions/checkout@v7
       - uses: ruby/setup-ruby@v1
@@ -47,3 +48,10 @@ jobs:
       - name: Run tests
         timeout-minutes: 10
         run: bundle exec rspec
+      - name: Report coverage
+        if: ${{ matrix.coverage == 'true' }}
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: coverage/.resultset.json
+          format: simplecov
