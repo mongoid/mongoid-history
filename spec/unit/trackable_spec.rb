@@ -845,6 +845,13 @@ describe Mongoid::History::Trackable do
       expect { m.destroy }.to change(Tracker, :count).by(1)
     end
 
+    it 'yields without creating another history track when already destroyed' do
+      m.destroy
+      expect do
+        expect { |block| m.send(:track_destroy, &block) }.to yield_control
+      end.not_to change(Tracker, :count)
+    end
+
     it 'should not create history when error raised' do
       expect(m).to receive(:destroy).and_raise(StandardError)
       expect do

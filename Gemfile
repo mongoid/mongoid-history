@@ -2,9 +2,13 @@ source 'https://rubygems.org'
 
 gemspec
 
-case version = ENV['MONGOID_VERSION'] || '~> 7.0'
+case version = ENV['MONGOID_VERSION'] || '9'
 when 'HEAD'
   gem 'mongoid', github: 'mongodb/mongoid'
+when '9'
+  gem 'mongoid', '~> 9.0'
+when '8'
+  gem 'mongoid', '~> 8.0'
 when '7'
   gem 'mongoid', '~> 7.3'
 when '7.3'
@@ -30,7 +34,7 @@ else
 end
 
 gem 'mongoid-compatibility'
-gem 'psych', '< 5.0'
+gem 'psych', Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.6') ? '< 4.0' : '< 5.0'
 
 group :development, :test do
   gem 'bundler'
@@ -39,16 +43,27 @@ group :development, :test do
 end
 
 group :test do
+  gem 'base64'
+  gem 'benchmark'
+  if %w[3 4 5].include?(ENV['MONGOID_VERSION']) && RUBY_ENGINE == 'ruby'
+    gem 'bigdecimal', '~> 1.3.5'
+  else
+    gem 'bigdecimal'
+  end
   gem 'benchmark-ips', require: false
-  gem 'coveralls'
-  gem 'danger'
-  gem 'danger-changelog'
-  gem 'danger-pr-comment'
+  if Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('2.7')
+    gem 'danger'
+    gem 'danger-changelog'
+    gem 'danger-pr-comment'
+  end
+  gem 'simplecov', Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.5') ? '>= 0.16' : '>= 0.22', require: false
   gem 'gem-release'
   gem 'racc'
   gem 'request_store'
+  gem 'logger'
+  gem 'mutex_m'
   gem 'rspec', '~> 3.1'
-  gem 'rubocop', '~> 1.28'
+  gem 'rubocop', Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.6') ? '~> 0.49.0' : '~> 1.28'
   gem 'term-ansicolor', '~> 1.3.0'
   gem 'yard'
 end

@@ -1,5 +1,6 @@
-require 'coveralls'
-Coveralls.wear!
+require 'logger'
+require 'simplecov'
+SimpleCov.start
 
 $LOAD_PATH.push File.expand_path('../lib', __dir__)
 
@@ -19,8 +20,8 @@ RSpec.configure do |config|
   config.raise_errors_for_deprecations!
 
   config.before :all do
-    Mongoid.logger.level = Logger::INFO
-    Mongo::Logger.logger.level = Logger::INFO if Mongoid::Compatibility::Version.mongoid5_or_newer?
+    Mongoid.logger.level = Logger::Severity::INFO
+    Mongo::Logger.logger.level = Logger::Severity::INFO if Mongoid::Compatibility::Version.mongoid5_or_newer?
     Mongoid.belongs_to_required_by_default = false if Mongoid::Compatibility::Version.mongoid6?
   end
 

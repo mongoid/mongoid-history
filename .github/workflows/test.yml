@@ -3,70 +3,47 @@ name: CI RSpec Test
 on: [push, pull_request]
 
 jobs:
-  build:
-    name: >-
-      ${{ matrix.ruby }}
-    env:
-      CI: true
-      TESTOPTS: -v
-    runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.experimental }}
+  test:
+    name: test (ruby=${{ matrix.ruby }}, mongoid=${{ matrix.mongoid }}, mongodb=${{ matrix.mongodb }})
+    runs-on: ubuntu-22.04
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
-        ruby: [2.7, 3.0] # truffleruby, jruby
-        mongoid: [7]
-        experimental: [false]
         include:
-          - ruby: 2.7
-            mongoid: 3
-            experimental: false
-          - ruby: 2.7
-            mongoid: 4
-            experimental: false
-          - ruby: 2.7
-            mongoid: 5
-            experimental: false
-          - ruby: 2.7
-            mongoid: 6
-            experimental: false
-          - ruby: 2.7
-            mongoid: 7.0
-            experimental: false
-          - ruby: 2.7
-            mongoid: 7.1
-            experimental: false
-          - ruby: 2.7
-            mongoid: 7.2
-            experimental: false
-          - ruby: 2.7
-            mongoid: 7.3
-            experimental: false
-          - ruby: head
-            mongoid: 7
-            experimental: true
-          # - ruby: jruby-head
-          #   mongoid: 7
-          #   experimental: true
-          # - ruby: truffleruby-head
-          #   mongoid: 7
-          #   experimental: true
+          - { ruby: '2.3', mongoid: '3', mongodb: '4.4' }
+          - { ruby: '2.4', mongoid: '4', mongodb: '4.4' }
+          - { ruby: '2.5', mongoid: '5', mongodb: '4.4' }
+          - { ruby: '2.6', mongoid: '6', mongodb: '4.4' }
+          - { ruby: '2.5', mongoid: '7', mongodb: '4.4' }
+          - { ruby: '2.6', mongoid: '7', mongodb: '4.4' }
+          - { ruby: '2.7', mongoid: '7.0', mongodb: '4.4' }
+          - { ruby: '2.7', mongoid: '7.1', mongodb: '4.4' }
+          - { ruby: '2.7', mongoid: '7.2', mongodb: '4.4' }
+          - { ruby: '2.7', mongoid: '7.3', mongodb: '4.4' }
+          - { ruby: '3.0', mongoid: '7', mongodb: '4.4' }
+          - { ruby: 'jruby-9.4', mongoid: '7', mongodb: '4.4' }
+          - { ruby: '3.2', mongoid: '8', mongodb: '6.0' }
+          - { ruby: '3.3', mongoid: '9', mongodb: '7.0' }
+          - { ruby: '3.4', mongoid: '9', mongodb: '8.0' }
+          - { ruby: '4.0', mongoid: '9', mongodb: '8.0' }
+    services:
+      mongodb:
+        image: mongo:${{ matrix.mongodb }}
+        ports: ['27017:27017']
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ping: 1})' || mongo --quiet --eval 'db.adminCommand({ping: 1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      MONGOID_VERSION: ${{ matrix.mongoid }}
     steps:
-      - name: repo checkout
-        uses: actions/checkout@v2
-      - name: start mongodb
-        uses: supercharge/mongodb-github-action@1.6.0
-        with:
-          mongodb-version: 4.4
-          mongodb-replica-set: rs0
-      - name: load ruby
-        uses: ruby/setup-ruby@v1
+      - uses: actions/checkout@v7
+      - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
-          bundler: 2
-      - name: bundle install
-        run:  bundle install --jobs 4 --retry 3
-      - name: test
+          bundler-cache: true
+          cache-version: psych-compatible
+      - name: Run tests
         timeout-minutes: 10
-        run: bundle exec rake spec
-        continue-on-error: ${{ matrix.experimental }}
+        run: bundle exec rspec
