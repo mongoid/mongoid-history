@@ -634,3 +634,6 @@ You're encouraged to contribute to Mongoid History. See [CONTRIBUTING.md](CONTRI
 Copyright (c) 2011-2024 Aaron Qian and Contributors.
 
 MIT License. See [LICENSE.txt](LICENSE.txt) for further details.
+# CI compatibility
+
+CI preserves representative Mongoid 3–7 combinations and tests Mongoid 8 and 9 through Ruby 4.0 and MongoDB 8.0; set `MONGOID_VERSION` to select a dependency family, and set `Mongoid.around_callbacks_for_embeds = true` and `Mongoid.prevent_multiple_calls_of_embedded_callbacks = false` on Mongoid 9 to preserve cascading history callbacks for deeply embedded documents.

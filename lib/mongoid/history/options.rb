@@ -45,7 +45,7 @@ module Mongoid
       def prepare_skipped_fields
         # normalize :except fields to an array of database field strings
         @prepared[:except] = Array(@prepared[:except])
-        @prepared[:except] = @prepared[:except].map { |field| trackable.database_field_name(field) }.compact.uniq
+        @prepared[:except] = @prepared[:except].compact.map { |field| trackable.database_field_name(field) }.compact.uniq
       end
 
       def prepare_formatted_fields

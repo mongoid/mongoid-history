@@ -361,7 +361,7 @@ describe Mongoid::History::Attributes::Update do
             # on where those can be used.
 
             cmp = track_blank_changes ? 'should' : 'should_not'
-            cmp_name = cmp.humanize capitalize: false
+            cmp_name = cmp.tr('_', ' ')
 
             [
               { n: 'many-to-many', f: 'other_dummy_parent_ids', v: [] },

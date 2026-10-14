@@ -276,7 +276,11 @@ module Mongoid
         end
 
         def track_destroy(&block)
-          track_history_for_action(:destroy, &block) unless destroyed?
+          if destroyed?
+            yield
+          else
+            track_history_for_action(:destroy, &block)
+          end
         end
 
         def clear_trackable_memoization
