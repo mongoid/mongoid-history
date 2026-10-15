@@ -18,6 +18,8 @@ Mongoid History supports the following dependency versions:
 
 Earlier Ruby versions may work but are untested.
 
+For breaking changes and migration guidance, see [UPGRADING](UPGRADING.md).
+
 ### Tracking Boundaries
 
 History is recorded by Mongoid's create, update, and destroy callbacks. Use callback-based persistence, such as `create!`, `update_attributes!`, `save!`, and `destroy`, when changes must be tracked:
@@ -512,6 +514,10 @@ the history tracker unless they are satisfied. These options can take either a m
                 if: :should_i_track_history?,
                 unless: ->(obj){ obj.method_to_skip_history }
 ```
+
+### Reading custom serialized values
+
+Starting with 1.0, `tracker.original` and `tracker.modified` return application-level values converted through the tracked model's Mongoid field definitions, including embedded snapshots. For example, `tracker.modified['amount']` returns a `Money` when the model declares `field :amount, type: Money` and the application's Money/Mongoid integration is loaded; Date fields return Date objects. These are separate hashes: mutating them does not update the stored history. `tracked_changes`, `tracked_edits`, and `affected` also expose application-level values. Use `tracker.database_original` and `tracker.database_modified` for the BSON-safe snapshots previously returned by `original` and `modified`; `tracker.attributes`, bracket access, persisted field names, and database queries remain serialized. Internal undo/redo and destroy restoration use database representations, so merely reading typed values never stores Money objects in BSON or changes replay semantics. Typed readers work after document destruction but require the model class and current field definitions to remain available; raw readers remain available without the model. Unknown fields and localized translation hashes retain their stored representation. Removed field types and lossy `:format` transformations cannot be reconstructed. See [UPGRADING](UPGRADING) before migrating from 0.x.
 
 ### Using an alternate changes method
 

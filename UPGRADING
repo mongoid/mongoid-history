@@ -1,0 +1,31 @@
+Upgrading from 0.x to 1.0
+
+Tracker#original and Tracker#modified now return application-level values using
+the tracked model's current Mongoid field definitions. Money fields return Money,
+Date fields return Date, and embedded snapshots use their related field types.
+The returned hashes are copies; mutating them does not edit persisted history.
+Tracker#tracked_changes, #tracked_edits, and #affected also use typed values.
+
+Replace calls that need the old serialized representation with
+Tracker#database_original and Tracker#database_modified. For example:
+
+  # Before 1.0: tracker.modified['amount']['cents']
+  tracker.database_modified['amount']['cents']
+  # Application-level access in 1.0:
+  tracker.modified['amount'].cents
+
+Keep the tracked model definitions and custom type integrations loaded when
+using typed readers. They work even after the document is destroyed, but a
+missing model raises NameError for nonempty snapshots. The database readers do
+not need model definitions. Schema changes affect interpretation; unknown
+fields and localized translation hashes retain their stored representation.
+Lossy :format transformations cannot be reversed into their original types.
+
+No database migration is required. Existing BSON snapshots, the original and
+modified database field names, bracket access (tracker[:modified]), attributes,
+and query criteria remain serialized. The generated original=/modified= writers
+continue accepting BSON-safe snapshots; do not assign custom objects directly
+into tracker hashes. Internal undo/redo and destroy restoration explicitly use
+database representations, preserving replay without persisting custom objects.
+Applications needing to edit history should explicitly assign serialized
+snapshots rather than mutating the typed reader's copy.

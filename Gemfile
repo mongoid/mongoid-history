@@ -61,6 +61,7 @@ group :test do
   gem 'racc'
   gem 'request_store'
   gem 'logger'
+  gem 'money-rails', '~> 1.15.0', require: false
   gem 'mutex_m'
   gem 'rspec', '~> 3.1'
   gem 'rubocop', Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.6') ? '~> 0.49.0' : '~> 1.28'
