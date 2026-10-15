@@ -7,6 +7,7 @@ require 'mongoid/history/attributes/destroy'
 require 'mongoid/history/options/relations'
 require 'mongoid/history/options'
 require 'mongoid/history/version'
+require 'mongoid/history/obfuscation'
 require 'mongoid/history/tracker'
 require 'mongoid/history/trackable'
 
