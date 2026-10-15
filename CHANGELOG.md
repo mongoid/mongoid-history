@@ -1,5 +1,6 @@
 ### 0.9.1 (Next)
 
+* Add scoped modifier assignment and opt-in controller hooks, restoring context after errors; document custom modifier names and string snapshots - [@dblock](https://github.com/dblock), building on [#149](https://github.com/mongoid/mongoid-history/pull/149) by [@melnikaite](https://github.com/melnikaite).
 * Your contribution here.
 * Document and test callback-based auditing boundaries, and clarify MongoDB storage and audit presentation constraints - [@dblock](https://github.com/dblock).
 * [#264](https://github.com/mongoid/mongoid-history/pull/264): Add explicit `Mongoid::History.with_group` reporting metadata while preserving per-write history and undo/redo, addressing [#144](https://github.com/mongoid/mongoid-history/issues/144) proposed by [@ajsharp](https://github.com/ajsharp) - [@dblock](https://github.com/dblock).

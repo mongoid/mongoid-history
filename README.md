@@ -483,18 +483,55 @@ In your View, you might do something like (example in HAML format):
     %li.remove Removed field #{k} (was previously #{v})
 ```
 
-### Adding Userstamp on History Trackers
+### Assigning the Current Modifier
 
-To track the User in the application who created the HistoryTracker, add the
-[Mongoid::Userstamp gem](https://github.com/tbpro/mongoid_userstamp) to your HistoryTracker class.
-This will add a field called `created_by` and an accessor `creator` to the model (you can rename these via gem config).
+Without an integration, assign the model's `modifier` explicitly on each change. Setting `Mongoid::History.current_user_method` alone does not discover a controller or enable automatic assignment.
 
+For Rails controllers, opt in to an around-action hook:
+
+```ruby
+class ApplicationController < ActionController::Base
+  include Mongoid::History::Hooks::Modifier
+end
+
+# Optional; defaults to :current_user. Private controller methods are supported.
+Mongoid::History.current_user_method = :current_person
 ```
-class MyHistoryTracker
-  include Mongoid::History::Tracker
-  include Mongoid::Userstamp
+
+The hook calls the configured method once for each action and wraps the action in `Mongoid::History.with_modifier`. It does not retain a controller in thread-local storage. Missing methods raise normally rather than silently writing unattributed history.
+
+For Sinatra, background jobs, scripts, or explicit overrides, wrap the entire operation in a block:
+
+```ruby
+Mongoid::History.with_modifier(current_user) do
+  post.update_attributes!(title: 'Updated')
 end
 ```
+
+The scoped modifier is authoritative: it overrides a previously saved modifier and an assignment within the block. Use a nested `with_modifier(other_user)` to override it, or `with_modifier(nil)` for an anonymous operation. Scopes restore their previous context even after an exception and use RequestStore when available, otherwise thread-local storage. Background work must establish its own scope. No context is installed automatically.
+
+The modifier is assigned before validation and used for create, update, and destroy history. This does not disable model validations: anonymous saves of a required association still fail. Use `modifier_field_optional: true` on Mongoid 6+ when anonymous model saves should be allowed.
+
+### Modifier Names and String Snapshots
+
+`modifier_field: :updater` changes the association on the tracked model, not the shared tracker: use `post.updater` and `post.history_tracks.first.modifier`. A tracker can contain history for multiple models with different association names, so renaming its common `modifier` association per model would be ambiguous and break existing queries. Define an application-specific alias on your tracker if desired.
+
+`modifier_field: nil` omits the model association and produces history without a modifier, including during undo and redo.
+
+The default modifier is a Mongoid association, not a string field. For a durable string snapshot, add a separate field and a callback to your tracker instead of changing the shared association schema:
+
+```ruby
+class HistoryTracker
+  include Mongoid::History::Tracker
+  field :modifier_name, type: String
+
+  before_create do
+    self.modifier_name = modifier.name if modifier
+  end
+end
+```
+
+The snapshot survives removal of the referenced user. For an arbitrary label without any user relationship, set `modifier_field: nil` on the model and populate a custom tracker field in a callback from your application's scoped context. Decide which information to retain according to your application's privacy and retention requirements; a snapshot is not automatically exempt from erasure obligations. No userstamp gem is required.
 
 ### Setting Modifier Class Name
 
