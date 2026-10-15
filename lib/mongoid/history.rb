@@ -7,6 +7,7 @@ require 'mongoid/history/attributes/destroy'
 require 'mongoid/history/options'
 require 'mongoid/history/version'
 require 'mongoid/history/tracker'
+require 'mongoid/history/retention'
 require 'mongoid/history/trackable'
 
 module Mongoid
@@ -85,3 +86,6 @@ module Mongoid
 end
 
 Mongoid::History.reset!
+
+Mongoid::Document.include Mongoid::History::RetentionLifecycle
+Mongoid.models.each { |model| model.include Mongoid::History::RetentionLifecycle }

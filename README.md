@@ -633,6 +633,37 @@ If you are using multiple trackers and the `tracker_class_name` parameter is
 not specified, Mongoid::History will use the default tracker configured in the
 initializer file or whatever the first tracker was loaded.
 
+### Count-Based History Retention
+
+History is retained indefinitely by default. To automatically keep the latest 100 records for each tracked document, opt in on the model:
+
+```ruby
+class Post
+  include Mongoid::Document
+  include Mongoid::History::Trackable
+  field :title, type: String
+
+  track_history on: [:title], max_history: 100
+end
+```
+
+`max_history: nil` (the default) means unlimited retention; a non-negative integer enables automatic pruning after successful callback-based persistence. `max_history: 0` retains no history but still advances the history version. The count applies separately to each exact association chain: separately tracked embedded documents need their own option.
+
+Pruning is deferred until the enclosing create/update/save/destroy callback chain has completed successfully, including after callbacks. Embedded changes are queued on the root document, including when that root is not itself tracked. A validation failure, false callback result, or exception discards the pending pruning; earlier history is not deleted on behalf of the failed operation. The callback boundary is not a database transaction: it cannot protect against later rollback of an application-owned transaction or errors after Mongoid's callback chain has returned. Use unlimited automatic retention and explicit pruning after commit in those cases. Likewise, if retention deletion itself fails after the model write succeeded, the error propagates and the application must retry maintenance; the document write is not rolled back.
+
+You can also explicitly prune a particular document after its writes have succeeded:
+
+```ruby
+post.update_attributes!(title: 'A tracked edit')
+post.prune_history!(keep: 100) # returns the number of deleted history records
+```
+
+`keep` must be a non-negative integer; `keep: 0` discards all history. Unsaved documents are rejected. Records are ordered by version descending, with `_id` descending as a deterministic tie breaker. Versions are not renumbered and the document's current version is unchanged. The configured tracker, scope, and complete association chain isolate deletion from other documents and from separately tracked embedded documents. Prune those embedded documents separately if desired. A parent's `history_tracks` can include descendant edits, so its total count can exceed `keep`.
+
+Run explicit pruning in an application-owned retention job or after the entire enclosing persistence operation has succeeded, not in a tracker creation callback or an embedded save callback that may precede a parent failure. For both automatic and explicit retention, coordinate concurrent writes and other pruning for the same document; selection and deletion are not a transaction or a concurrency-safe hard cap. Only selected record IDs are deleted, so records inserted after selection are not accidentally swept up. Large backlogs should be pruned during controlled maintenance because selection materializes the IDs to delete. Automatic retention only runs when the operation actually records history; disabled tracking, untracked changes, atomic operations, and direct driver writes do not trigger it.
+
+Pruning is irreversible, bypasses tracker destroy callbacks, and removes the ability to undo/redo deleted revisions or reconstruct the full audit trail. Remaining entries retain their recorded before/after values but are not full snapshots. Choose a policy appropriate to your application's audit requirements and archive records first if needed. MongoDB TTL indexes retain by time, while capped collections limit a whole collection; neither implements a per-document revision count.
+
 ### Dependent Restrict Associations
 
 When `dependent: :restrict` is used on an association, a call to `destroy` on
