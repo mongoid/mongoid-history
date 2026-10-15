@@ -1,6 +1,7 @@
 ### 0.9.1 (Next)
 
 * Your contribution here.
+* Document and test callback-based auditing boundaries, and clarify MongoDB storage and audit presentation constraints - [@dblock](https://github.com/dblock).
 
 ### 0.9.0 (2026/10/14)
 
