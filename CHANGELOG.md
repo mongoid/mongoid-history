@@ -2,6 +2,8 @@
 
 * Your contribution here.
 
+* Add opt-in `:obfuscate` history fields, filtering both sides of create/update/destroy snapshots and rejecting unsafe undo/redo ([#164](https://github.com/mongoid/mongoid-history/issues/164)) - [@dblock](https://github.com/dblock).
+
 ### 0.9.0 (2026/10/14)
 
 * [#261](https://github.com/mongoid/mongoid-history/pull/261): Report library coverage to Coveralls from one modern CI job and replace obsolete coverage integration and badges - [@dblock](https://github.com/dblock).

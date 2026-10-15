@@ -264,7 +264,7 @@ module Mongoid
 
           @history_tracker_attributes[:original] = original
           @history_tracker_attributes[:modified] = modified
-          @history_tracker_attributes
+          @history_tracker_attributes = Mongoid::History::Obfuscation.prepare(@history_tracker_attributes, self)
         end
 
         def track_create(&block)

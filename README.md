@@ -486,6 +486,10 @@ the history tracker unless they are satisfied. These options can take either a m
                 unless: ->(obj){ obj.method_to_skip_history }
 ```
 
+### Obfuscating sensitive history values
+
+Use `track_history obfuscate: [:password_digest, 'profile.api_token']` to record that selected fields changed without keeping their values. Non-nil values in both `original` and `modified` are replaced with `[FILTERED]` before persistence on create, update, and destroy; ordinary fields and actor/action/version metadata remain available. Field aliases are supported, dotted paths address nested snapshots, and paths through arrays apply to every member. Configure the fields in `:on` as usual: `:obfuscate` does not enable tracking of excluded fields. This does not encrypt values, sanitize other collections, or remove secrets from old history; passwords should never be stored in plaintext. It does not alter the document itself. A tracker that contains obfuscated values records `obfuscated_fields` and rejects undo/redo with `ArgumentError`, including after configuration changes, because the lost values cannot be restored safely. Unaffected tracks retain normal undo/redo behavior.
+
 ### Using an alternate changes method
 
 Sometimes you may wish to provide an alternate method for determining which changes should be tracked.  For example, if you are using embedded documents
