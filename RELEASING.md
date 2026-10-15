@@ -1,66 +1,50 @@
 # Releasing Mongoid::History
 
-There are no particular rules about when to release Mongoid History.
-Release bug fixes frequently, features not so frequently and breaking API changes rarely.
+## Prepare
 
-### Release Procedure
+Use the upstream checkout on a clean `master` and run `git pull --ff-only`. Verify the latest [GitHub Actions](https://github.com/mongoid/mongoid-history/actions) checks pass for supported platforms. Follow semantic versioning: patch for fixes, minor for backward-compatible features, major for breaking changes.
 
-Run tests, check that all tests succeed locally.
+Set `lib/mongoid/history/version.rb` to the release version, date its `CHANGELOG.md` heading using `YYYY/MM/DD`, and remove the contribution placeholder from that section.
 
-```
+```sh
 bundle install
 bundle exec rake
-```
-
-Check that the last build succeeded in [Travis CI](https://travis-ci.org/mongoid/mongoid-history)
-for all supported platforms.
-
-Increment the version, modify [lib/mongoid/history/version.rb](lib/mongoid/history/version.rb).
-Mongoid History versions should follow [Semantic Versioning (SemVer)](https://semver.org/).
-
-Change "Next Release" in [CHANGELOG.md](CHANGELOG.md) to the new version.
-
-```
-### 0.4.0 (2014-01-27)
-```
-
-Remove the line with "Your contribution here.", since there will be no more contributions to this release.
-
-Commit your changes.
-
-```
-git add CHANGELOG.md lib/mongoid/history/version.rb
-git commit -m "Preparing for release, 0.4.0."
+git add CHANGELOG.md lib/mongoid/history/version.rb RELEASING.md
+git commit -m "Preparing for release, 0.9.0."
 git push origin master
 ```
 
-Release.
+Wait for the preparation commit's CI checks to pass.
 
-```
-$ rake release
+## Publish RubyGems and GitHub
 
-mongoid-history 0.4.0 built to pkg/mongoid-history-0.4.0.gem.
-Tagged v0.4.0.
-Pushed git commits and tags.
-Pushed mongoid-history 0.4.0 to rubygems.org.
+```sh
+bundle exec rake release
 ```
 
-### Prepare for the Next Version
+This builds the gem, pushes the tag, and publishes to RubyGems. Complete RubyGems MFA when prompted. If interrupted, inspect the existing tag and RubyGems version before retrying. Never move a published tag; if only gem publication is missing, use `gem push pkg/mongoid-history-0.9.0.gem`.
 
-Add the next release to [CHANGELOG.md](CHANGELOG.md).
+A tag does not create a GitHub release. Once RubyGems publication is verified, create the matching release with the changelog entries as notes:
 
+```sh
+version=0.9.0
+notes="$(mktemp)"
+awk -v version="$version" '
+  /^### / {
+    if (found) exit
+    if ($2 == version) found = 1
+    next
+  }
+  found { print }
+' CHANGELOG.md > "$notes"
+gh release create "v$version" --repo mongoid/mongoid-history --verify-tag --title "$version" --notes-file "$notes" --latest
+rm "$notes"
+curl --fail --silent --show-error "https://rubygems.org/api/v2/rubygems/mongoid-history/versions/$version.json"
+gh release view "v$version" --repo mongoid/mongoid-history
 ```
-### 0.4.1 (Next)
 
-* Your contribution here.
-```
+The release is complete only after verifying both RubyGems publication and the non-draft GitHub release.
 
-Increment the minor version, modify [lib/mongoid/history/version.rb](lib/mongoid/history/version.rb).
+## Prepare the Next Version
 
-Commit your changes.
-
-```
-git add CHANGELOG.md lib/mongoid/history/version.rb
-git commit -m "Preparing for next release, 0.4.1."
-git push origin master
-```
+Increment the development patch version in `lib/mongoid/history/version.rb`, for example to `0.9.1`. Add `### 0.9.1 (Next)` and a contribution placeholder above the released section in `CHANGELOG.md`. Commit and push those changes to `master`; leave the released tag unchanged.

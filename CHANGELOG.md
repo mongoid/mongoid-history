@@ -1,9 +1,8 @@
-### 0.9.0 (Next)
+### 0.9.0 (2026/10/14)
 
 * [#260](https://github.com/mongoid/mongoid-history/pull/260): Modernize CI through Ruby 4.0, Mongoid 9 and MongoDB 8 while retaining legacy boundary coverage; fix modern dependency and embedded callback compatibility - [@dblock](https://github.com/dblock).
 * [#259](https://github.com/mongoid/mongoid-history/pull/259): Migrate Danger to danger-pr-comment workflow - [@dblock](https://github.com/dblock).
 * [#257](https://github.com/mongoid/mongoid-history/pull/257): Add track_blank_changes option - [@BrianLMatthews](https://github.com/BrianLMatthews).
-* Your contribution here.
 
 ### 0.8.5 (2021/09/18)
 
