@@ -5,7 +5,7 @@ module Mongoid
 
       def initialize(trackable, opts = {})
         @trackable = trackable
-        @options = default_options.merge(opts)
+        @options = default_options.merge(Mongoid::History.prepare_trackable_alias(trackable, opts))
       end
 
       def scope

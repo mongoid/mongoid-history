@@ -2,6 +2,8 @@
 
 * Your contribution here.
 
+* Add stable `track_history as:` model identities with alias-aware history resolution, scopes, and replay ([#86](https://github.com/mongoid/mongoid-history/issues/86)) - [@dblock](https://github.com/dblock).
+
 ### 0.9.0 (2026/10/14)
 
 * [#261](https://github.com/mongoid/mongoid-history/pull/261): Report library coverage to Coveralls from one modern CI job and replace obsolete coverage integration and badges - [@dblock](https://github.com/dblock).

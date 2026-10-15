@@ -218,7 +218,7 @@ module Mongoid
           end
 
           # if root node has no meta, and should use class name instead
-          name = meta ? meta.key.to_s : node.class.name
+          name = meta ? meta.key.to_s : Mongoid::History.trackable_name(node.class)
 
           ActiveSupport::OrderedHash['name', name, 'id', node.id]
         end
@@ -589,7 +589,7 @@ module Mongoid
 
         def inherited(subclass)
           super
-          subclass.mongoid_history_options = Mongoid::History::Options.new(subclass, mongoid_history_options.options)
+          subclass.mongoid_history_options = Mongoid::History::Options.new(subclass, mongoid_history_options.options.except(:as))
         end
       end
     end

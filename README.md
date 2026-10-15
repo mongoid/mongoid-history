@@ -486,6 +486,10 @@ the history tracker unless they are satisfied. These options can take either a m
                 unless: ->(obj){ obj.method_to_skip_history }
 ```
 
+### Stable model names in history
+
+Use `track_history as: 'stable_document'` to store a stable root identity instead of the Ruby class name. The alias is also the default history scope unless `:scope` is explicitly supplied. When moving or renaming a class, keep the same alias and Mongoid collection (`store_in collection: ...`) on its replacement; loaded models register aliases so old history, lookups, and undo/redo can resolve the current class without rewriting association chains. Aliases must be nonempty and unique among loaded models and cannot shadow another model's constant name. Make aliased models available before reading history (for example, eager-load them in Rails); the gem cannot infer an unloaded model from an arbitrary alias. Embedded nodes still use their parent relation names, so renaming an embedded class only requires updating relation metadata, while renaming the relation itself still requires migration. Subclasses do not inherit a parent's concrete alias; configure a unique alias on each class whose name must be stable. Existing history recorded before enabling an alias retains its old identity and needs a migration or continued access to the old class name.
+
 ### Using an alternate changes method
 
 Sometimes you may wish to provide an alternate method for determining which changes should be tracked.  For example, if you are using embedded documents
