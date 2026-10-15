@@ -9,14 +9,30 @@ require 'mongoid/history/options'
 require 'mongoid/history/version'
 require 'mongoid/history/tracker'
 require 'mongoid/history/trackable'
+require 'mongoid/history/hooks/modifier'
 
 module Mongoid
   module History
     GLOBAL_TRACK_HISTORY_FLAG = 'mongoid_history_trackable_enabled'.freeze
     HISTORY_GROUP_KEY = 'mongoid_history_group_id'.freeze
+    MODIFIER_KEY = :mongoid_history_modifier
 
     class << self
       attr_accessor :tracker_class_name, :trackable_settings, :modifier_class_name, :current_user_method
+
+      def with_modifier(modifier)
+        storage = store
+        present = storage.key?(MODIFIER_KEY)
+        previous = storage[MODIFIER_KEY]
+        storage[MODIFIER_KEY] = [modifier]
+        yield
+      ensure
+        if !present && storage.respond_to?(:delete)
+          storage.delete(MODIFIER_KEY)
+        else
+          storage[MODIFIER_KEY] = previous
+        end
+      end
 
       def disable
         original_flag = store[GLOBAL_TRACK_HISTORY_FLAG]
