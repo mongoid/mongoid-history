@@ -1,6 +1,8 @@
 module Mongoid
   module History
     class Options
+      include Relations
+
       attr_reader :trackable, :options
 
       def initialize(trackable, opts = {})
@@ -45,7 +47,7 @@ module Mongoid
       def prepare_skipped_fields
         # normalize :except fields to an array of database field strings
         @prepared[:except] = Array(@prepared[:except])
-        @prepared[:except] = @prepared[:except].compact.map { |field| trackable.database_field_name(field) }.compact.uniq
+        @prepared[:except] = @prepared[:except].compact.map { |field| history_field_name(field) }.compact.uniq
       end
 
       def prepare_formatted_fields
@@ -55,7 +57,7 @@ module Mongoid
           @prepared[:format].each do |field, format|
             next if field.nil?
 
-            field = trackable.database_field_name(field)
+            field = history_field_name(field)
 
             if format.class == Hash && trackable.embeds_many?(field)
               relation_class = trackable.relation_class_of(field)
@@ -90,10 +92,7 @@ module Mongoid
           @prepared[:on] = @prepared[:on] | trackable.fields.keys.map(&:to_sym) - reserved_fields.map(&:to_sym)
         end
 
-        if @prepared[:on].include?(:embedded_relations)
-          @prepared[:on] = @prepared[:on].reject { |opt| opt == :embedded_relations }
-          @prepared[:on] = @prepared[:on] | trackable.embedded_relations.keys
-        end
+        prepare_relations
 
         @prepared[:fields] = []
         @prepared[:dynamic] = []
@@ -125,7 +124,7 @@ module Mongoid
               elsif option.is_a?(Array)
                 option.first
               end
-        trackable.database_field_name(key || option)
+        history_field_name(key || option)
       end
 
       # Returns the tracked attributes for embedded relations, otherwise `nil`
