@@ -21,7 +21,7 @@ module Mongoid
             belongs_to history_options.options[:modifier_field].to_sym, belongs_to_modifier_options
           end
 
-          include MyInstanceMethods
+          include HistoricalAttributes, MyInstanceMethods
           extend SingletonMethods
 
           delegate :history_trackable_options, to: 'self.class'
