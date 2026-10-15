@@ -1,3 +1,7 @@
+### 0.9.1 (Next)
+
+* Your contribution here.
+
 ### 0.9.0 (2026/10/14)
 
 * [#260](https://github.com/mongoid/mongoid-history/pull/260): Modernize CI through Ruby 4.0, Mongoid 9 and MongoDB 8 while retaining legacy boundary coverage; fix modern dependency and embedded callback compatibility - [@dblock](https://github.com/dblock).
