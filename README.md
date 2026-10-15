@@ -18,6 +18,27 @@ Mongoid History supports the following dependency versions:
 
 Earlier Ruby versions may work but are untested.
 
+### Tracking Boundaries
+
+History is recorded by Mongoid's create, update, and destroy callbacks. Use callback-based persistence, such as `create!`, `update_attributes!`, `save!`, and `destroy`, when changes must be tracked:
+
+```ruby
+post.update_attributes!(title: 'A tracked edit')
+Post.where(published: false).each do |post|
+  post.update_attributes!(published: true)
+end
+```
+
+Atomic operations such as `post.set`, criteria operations such as `update_all`, and direct driver operations such as `collection.bulk_write` bypass these callbacks. They persist changes without creating history or incrementing the history version. Enabling tracking does not change this behavior. A subsequent callback-based update cannot reconstruct the missing edits. Iterating and saving documents is not a bulk-write equivalent: it runs validations and callbacks and is not atomic across documents.
+
+Mongoid History does not wrap driver writes or synthesize history by reading documents before a bulk operation. Such a read can race with concurrent writes; ordered or unordered bulk writes can partially succeed, and their result does not provide every document's before-and-after values. Applications requiring auditing for all database writers need a separate capture design with explicit consistency, failure, and recovery guarantees.
+
+### Storage and Audit Presentation
+
+Trackers are Mongoid documents, not a pluggable storage interface. Custom tracker classes can select a MongoDB collection or client using Mongoid's `store_in`, but cannot replace MongoDB with Cassandra or another database. A non-MongoDB adapter would also need compatible queries, association traversal, ordering, undo/redo, and failure semantics; changing only the insertion path is insufficient.
+
+The persisted `original`, `modified`, `action`, and `association_chain` fields describe individual edits, including edits to embedded documents. They are not whole-root snapshots. Replacing them with a single nested tree would change the storage format and the independent, non-linear undo behavior. For a human-readable audit trail, use `tracked_changes` or `tracked_edits` (see below) and build a presentation layer without rewriting the stored edits. An external archive or derived tree is not a supported replacement for the records required by undo/redo.
+
 ## Install
 
 ```ruby
