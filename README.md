@@ -64,6 +64,14 @@ Use `Mongoid::History.with_group('editing-session-id') { document.update_attribu
 
 Grouping is presentation metadata, not a transaction: each write retains its own history record, version, modifier, undo and redo. Records are not automatically merged by time or modifier, and a failed block does not roll back earlier successful writes. Group IDs do not grant authorization; scope queries to documents/users the caller may access. Existing records have no group. Add a database index on `group_id` in your tracker if your application's reporting queries require it.
 
+### Track has_and_belongs_to_many references
+
+Track a HABTM association's stored ID array with `track_history on: [:tags]`, its foreign key (`on: [:tag_ids]`), or `on: :referenced_relations` for all HABTM associations. The default `on: :all` already includes these stored fields. Relation names in `except` and `format` also resolve to the foreign key, including custom foreign keys. This tracks membership IDs, not changes to fields on referenced documents.
+
+Use document saves to record membership changes: `post.update_attributes!(tag_ids: post.tag_ids + [tag.id])`, `post.update_attributes!(tag_ids: post.tag_ids - [tag.id])`, or `post.update_attributes!(tag_ids: [])`. These use normal validation, tracking flags, persisted versions and undo/redo. Read fresh IDs before editing if another process may update the association; this is not an atomic concurrent append.
+
+Mongoid's association proxy operations (`post.tags << tag`, `delete`, `clear`, association replacement) and atomic field operations bypass the owner's document update callbacks and are **not tracked**. Calling `save!` afterwards cannot reliably recover those already-persisted changes. This gem deliberately does not override `has_and_belongs_to_many` or install before-add/remove history callbacks: those can record failed operations, misidentify multiple associations to the same class, and lose version updates. For audited membership changes use saved foreign-key assignments rather than proxy operations.
+
 ### Set default tracker class name (optional)
 
 For backward compatibility, Mongoid::History uses the first loaded class to include `Mongoid::History::Tracker` as the default history tracker. Explicitly configure the default in a Rails initializer to avoid depending on model loading order, especially with multiple trackers or Rails lazy loading:
