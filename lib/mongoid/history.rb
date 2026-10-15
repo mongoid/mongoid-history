@@ -12,6 +12,7 @@ require 'mongoid/history/trackable'
 module Mongoid
   module History
     GLOBAL_TRACK_HISTORY_FLAG = 'mongoid_history_trackable_enabled'.freeze
+    HISTORY_GROUP_KEY = 'mongoid_history_group_id'.freeze
 
     class << self
       attr_accessor :tracker_class_name, :trackable_settings, :modifier_class_name, :current_user_method
@@ -37,6 +38,18 @@ module Mongoid
 
       def enabled?
         store[GLOBAL_TRACK_HISTORY_FLAG] != false
+      end
+
+      def with_group(group_id)
+        original_group = store[HISTORY_GROUP_KEY]
+        store[HISTORY_GROUP_KEY] = group_id
+        yield
+      ensure
+        store[HISTORY_GROUP_KEY] = original_group
+      end
+
+      def group_id
+        store[HISTORY_GROUP_KEY]
       end
 
       def store

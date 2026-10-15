@@ -258,6 +258,7 @@ module Mongoid
             association_chain: traverse_association_chain,
             scope: related_scope
           }
+          @history_tracker_attributes[:group_id] = Mongoid::History.group_id unless Mongoid::History.group_id.nil?
           @history_tracker_attributes[:modifier] = send(modifier_field) if modifier_field
 
           original, modified = transform_changes(modified_attributes_for_action(action))

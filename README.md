@@ -58,6 +58,12 @@ class HistoryTracker
 end
 ```
 
+### Group changes for reporting
+
+Use `Mongoid::History.with_group('editing-session-id') { document.update_attributes!(title: 'New title') }` to tag history records with a `group_id`. Reuse the same application-provided string in separate requests to collect changes from an editing session. Query `document.history_tracks.where(group_id: 'editing-session-id')` or the tracker class directly. The block returns its result and restores any enclosing group even on exceptions; storage follows the existing RequestStore/thread-local tracking settings.
+
+Grouping is presentation metadata, not a transaction: each write retains its own history record, version, modifier, undo and redo. Records are not automatically merged by time or modifier, and a failed block does not roll back earlier successful writes. Group IDs do not grant authorization; scope queries to documents/users the caller may access. Existing records have no group. Add a database index on `group_id` in your tracker if your application's reporting queries require it.
+
 ### Set default tracker class name (optional)
 
 Mongoid::History will use the first loaded class to include Mongoid::History::Tracker as the
