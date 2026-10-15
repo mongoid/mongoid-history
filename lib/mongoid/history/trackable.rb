@@ -2,6 +2,7 @@ module Mongoid
   module History
     module Trackable
       extend ActiveSupport::Concern
+      include Mongoid::History::TrackerAttributes
 
       module ClassMethods
         def track_history(options = {})
@@ -344,9 +345,10 @@ module Mongoid
 
         def track_history_for_action(action)
           if track_history_for_action?(action)
+            tracker_attributes = history_tracker_attributes(action.to_sym).merge(custom_history_tracker_attributes(action.to_sym))
             current_version = increment_current_version?(action) ? increment_current_version : next_version
             last_track = self.class.tracker_class.create!(
-              history_tracker_attributes(action.to_sym)
+              tracker_attributes
               .merge(version: current_version, action: action.to_s, trackable: self)
             )
           end

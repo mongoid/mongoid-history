@@ -7,6 +7,7 @@ require 'mongoid/history/attributes/destroy'
 require 'mongoid/history/options'
 require 'mongoid/history/version'
 require 'mongoid/history/tracker'
+require 'mongoid/history/tracker_attributes'
 require 'mongoid/history/trackable'
 
 module Mongoid

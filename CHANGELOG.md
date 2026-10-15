@@ -1,6 +1,7 @@
 ### 0.9.1 (Next)
 
 * Your contribution here.
+* Add model-specific `tracker_attributes_method` to attach metadata before history creation without overriding canonical audit fields - [@dblock](https://github.com/dblock).
 
 ### 0.9.0 (2026/10/14)
 
