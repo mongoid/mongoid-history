@@ -26,8 +26,8 @@ module Mongoid
           include MyInstanceMethods
           extend SingletonMethods
 
-          delegate :history_trackable_options, to: 'self.class'
-          delegate :track_history?, to: 'self.class'
+          delegate :history_trackable_options, :track_history?, to: 'self.class'
+          define_history_tracks_alias(options[:history_method])
 
           callback_options = history_options.options.slice(:if, :unless)
           around_update :track_update, **callback_options if history_options.options[:track_update]
@@ -37,6 +37,16 @@ module Mongoid
           class_attribute :mongoid_history_options, instance_accessor: false unless respond_to? :mongoid_history_options
 
           self.mongoid_history_options = history_options
+        end
+
+        def define_history_tracks_alias(name)
+          return if !name || name.to_sym == :history_tracks
+
+          if method_defined?(name) || private_method_defined?(name)
+            raise ArgumentError, "History association #{name} is already defined"
+          end
+
+          define_method(name) { history_tracks }
         end
 
         def history_settings(options = {})

@@ -79,6 +79,8 @@ Mongoid::History.tracker_class_name = :history_tracker
 
 ### Create trackable classes and objects
 
+`history_tracks` always returns the configured tracker's criteria, regardless of `tracker_class_name`. To add an application-specific method, set `track_history tracker_class_name: :audit, history_method: :audits`, then use `document.audits`. The original `history_tracks` method remains available for compatibility and undo/redo. Choose a name that does not conflict with an existing model method.
+
 ```ruby
 class Post
   include Mongoid::Document
