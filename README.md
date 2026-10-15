@@ -184,7 +184,7 @@ comment.redo! user, 1
 post.destroy
 
 # undelete post
-post.undo! user
+post = post.undo! user
 
 # disable tracking for comments within a block
 Comment.disable_tracking do
@@ -221,6 +221,8 @@ end
 Mongoid::History.enable!
 ```
 
+Undoing destruction returns a newly persisted document with the original identity; the destroyed instance remains destroyed. You can also restore a document with `document.history_tracks.last.undo!(user)`. Pass the acting user to `undo!` and `redo!` so creation and destruction audit entries record that user, including embedded documents.
+
 You may want to track changes on all fields.
 
 ```ruby
@@ -253,6 +255,8 @@ end
 **Include embedded objects attributes in parent audit**
 
 Modify above `Post` and `Comment` classes as below:
+
+Saving a tracked parent captures changes to permitted fields on its immediate `embeds_one` and `embeds_many` documents, including changes assigned through nested attributes. An `embeds_many` change stores the complete before/after collection, preserving unchanged siblings; tracking never appends duplicate children. Arbitrarily deep embedded changes are not automatically included in the root audit.
 
 ```ruby
 class Post
@@ -297,6 +301,8 @@ track.modified # { "title" => "Test", "body" => "Post", "comments" => [{ "_id" =
 ```
 
 ### Whitelist the tracked attributes of embedded relations
+
+When an embedded model tracks its own history, its own whitelist controls that history's `tracked_changes` and `tracked_edits`; the parent's whitelist only controls the parent's audit. To run embedded history callbacks when saving nested attributes through a parent, configure `cascade_callbacks: true` on the parent's embedded association. This also applies to polymorphic embedded associations. Version counters belong to each tracked document, not to the shared history scope: two children can both have version 1 without changing the parent's counter.
 
 If you don't want to track all the attributes of embedded relations in parent audit history, you can whitelist the attributes as below:
 

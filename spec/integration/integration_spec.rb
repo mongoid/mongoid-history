@@ -29,9 +29,7 @@ describe Mongoid::History do
       field :t, as: :title
       field :body
       embedded_in :commentable, polymorphic: true
-      # BUG: see https://github.com/mongoid/mongoid-history/issues/223, modifier_field_optional should not be necessary
-      track_history on: %i[title body], scope: :post, track_create: true, track_destroy: true,
-                    modifier_field_optional: true
+      track_history on: %i[title body], scope: :post, track_create: true, track_destroy: true
     end
 
     class Section
