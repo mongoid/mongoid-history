@@ -566,6 +566,42 @@ end
 
 For more examples, check out [spec/integration/integration_spec.rb](spec/integration/integration_spec.rb).
 
+### Model-Specific Tracker Attributes
+
+To attach request context or other metadata to a history record, declare fields on your tracker and configure `tracker_attributes_method` on each trackable model:
+
+```ruby
+class HistoryTracker
+  include Mongoid::History::Tracker
+  field :request_id, type: String
+  field :source, type: String
+end
+
+class Post
+  include Mongoid::Document
+  include Mongoid::History::Trackable
+  field :title, type: String
+  attr_accessor :request_id
+
+  track_history on: [:title], tracker_attributes_method: :audit_context
+
+  private
+
+  def audit_context(action)
+    { request_id: request_id, source: "#{self.class.name}:#{action}" }
+  end
+end
+
+post = Post.new(title: 'First title')
+post.request_id = 'request-123'
+post.save!
+post.history_tracks.last.request_id # => 'request-123'
+```
+
+The model method receives `:create`, `:update`, or `:destroy` and must return a hash with string or symbol keys. It runs for each tracked action, before the tracker is created and before its creation callbacks. It can be private. Different models can supply different metadata without dispatching from tracker callbacks. Metadata-only changes do not create a history entry, and disabled tracking does not invoke the method.
+
+Declare custom fields on the tracker as usual. Canonical fields (`_id`, `id`, `_type`, `association_chain`, `scope`, `version`, `action`, `original`, `modified`, `modifier`, `modifier_id`, `trackable`, `created_at`, and `updated_at`) are reserved and rejected with `ArgumentError`; a non-hash result also raises `ArgumentError`. Metadata is not inserted into `original`/`modified`, is not part of undo/redo, and should not have side effects. Use `changes_method` instead when supplying additional *tracked changes*, not tracker metadata. This hook does not add callbacks to atomic or driver writes.
+
 ### Multiple Trackers
 
 You can have different trackers for different classes like so.
