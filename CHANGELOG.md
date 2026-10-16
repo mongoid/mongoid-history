@@ -4,6 +4,8 @@
 * Document and test callback-based auditing boundaries, and clarify MongoDB storage and audit presentation constraints - [@dblock](https://github.com/dblock).
 * [#264](https://github.com/mongoid/mongoid-history/pull/264): Add explicit `Mongoid::History.with_group` reporting metadata while preserving per-write history and undo/redo, addressing [#144](https://github.com/mongoid/mongoid-history/issues/144) proposed by [@ajsharp](https://github.com/ajsharp) - [@dblock](https://github.com/dblock).
 
+* Add stable `track_history as:` model identities with alias-aware history resolution, scopes, and replay ([#86](https://github.com/mongoid/mongoid-history/issues/86)) - [@dblock](https://github.com/dblock).
+
 ### 0.9.0 (2026/10/14)
 
 * [#261](https://github.com/mongoid/mongoid-history/pull/261): Report library coverage to Coveralls from one modern CI job and replace obsolete coverage integration and badges - [@dblock](https://github.com/dblock).

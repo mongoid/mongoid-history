@@ -158,7 +158,7 @@ module Mongoid
       #
       # @return [ Class ] the class of the trackable
       def trackable_parent_class
-        association_chain.first['name'].constantize
+        Mongoid::History.trackable_class_for(association_chain.first['name'])
       end
 
       private
@@ -203,7 +203,7 @@ module Mongoid
           doc = if doc.nil?
                   # root association. First element of the association chain
                   # unscoped is added to remove any default_scope defined in model
-                  klass = name.classify.constantize
+                  klass = Mongoid::History.trackable_class_for(name)
                   klass.unscoped.where(_id: node['id']).first
                 elsif doc.class.embeds_one?(name)
                   doc._get_relation(name)
@@ -221,7 +221,7 @@ module Mongoid
       end
 
       def localize_keys(hash)
-        klass = association_chain.first['name'].constantize
+        klass = trackable_parent_class
         if klass.respond_to?(:localized_fields)
           klass.localized_fields.keys.each do |name|
             hash["#{name}_translations"] = hash.delete(name) if hash[name].present?
