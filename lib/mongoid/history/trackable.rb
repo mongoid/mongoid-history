@@ -351,7 +351,10 @@ module Mongoid
         protected
 
         def track_history_for_action?(action)
-          track_history? && !(action.to_sym == :update && modified_attributes_for_update.blank?)
+          modifier_field = history_trackable_options[:modifier_field]
+          track_history? &&
+            (history_trackable_options[:track_without_modifier] != false || (modifier_field && send(modifier_field).present?)) &&
+            !(action.to_sym == :update && modified_attributes_for_update.blank?)
         end
 
         def increment_current_version?(action)

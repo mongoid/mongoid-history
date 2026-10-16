@@ -84,6 +84,7 @@ describe Mongoid::History::Trackable do
         except: %w[created_at updated_at],
         tracker_class_name: nil,
         modifier_field: :modifier,
+        track_without_modifier: true,
         version_field: :version,
         changes_method: :changes,
         scope: :my_model,
