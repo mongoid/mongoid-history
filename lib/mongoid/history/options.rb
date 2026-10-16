@@ -5,7 +5,7 @@ module Mongoid
 
       def initialize(trackable, opts = {})
         @trackable = trackable
-        @options = default_options.merge(opts)
+        @options = default_options.merge(opts).tap { |options| Mongoid::History::Retention.validate_limit!(options[:max_history]) }
       end
 
       def scope

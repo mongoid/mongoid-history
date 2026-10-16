@@ -2,6 +2,7 @@ module Mongoid
   module History
     module Trackable
       extend ActiveSupport::Concern
+      include Mongoid::History::Retention
 
       module ClassMethods
         def track_history(options = {})
@@ -355,7 +356,7 @@ module Mongoid
           clear_trackable_memoization
 
           begin
-            yield
+            result = yield
           rescue StandardError => e
             if track_history_for_action?(action)
               send("#{history_trackable_options[:version_field]}=", current_version - 1)
@@ -363,6 +364,8 @@ module Mongoid
             end
             raise e
           end
+          schedule_history_retention if last_track && result != false
+          result
         end
       end
 

@@ -3,6 +3,7 @@
 * Your contribution here.
 * Document and test callback-based auditing boundaries, and clarify MongoDB storage and audit presentation constraints - [@dblock](https://github.com/dblock).
 * [#264](https://github.com/mongoid/mongoid-history/pull/264): Add explicit `Mongoid::History.with_group` reporting metadata while preserving per-write history and undo/redo, addressing [#144](https://github.com/mongoid/mongoid-history/issues/144) proposed by [@ajsharp](https://github.com/ajsharp) - [@dblock](https://github.com/dblock).
+* Add opt-in `max_history` automatic count retention after successful persistence and explicit `prune_history!(keep:)`, without renumbering revisions - [@dblock](https://github.com/dblock).
 
 ### 0.9.0 (2026/10/14)
 
