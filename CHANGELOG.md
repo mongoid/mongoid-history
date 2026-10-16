@@ -1,8 +1,9 @@
 ### 0.9.1 (Next)
 
-* Your contribution here.
+* [#263](https://github.com/mongoid/mongoid-history/pull/263): Add an opt-in `history_method` alias without changing the existing `history_tracks` API, implementing [#117](https://github.com/mongoid/mongoid-history/issues/117) proposed by [@johnnyshields](https://github.com/johnnyshields) - [@dblock](https://github.com/dblock).
 * Document and test callback-based auditing boundaries, and clarify MongoDB storage and audit presentation constraints - [@dblock](https://github.com/dblock).
 * [#264](https://github.com/mongoid/mongoid-history/pull/264): Add explicit `Mongoid::History.with_group` reporting metadata while preserving per-write history and undo/redo, addressing [#144](https://github.com/mongoid/mongoid-history/issues/144) proposed by [@ajsharp](https://github.com/ajsharp) - [@dblock](https://github.com/dblock).
+* Your contribution here.
 
 ### 0.9.0 (2026/10/14)
 
