@@ -1,6 +1,7 @@
 ### 0.9.1 (Next)
 
 * Your contribution here.
+* Add opt-in undo without another audit entry using explicit version selections, addressing [#235](https://github.com/mongoid/mongoid-history/issues/235) - [@dblock](https://github.com/dblock).
 * Document and test callback-based auditing boundaries, and clarify MongoDB storage and audit presentation constraints - [@dblock](https://github.com/dblock).
 * [#264](https://github.com/mongoid/mongoid-history/pull/264): Add explicit `Mongoid::History.with_group` reporting metadata while preserving per-write history and undo/redo, addressing [#144](https://github.com/mongoid/mongoid-history/issues/144) proposed by [@ajsharp](https://github.com/ajsharp) - [@dblock](https://github.com/dblock).
 * [#268](https://github.com/mongoid/mongoid-history/pull/268): Fix repeated `track_history` declarations to retain inherited options, reuse history-owned version fields, and refresh prepared field configuration; improve missing-tracker errors and avoid memoizing history query criteria and tracker payloads - [@dblock](https://github.com/dblock).
