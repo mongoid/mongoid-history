@@ -125,6 +125,13 @@ module Mongoid
         #  undo! 4
         #  undo! :last => 10
         def undo!(modifier = nil, options_or_version = nil)
+          if options_or_version.is_a?(Hash) && options_or_version[:history] == false
+            selection = options_or_version.except(:history)
+            raise ArgumentError, 'Undo without history requires an explicit :last or :from/:to selection' unless selection[:last] || (selection[:from] && selection[:to])
+
+            return Mongoid::History.disable { undo!(modifier, selection) }
+          end
+
           undo(modifier, options_or_version)
           save!
         end
