@@ -7,9 +7,7 @@ module Mongoid
         def track_history(options = {})
           extend RelationMethods
 
-          history_options = Mongoid::History::Options.new(self, options)
-
-          field history_options.options[:version_field].to_sym, type: Integer
+          history_options = prepare_history_options(options)
 
           unless history_options.options[:modifier_field].nil?
             belongs_to_modifier_options = { class_name: Mongoid::History.modifier_class_name }
@@ -37,6 +35,7 @@ module Mongoid
           class_attribute :mongoid_history_options, instance_accessor: false unless respond_to? :mongoid_history_options
 
           self.mongoid_history_options = history_options
+          clear_trackable_memoization
         end
 
         def history_settings(options = {})
@@ -80,16 +79,29 @@ module Mongoid
 
         def tracker_class
           klass = history_trackable_options[:tracker_class_name] || Mongoid::History.tracker_class_name
+          if !klass.is_a?(Class) && klass.blank?
+            raise ArgumentError, 'Set Mongoid::History.tracker_class_name or pass tracker_class_name to track_history before tracking documents'
+          end
+
           klass.is_a?(Class) ? klass : klass.to_s.camelize.constantize
+        end
+
+        private
+
+        def prepare_history_options(options)
+          previous_options = respond_to?(:mongoid_history_options) ? mongoid_history_options.options : {}
+          history_options = Mongoid::History::Options.new(self, previous_options.merge(options))
+          version_field = history_options.options[:version_field].to_s
+          unless previous_options[:version_field].to_s == version_field && fields.key?(version_field)
+            field version_field.to_sym, type: Integer
+          end
+          history_options
         end
       end
 
       module MyInstanceMethods
         def history_tracks
-          @history_tracks ||= self.class.tracker_class.where(
-            scope: related_scope,
-            association_chain: association_hash
-          ).asc(:version)
+          self.class.tracker_class.where(scope: related_scope, association_chain: association_hash).asc(:version)
         end
 
         #  undo :from => 1, :to => 5
@@ -251,21 +263,19 @@ module Mongoid
         end
 
         def history_tracker_attributes(action)
-          return @history_tracker_attributes if @history_tracker_attributes
-
           modifier_field = history_trackable_options[:modifier_field]
-          @history_tracker_attributes = {
+          tracker_attributes = {
             association_chain: traverse_association_chain,
             scope: related_scope
           }
-          @history_tracker_attributes[:group_id] = Mongoid::History.group_id unless Mongoid::History.group_id.nil?
-          @history_tracker_attributes[:modifier] = send(modifier_field) if modifier_field
+          tracker_attributes[:group_id] = Mongoid::History.group_id unless Mongoid::History.group_id.nil?
+          tracker_attributes[:modifier] = send(modifier_field) if modifier_field
 
           original, modified = transform_changes(modified_attributes_for_action(action))
 
-          @history_tracker_attributes[:original] = original
-          @history_tracker_attributes[:modified] = modified
-          @history_tracker_attributes
+          tracker_attributes[:original] = original
+          tracker_attributes[:modified] = modified
+          tracker_attributes
         end
 
         def track_create(&block)
@@ -285,7 +295,7 @@ module Mongoid
         end
 
         def clear_trackable_memoization
-          @history_tracker_attributes = @modified_attributes_for_create = @modified_attributes_for_update = @history_tracks = nil
+          @modified_attributes_for_create = @modified_attributes_for_update = nil
         end
 
         # Transform hash of pair of changes into an `original` and `modified` hash
@@ -580,6 +590,7 @@ module Mongoid
         end
 
         def clear_trackable_memoization
+          @field_formats = nil
           @reserved_tracked_fields = nil
           @history_trackable_options = nil
           @trackable_settings = nil

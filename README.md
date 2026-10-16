@@ -66,9 +66,7 @@ Grouping is presentation metadata, not a transaction: each write retains its own
 
 ### Set default tracker class name (optional)
 
-Mongoid::History will use the first loaded class to include Mongoid::History::Tracker as the
-default history tracker. If you are using multiple Tracker classes, you should set a global
-default in a Rails initializer:
+For backward compatibility, Mongoid::History uses the first loaded class to include `Mongoid::History::Tracker` as the default history tracker. Explicitly configure the default in a Rails initializer to avoid depending on model loading order, especially with multiple trackers or Rails lazy loading:
 
 ```ruby
 # config/initializers/mongoid_history.rb
@@ -76,6 +74,10 @@ default in a Rails initializer:
 # assuming HistoryTracker is your tracker class
 Mongoid::History.tracker_class_name = :history_tracker
 ```
+
+The initializer is necessary when the tracker has not yet been loaded before the first tracked write. An explicitly configured tracker is constantized on demand, so Rails can autoload it. Without a loaded or configured tracker, tracking raises an `ArgumentError` explaining the required configuration. You can also pass `tracker_class_name:` to `track_history` on individual models.
+
+Namespaced trackers and trackables are supported. Use the fully qualified class name, for example `Mongoid::History.tracker_class_name = 'CMS::HistoryTracker'` or `track_history tracker_class_name: 'CMS::HistoryTracker'`.
 
 ### Create trackable classes and objects
 
@@ -500,6 +502,16 @@ Or perhaps you are namespacing to a module:
 ```ruby
 Mongoid::History.modifier_class_name = 'CMS::Author'
 ```
+
+Set `Mongoid::History.modifier_class_name` before loading tracker and trackable classes, because it is used when their associations are declared. Changing `modifier_field` renames the association on a trackable; it does not change the modifier's class.
+
+If your application has no modifier model, use `track_history modifier_field: nil`. This omits the trackable's modifier association and records history with a nil modifier; a `User` model is not required. Setting the global `modifier_class_name` to nil is not how modifier tracking is disabled.
+
+### Repeated declarations and custom version fields
+
+Use `track_history version_field: :_version` to store a trackable's version in `_version` instead of `version`. The default remains `version` for compatibility with existing documents; changing it requires migrating stored version values. History tracker records always use their own `version` field.
+
+Subclasses inherit their parent's tracking options, including `version_field`. Calling `track_history` again on a class or subclass overrides only the supplied options, refreshes the tracked-field configuration, and does not redefine a version field already installed by history tracking. For example, a concern can call `track_history on: :fields, version_field: :_version, modifier_field: nil`, and a model can call `track_history on: :fields` after declaring additional fields. An explicit `on:` replaces the previous field selection rather than appending to it.
 
 ### Conditional :if and :unless options
 
