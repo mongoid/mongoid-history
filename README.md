@@ -223,6 +223,20 @@ Mongoid::History.enable!
 
 Undoing destruction returns a newly persisted document with the original identity; the destroyed instance remains destroyed. You can also restore a document with `document.history_tracks.last.undo!(user)`. Pass the acting user to `undo!` and `redo!` so creation and destruction audit entries record that user, including embedded documents.
 
+### Undo without another history entry
+
+Normal `undo!` remains audited: undoing a change writes another track, so a subsequent default undo can undo that undo. To opt out, pass `history: false` with an explicit batch or version range. For successive undos, select the original versions explicitly; this API does not maintain an implicit undo stack or rewind version numbers.
+
+```ruby
+post.undo!(user, last: 2, history: false) # undo a batch without adding tracks
+
+# Alternatively, undo original changes one at a time, newest first:
+post.undo!(user, from: 3, to: 3, history: false)
+post.undo!(user, from: 2, to: 2, history: false)
+```
+
+`history: false` without `last:` or both `from:` and `to:` raises `ArgumentError`. Repeating the same selection repeats that selection; `last:` always refers to the retained audit trail, not an advancing cursor. Tracking is disabled for the duration of the save (including callbacks and cascading saves) and its previous state is restored even on failure. Version numbers remain monotonic for future tracked edits. This intentionally creates an audit gap: the unaudited undo and its time cannot be recovered from history, and the original tracks remain unchanged. Prefer ordinary audited undo whenever historical accuracy matters.
+
 You may want to track changes on all fields.
 
 ```ruby
