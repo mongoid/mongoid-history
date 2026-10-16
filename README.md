@@ -213,6 +213,29 @@ end
 Mongoid::History.enable!
 ```
 
+### Recorded attributes at a version or time
+
+`attributes_at_version(version)` and `attributes_at(time)` replay a document's own history and return a detached hash of recorded attributes, not a Mongoid document or a complete historical snapshot of a collection. They never fill gaps using the current document. Versions are inclusive; times must be a `Time` or `ActiveSupport::TimeWithZone` and include every track at that instant, ordered by version.
+
+```ruby
+post = Post.create!(title: 'First', body: 'Original', modifier: user)
+created_at = post.history_tracks.first.created_at
+post.update_attributes!(title: 'Second')
+
+post.attributes_at_version(1).fetch('title') # => "First"
+post.attributes_at_version(2).fetch('title') # => "Second"
+post.attributes_at(created_at).fetch('body') # => "Original"
+post.attributes_at_version(0) # => nil (before the recorded creation)
+
+post.destroy
+post.attributes_at_version(2).fetch('title') # => "Second", using the retained receiver
+post.attributes_at(Time.now) # => nil, after the recorded destruction
+```
+
+Reconstruction requires a create track at version 1 and a continuous, unambiguous retained history with consistent timestamps. Missing creation, missing or duplicate versions, invalid lifecycle actions and a requested version beyond the recorded history raise `Mongoid::History::IncompleteHistory`; invalid argument types raise `ArgumentError`. A recorded nonexistence (before creation or at/after destruction) returns `nil`, not an empty hash. Keep a reference to a destroyed document to query its history; these instance methods do not discover deleted documents or replay other documents' histories.
+
+The returned hash uses database field names (including aliases) and stored, possibly formatted values. Only captured values are available: untracked fields, omitted defaults, skipped blank changes and independent embedded-document changes cannot be recovered. Missing keys may represent nil values or values never recorded; use `fetch` when your calculation requires a recorded value rather than silently treating an unknown as nil. Changes made with tracking disabled, direct database writes and historically changed tracking settings cannot be detected reliably and are not reconstructed. These methods describe the audit trail, not a guarantee of the database state at a wall-clock instant; callbacks record timestamps before the operation completes. Reconstruction reads all retained tracks and is intended for occasional offline analysis, not a point-in-time database backup.
+
 You may want to track changes on all fields.
 
 ```ruby

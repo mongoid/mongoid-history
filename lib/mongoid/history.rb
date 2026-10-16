@@ -6,6 +6,8 @@ require 'mongoid/history/attributes/update'
 require 'mongoid/history/attributes/destroy'
 require 'mongoid/history/options'
 require 'mongoid/history/version'
+require 'mongoid/history/reconstruction'
+require 'mongoid/history/historical_attributes'
 require 'mongoid/history/tracker'
 require 'mongoid/history/trackable'
 
