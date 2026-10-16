@@ -1,8 +1,10 @@
-### 0.9.1 (Next)
+### 1.0.0 (Next)
 
 * Your contribution here.
 * Document and test callback-based auditing boundaries, and clarify MongoDB storage and audit presentation constraints - [@dblock](https://github.com/dblock).
 * [#264](https://github.com/mongoid/mongoid-history/pull/264): Add explicit `Mongoid::History.with_group` reporting metadata while preserving per-write history and undo/redo, addressing [#144](https://github.com/mongoid/mongoid-history/issues/144) proposed by [@ajsharp](https://github.com/ajsharp) - [@dblock](https://github.com/dblock).
+
+* Breaking change: return application-level Mongoid values from tracker `original` and `modified`, and add `database_original` and `database_modified` for serialized snapshots; keep BSON storage and undo/redo serialized, bump to 1.0.0, and document migration, with real Money Rails regression coverage based on [#122](https://github.com/mongoid/mongoid-history/pull/122) by [@marcocanderle](https://github.com/marcocanderle) - [@dblock](https://github.com/dblock).
 
 ### 0.9.0 (2026/10/14)
 

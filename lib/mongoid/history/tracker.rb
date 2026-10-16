@@ -2,6 +2,7 @@ module Mongoid
   module History
     module Tracker
       extend ActiveSupport::Concern
+      include Values
 
       included do
         include Mongoid::Document
@@ -11,6 +12,8 @@ module Mongoid
         field :association_chain,       type: Array, default: []
         field :modified,                type: Hash, default: {}
         field :original,                type: Hash, default: {}
+        define_method(:original) { typed_history_values(database_original) }
+        define_method(:modified) { typed_history_values(database_modified) }
         field :version,                 type: Integer
         field :action,                  type: String
         field :scope,                   type: String
@@ -52,19 +55,19 @@ module Mongoid
       end
 
       def undo_attr(modifier)
-        undo_hash = affected.easy_unmerge(modified)
-        undo_hash.easy_merge!(original)
+        undo_hash = database_affected.easy_unmerge(database_modified)
+        undo_hash.easy_merge!(database_original)
         modifier_field = trackable.history_trackable_options[:modifier_field]
         undo_hash[modifier_field] = modifier if modifier_field
-        (modified.keys - undo_hash.keys).each do |k|
+        (database_modified.keys - undo_hash.keys).each do |k|
           undo_hash[k] = nil
         end
         localize_keys(undo_hash)
       end
 
       def redo_attr(modifier)
-        redo_hash = affected.easy_unmerge(original)
-        redo_hash.easy_merge!(modified)
+        redo_hash = database_affected.easy_unmerge(database_original)
+        redo_hash.easy_merge!(database_modified)
         modifier_field = trackable.history_trackable_options[:modifier_field]
         redo_hash[modifier_field] = modifier if modifier_field
         localize_keys(redo_hash)
@@ -163,6 +166,13 @@ module Mongoid
 
       private
 
+      def database_affected
+        values = action.to_sym == :destroy ? database_original : database_modified
+        values.each_with_object(HashWithIndifferentAccess.new) do |(key, value), result|
+          result[key] = copy_history_value(value) if trackable_parent_class.tracked?(key)
+        end
+      end
+
       def re_create
         association_chain.length > 1 ? create_on_parent : create_standalone
       end
@@ -172,8 +182,8 @@ module Mongoid
       end
 
       def create_standalone
-        restored = trackable_parent_class.new(localize_keys(original))
-        restored.id = original['_id']
+        restored = trackable_parent_class.new(localize_keys(database_original.dup))
+        restored.id = database_original['_id']
         restored.save!
       end
 
@@ -181,9 +191,9 @@ module Mongoid
         name = association_chain.last['name']
 
         if trackable_parent.class.embeds_one?(name)
-          trackable_parent._create_relation(name, localize_keys(original))
+          trackable_parent._create_relation(name, localize_keys(database_original.dup))
         elsif trackable_parent.class.embeds_many?(name)
-          trackable_parent._get_relation(name).create!(localize_keys(original))
+          trackable_parent._get_relation(name).create!(localize_keys(database_original.dup))
         else
           raise 'This should never happen. Please report bug!'
         end
