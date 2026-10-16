@@ -35,7 +35,7 @@ module Mongoid
         end
 
         def changes_from_children
-          embeds_one_changes_from_embedded_documents
+          embeds_one_changes_from_embedded_documents.merge(embeds_many_changes_from_embedded_documents)
         end
 
         # Retrieve the list of changes applied directly to the nested documents
@@ -61,10 +61,28 @@ module Mongoid
             next if !obj || (obj.respond_to?(paranoia_field) && obj.public_send(paranoia_field).present?)
 
             obj.changes.each do |k, v|
-              embedded_doc_changes["#{rel}.#{k}"] = [v.first, v.last]
+              formatted = v.map { |value| format_embeds_one_relation(rel, k => value) }
+              next if formatted.first == formatted.last
+
+              embedded_doc_changes["#{rel}.#{k}"] = formatted.map { |value| value.values.first }
             end
           end
           embedded_doc_changes
+        end
+
+        def embeds_many_changes_from_embedded_documents
+          trackable_class.tracked_embeds_many.each_with_object({}) do |rel, result|
+            next if changes.key?(rel)
+
+            documents = trackable._get_relation(rel).to_a
+            next unless documents.any?(&:changed?)
+
+            original = documents.reject(&:new_record?).map do |document|
+              document.attributes.merge(document.changes.each_with_object({}) { |(key, pair), attrs| attrs[key] = pair.first })
+            end
+            modified = documents.map(&:attributes)
+            result.merge!(embeds_many_changes_from_parent(rel, [original, modified]) || {})
+          end
         end
 
         # @param [String] relation
@@ -90,10 +108,10 @@ module Mongoid
           relation = trackable_class.database_field_name(relation)
           relation_class = trackable_class.relation_class_of(relation)
           paranoia_field = Mongoid::History.trackable_class_settings(relation_class)[:paranoia_field]
-          original_value = value[0].reject { |rel| rel[paranoia_field].present? }
-                                   .map { |v_attrs| format_embeds_many_relation(relation, v_attrs) }
-          modified_value = value[1].reject { |rel| rel[paranoia_field].present? }
-                                   .map { |v_attrs| format_embeds_many_relation(relation, v_attrs) }
+          original_value = Array(value[0]).reject { |rel| rel[paranoia_field].present? }
+                                          .map { |v_attrs| format_embeds_many_relation(relation, v_attrs) }
+          modified_value = Array(value[1]).reject { |rel| rel[paranoia_field].present? }
+                                          .map { |v_attrs| format_embeds_many_relation(relation, v_attrs) }
           return if original_value == modified_value
 
           { relation => [original_value, modified_value] }

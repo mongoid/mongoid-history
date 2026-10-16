@@ -216,6 +216,22 @@ describe Mongoid::History::Attributes::Update do
           before :each do
             ModelOne.track_history(on: :emb_ones)
           end
+
+          context 'when the original embeds_many value is nil' do
+            let(:changes) { { 'emb_ones' => [nil, [{ 'em_foo' => 'new' }]] } }
+
+            it 'treats the original collection as empty' do
+              expect(subject['emb_ones']).to eq([[], [{ 'em_foo' => 'new' }]])
+            end
+          end
+
+          context 'when the modified embeds_many value is nil' do
+            let(:changes) { { 'emb_ones' => [[{ 'em_foo' => 'old' }], nil] } }
+
+            it 'treats the modified collection as empty' do
+              expect(subject['emb_ones']).to eq([[{ 'em_foo' => 'old' }], []])
+            end
+          end
           let(:changes) do
             { 'emb_ones' => [[{ 'em_foo' => 'Em-Foo', 'deleted_at' => Time.now }],
                              [{ 'em_foo' => 'Em-Foo-new', 'em_bar' => 'Em-Bar-new' }]] }

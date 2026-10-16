@@ -125,6 +125,11 @@ module Mongoid
         #  undo! 4
         #  undo! :last => 10
         def undo!(modifier = nil, options_or_version = nil)
+          if destroyed?
+            track = get_versions_criteria(options_or_version || { last: 1 }).where(association_chain: traverse_association_chain).first
+            return track.undo!(modifier) if track && track.action == 'destroy'
+          end
+
           undo(modifier, options_or_version)
           save!
         end

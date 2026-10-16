@@ -29,9 +29,9 @@ module Mongoid
 
       def undo!(modifier = nil)
         if action.to_sym == :destroy
-          re_create
+          re_create(modifier)
         elsif action.to_sym == :create
-          re_destroy
+          re_destroy(modifier)
         elsif Mongoid::Compatibility::Version.mongoid3?
           trackable.update_attributes!(undo_attr(modifier), without_protection: true)
         else
@@ -41,9 +41,9 @@ module Mongoid
 
       def redo!(modifier = nil)
         if action.to_sym == :destroy
-          re_destroy
+          re_destroy(modifier)
         elsif action.to_sym == :create
-          re_create
+          re_create(modifier)
         elsif Mongoid::Compatibility::Version.mongoid3?
           trackable.update_attributes!(redo_attr(modifier), without_protection: true)
         else
@@ -95,7 +95,7 @@ module Mongoid
       def tracked_changes
         @tracked_changes ||= (modified.keys | original.keys).each_with_object(HashWithIndifferentAccess.new) do |k, h|
           h[k] = { from: original[k], to: modified[k] }.delete_if { |_, vv| vv.nil? }
-        end.delete_if { |k, v| v.blank? || !trackable_parent_class.tracked?(k) }
+        end.delete_if { |k, v| v.blank? || !trackable_class.tracked?(k) }
       end
 
       # Outputs summary of edit actions performed: :add, :modify, :remove, or :array.
@@ -115,7 +115,7 @@ module Mongoid
         tracked_changes.each do |k, v|
           next if v[:from].blank? && v[:to].blank?
 
-          if trackable_parent_class.tracked_embeds_many?(k)
+          if trackable_class.tracked_embeds_many?(k)
             prepare_tracked_edits_for_embeds_many(k, v)
           elsif v[:from].blank?
             @tracked_edits[:add] ||= {}
@@ -161,29 +161,40 @@ module Mongoid
         association_chain.first['name'].constantize
       end
 
+      def trackable_class
+        association_chain.drop(1).inject(trackable_parent_class) do |klass, node|
+          klass.relation_class_of(node['name'])
+        end
+      end
+
       private
 
-      def re_create
-        association_chain.length > 1 ? create_on_parent : create_standalone
+      def re_create(modifier)
+        values = localize_keys(action.to_sym == :create ? modified.dup : original.dup)
+        values['_id'] = association_chain.last['id']
+        latest = self.class.where(scope: scope, association_chain: association_chain).desc(:version).first
+        values[trackable_class.history_trackable_options[:version_field]] = latest.version if latest
+        modifier_field = trackable_class.history_trackable_options[:modifier_field]
+        values[modifier_field] = modifier if modifier_field
+        @trackable = association_chain.length > 1 ? build_on_parent(values) : trackable_class.new(values)
+        @trackable.id = association_chain.last['id']
+        @trackable.tap(&:save!)
       end
 
-      def re_destroy
+      def re_destroy(modifier)
+        modifier_field = trackable_class.history_trackable_options[:modifier_field]
+        trackable.public_send("#{modifier_field}=", modifier) if modifier_field
         trackable.destroy
+        @trackable = @trackable_parents_and_trackable = nil
       end
 
-      def create_standalone
-        restored = trackable_parent_class.new(localize_keys(original))
-        restored.id = original['_id']
-        restored.save!
-      end
-
-      def create_on_parent
+      def build_on_parent(values)
         name = association_chain.last['name']
 
         if trackable_parent.class.embeds_one?(name)
-          trackable_parent._create_relation(name, localize_keys(original))
+          trackable_parent.public_send("build_#{trackable_parent.class.relation_alias(name)}", values)
         elsif trackable_parent.class.embeds_many?(name)
-          trackable_parent._get_relation(name).create!(localize_keys(original))
+          trackable_parent._get_relation(name).build(values)
         else
           raise 'This should never happen. Please report bug!'
         end
@@ -221,7 +232,7 @@ module Mongoid
       end
 
       def localize_keys(hash)
-        klass = association_chain.first['name'].constantize
+        klass = trackable_class
         if klass.respond_to?(:localized_fields)
           klass.localized_fields.keys.each do |name|
             hash["#{name}_translations"] = hash.delete(name) if hash[name].present?
