@@ -546,6 +546,20 @@ and nested attributes, you may wish to write your own changes method that includ
 
 Mongoid::History provides an option named `:changes_method` which allows you to do this.  It defaults to `:changes`, which is the standard changes method.
 
+Custom methods must return a Hash of field names to two-element `[original, modified]` Arrays for create and update, matching Mongoid's `changes` contract. Scalar replacements such as `changes.merge(key: "Save history-#{key}")` are invalid. Mongoid uses string field names: use the same string key when overriding an existing change, since `:key` and `"key"` are different Hash keys. Array-valued fields still require an outer change pair, for example `"tags" => [["old"], ["new"]]`. Return `changes` or `{}` when there are no custom changes.
+
+For example, to replace the modified side of a recorded change without losing its original value:
+
+```ruby
+def my_changes
+  return changes unless changes.key?('key')
+
+  changes.merge('key' => [changes.fetch('key').first, "Save history-#{key}"])
+end
+```
+
+Custom history values do not change the document during the save, but undo/redo uses those recorded values: redoing the example above can write the prefixed string into the actual field. Keep presentation-only labels out of replayable field values. Destroy tracking snapshots actual attributes rather than calling `:changes_method`; the `:format` option can transform recorded values across create/update/destroy, but likewise affects replay and is not merely display formatting.
+
 Note: Specify additional fields that are provided with a custom `changes_method` with the `:on` option.. To specify current fields and additional fields, use `fields.keys + [:custom]`
 
 Example:
