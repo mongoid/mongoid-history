@@ -14,6 +14,7 @@ module Mongoid
         field :version,                 type: Integer
         field :action,                  type: String
         field :scope,                   type: String
+        field :group_id,                type: String
         modifier_options = {
           class_name: Mongoid::History.modifier_class_name
         }
