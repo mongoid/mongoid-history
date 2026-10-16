@@ -496,6 +496,16 @@ class MyHistoryTracker
 end
 ```
 
+### Skipping History Without a Modifier
+
+Anonymous changes are tracked by default. To skip their history and version increments, while still saving and validating the model normally, opt in per model:
+
+```ruby
+track_history track_without_modifier: false, modifier_field_optional: true
+```
+
+Alternatively, set `Mongoid::History.track_without_modifier = false` before defining tracked models; a model's explicit setting takes precedence over this definition-time default. Repeated `track_history` declarations retain the model's previous options unless explicitly overridden. This option is independent of association validation and is not a replacement for `validate: false`. A model configured with both `modifier_field: nil` and `track_without_modifier: false` never produces history. Assign the model's configured modifier association explicitly to record an attributed change.
+
 ### Setting Modifier Class Name
 
 If your app will track history changes to a user, Mongoid History looks for these modifiers in the ``User`` class by default.  If you have named your 'user' accounts differently, you will need to add that to your Mongoid History config:

@@ -1,6 +1,7 @@
 ### 0.9.1 (Next)
 
 * Your contribution here.
+* Add opt-in skipping of history without a modifier while preserving normal model saves and validations - [@dblock](https://github.com/dblock), building on [#140](https://github.com/mongoid/mongoid-history/pull/140) by [@duhast](https://github.com/duhast).
 * Document and test callback-based auditing boundaries, and clarify MongoDB storage and audit presentation constraints - [@dblock](https://github.com/dblock).
 * [#264](https://github.com/mongoid/mongoid-history/pull/264): Add explicit `Mongoid::History.with_group` reporting metadata while preserving per-write history and undo/redo, addressing [#144](https://github.com/mongoid/mongoid-history/issues/144) proposed by [@ajsharp](https://github.com/ajsharp) - [@dblock](https://github.com/dblock).
 * [#268](https://github.com/mongoid/mongoid-history/pull/268): Fix repeated `track_history` declarations to retain inherited options, reuse history-owned version fields, and refresh prepared field configuration; improve missing-tracker errors and avoid memoizing history query criteria and tracker payloads - [@dblock](https://github.com/dblock).
