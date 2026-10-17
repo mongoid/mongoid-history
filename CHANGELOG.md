@@ -1,5 +1,6 @@
 ### 0.10.0 (Next)
 
+* [#279](https://github.com/mongoid/mongoid-history/pull/279): Fix cached parent-chain slicing and cover ancestry, invalid historical associations and selectors; combine coverage across actual legacy and modern APIs - [@dblock](https://github.com/dblock).
 * Your contribution here.
 * [#262](https://github.com/mongoid/mongoid-history/pull/262): Document and test callback-based auditing boundaries, and clarify MongoDB storage and audit presentation constraints - [@dblock](https://github.com/dblock).
 * [#264](https://github.com/mongoid/mongoid-history/pull/264): Add explicit `Mongoid::History.with_group` reporting metadata while preserving per-write history and undo/redo, addressing [#144](https://github.com/mongoid/mongoid-history/issues/144) proposed by [@ajsharp](https://github.com/ajsharp) - [@dblock](https://github.com/dblock).
