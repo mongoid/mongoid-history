@@ -79,7 +79,7 @@ module Mongoid
       end
 
       def trackable_parents
-        @trackable_parents ||= trackable_parents_and_trackable[0, -1]
+        @trackable_parents ||= trackable_parents_and_trackable[0...-1]
       end
 
       def trackable_parent

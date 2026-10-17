@@ -10,10 +10,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { ruby: '2.3', mongoid: '3', mongodb: '4.4' }
+          - { ruby: '2.3', mongoid: '3', mongodb: '4.4', coverage: 'true' }
           - { ruby: '2.4', mongoid: '4', mongodb: '4.4' }
           - { ruby: '2.5', mongoid: '5', mongodb: '4.4' }
-          - { ruby: '2.6', mongoid: '6', mongodb: '4.4' }
+          - { ruby: '2.6', mongoid: '6', mongodb: '4.4', coverage: 'true' }
           - { ruby: '2.5', mongoid: '7', mongodb: '4.4' }
           - { ruby: '2.6', mongoid: '7', mongodb: '4.4' }
           - { ruby: '2.7', mongoid: '7.0', mongodb: '4.4' }
@@ -55,3 +55,15 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file: coverage/.resultset.json
           format: simplecov
+          parallel: true
+          flag-name: mongoid-${{ matrix.mongoid }}
+
+  coverage:
+    needs: test
+    if: ${{ always() && needs.test.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          parallel-finished: true
