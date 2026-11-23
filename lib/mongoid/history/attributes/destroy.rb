@@ -18,8 +18,8 @@ module Mongoid
           trackable_class.tracked_embeds_one
                          .map { |rel| aliased_fields.key(rel) || rel }
                          .each do |rel|
-                           obj = trackable.send(rel)
-                           @attributes[rel] = [format_embeds_one_relation(rel, obj.attributes), nil] if obj
+            obj = trackable.send(rel)
+            @attributes[rel] = [format_embeds_one_relation(rel, obj.attributes), nil] if obj
           end
         end
 
@@ -27,9 +27,9 @@ module Mongoid
           trackable_class.tracked_embeds_many
                          .map { |rel| aliased_fields.key(rel) || rel }
                          .each do |rel|
-                           @attributes[rel] = [trackable.send(rel).map do |obj|
-                             format_embeds_many_relation(rel, obj.attributes)
-                           end, nil]
+            @attributes[rel] = [trackable.send(rel).map do |obj|
+              format_embeds_many_relation(rel, obj.attributes)
+            end, nil]
           end
         end
       end

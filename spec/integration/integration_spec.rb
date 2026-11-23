@@ -544,7 +544,7 @@ describe Mongoid::History do
         expect(post.tags.last.title).to eq('baz')
       end
 
-      it 'should be possible to destroy through parent model using canoncial _destroy macro' do
+      it 'should be possible to destroy through parent model using canonical _destroy macro' do
         tag_foo
         tag_bar # initialize
         expect(post.tags.count).to eq(2)
@@ -555,7 +555,7 @@ describe Mongoid::History do
         expect(post.history_tracks.to_a.last.action).to eq('destroy')
       end
 
-      it 'should write relationship name for association_chain hiearchy instead of class name when using _destroy macro' do
+      it 'should write relationship name for association_chain hierarchy instead of class name when using _destroy macro' do
         update_hash = { 'tags_attributes' => { '1234' => { 'id' => tag_foo.id, '_destroy' => '1' } } }
         post.update_attributes!(update_hash)
 
@@ -899,7 +899,7 @@ describe Mongoid::History do
       end
     end
 
-    describe 'overriden changes_method with additional fields' do
+    describe 'overridden changes_method with additional fields' do
       before :each do
         class OverriddenChangesMethod
           include Mongoid::Document

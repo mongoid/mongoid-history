@@ -1,6 +1,80 @@
+plugins:
+  - rubocop-md
+  - rubocop-prose
+  - rubocop-rake
+  - rubocop-spellcheck
+  - rubocop-yaml
+
 AllCops:
+  NewCops: disable
+  SuggestExtensions: false
+  inherit_mode:
+    merge:
+      - Include
+  Include:
+    - '.github/**/*.yml'
+    - '.rubocop.yml'
   Exclude:
-    - vendor/**/*
-    - bin/**/*
+    - 'coverage/**/*'
+    - 'pkg/**/*'
+    - 'vendor/**/*'
+    - 'bin/**/*'
+
+YAML/Lint/InvalidSyntax:
+  Include: &yaml_files
+    - '**/*.yml'
+    - '**/*.yaml'
+
+YAML/Lint/DuplicateKey:
+  Include: *yaml_files
+
+Naming/FileName:
+  inherit_mode:
+    merge:
+      - Exclude
+  Exclude:
+    - '**/*.md'
+    - '.github/workflows/*.yml'
+
+# README examples show partial models and option values, not complete source files.
+Style/Documentation:
+  inherit_mode:
+    merge:
+      - Exclude
+  Exclude:
+    - '**/*.md'
+
+Style/MultilineBlockChain:
+  inherit_mode:
+    merge:
+      - Exclude
+  Exclude:
+    - '**/*.md'
+
+Style/SymbolProc:
+  inherit_mode:
+    merge:
+      - Exclude
+  Exclude:
+    - '**/*.md'
+
+Markdown/HeadingCapitalization:
+  Enabled: true
+  Style: title_case
+
+Prose/MaxLength:
+  Max: false
+  Exclude:
+    - LICENSE.txt
+
+Spellcheck:
+  DictionaryFiles:
+    en:
+      - gem:rubocop-spellcheck/data/en/en.dic
+      - '.spellcheck.txt'
+
+Spellcheck/Spelling:
+  Exclude:
+    - LICENSE.txt
 
 inherit_from: .rubocop_todo.yml
