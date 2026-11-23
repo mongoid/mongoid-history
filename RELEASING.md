@@ -12,7 +12,11 @@ Before the first automated release, a maintainer must:
 2. At [mongoid-history's trusted publishers](https://rubygems.org/gems/mongoid-history/trusted_publishers), add a GitHub Actions publisher with repository owner `mongoid`, repository `mongoid-history`, workflow filename `release.yml`, environment `release`, and the separate workflow repository owner `dblock` and repository `ruby-gem-release`.
 3. Allow GitHub Actions to push release commits and `v*` tags to `master`. The workflow uses `GITHUB_TOKEN` with `contents: write` and `id-token: write`, and pushes the release commit and the next development version directly to `master`. See the upstream [setup and permissions guidance](https://github.com/dblock/ruby-gem-release/blob/v0.9.0/RELEASING.md#one-time-setup).
 
-Installing the workflow does not apply these settings. To verify them without publishing, run a [dry run](https://github.com/dblock/ruby-gem-release/blob/v0.9.0/docs/actions/release.md#dry-run).
+Installing the workflow does not apply these settings. To verify them without publishing, run a [dry run](https://github.com/dblock/ruby-gem-release/blob/v0.9.0/docs/actions/release.md#dry-run). It checks release prerequisites, including Trusted Publishing, without editing files, building, pushing, or publishing:
+
+```sh
+gh workflow run release.yml --repo mongoid/mongoid-history --ref master -f dry-run=true
+```
 
 ## Prepare
 
