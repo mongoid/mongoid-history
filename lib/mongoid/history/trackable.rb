@@ -27,15 +27,20 @@ module Mongoid
           delegate :history_trackable_options, to: 'self.class'
           delegate :track_history?, to: 'self.class'
 
-          callback_options = history_options.options.slice(:if, :unless)
-          around_update :track_update, **callback_options if history_options.options[:track_update]
-          around_create :track_create, **callback_options if history_options.options[:track_create]
-          around_destroy :track_destroy, **callback_options if history_options.options[:track_destroy]
+          define_history_callbacks(history_options.options)
 
           class_attribute :mongoid_history_options, instance_accessor: false unless respond_to? :mongoid_history_options
 
           self.mongoid_history_options = history_options
           clear_trackable_memoization
+        end
+
+        def define_history_callbacks(options)
+          before_validation :set_history_modifier
+          callback_options = options.slice(:if, :unless)
+          around_update :track_update, **callback_options if options[:track_update]
+          around_create :track_create, **callback_options if options[:track_create]
+          around_destroy :track_destroy, **callback_options if options[:track_destroy]
         end
 
         def history_settings(options = {})
@@ -274,7 +279,7 @@ module Mongoid
             scope: related_scope
           }
           tracker_attributes[:group_id] = Mongoid::History.group_id unless Mongoid::History.group_id.nil?
-          tracker_attributes[:modifier] = send(modifier_field) if modifier_field
+          tracker_attributes[:modifier] = history_modifier if modifier_field
 
           original, modified = transform_changes(modified_attributes_for_action(action))
 
@@ -380,6 +385,27 @@ module Mongoid
           end
         end
       end
+
+      module ModifierMethods
+        private
+
+        def history_modifier
+          modifier_field = history_trackable_options[:modifier_field]
+          return unless modifier_field
+
+          context = Mongoid::History.store[Mongoid::History::MODIFIER_KEY]
+          context ? context.first : send(modifier_field)
+        end
+
+        def set_history_modifier
+          modifier_field = history_trackable_options[:modifier_field]
+          return unless modifier_field && Mongoid::History.store[Mongoid::History::MODIFIER_KEY]
+
+          send("#{modifier_field}=", history_modifier)
+        end
+      end
+
+      include ModifierMethods
 
       module RelationMethods
         # Returns a relation class for the given field.
