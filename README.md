@@ -1,14 +1,12 @@
 # Mongoid History
 
-[![Gem Version](https://badge.fury.io/rb/mongoid-history.svg)](http://badge.fury.io/rb/mongoid-history)
-[![CI](https://github.com/mongoid/mongoid-history/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/mongoid/mongoid-history/actions/workflows/test.yml?query=branch%3Amaster)
-[![Coverage Status](https://coveralls.io/repos/github/mongoid/mongoid-history/badge.svg?branch=master)](https://coveralls.io/github/mongoid/mongoid-history?branch=master)
+[![Gem Version](https://badge.fury.io/rb/mongoid-history.svg)](https://badge.fury.io/rb/mongoid-history) [![CI](https://github.com/mongoid/mongoid-history/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/mongoid/mongoid-history/actions/workflows/test.yml?query=branch%3Amaster) [![Coverage Status](https://coveralls.io/repos/github/mongoid/mongoid-history/badge.svg?branch=master)](https://coveralls.io/github/mongoid/mongoid-history?branch=master)
 
 Mongoid History tracks historical changes for any document, including embedded ones. It achieves this by storing all history tracks in a single collection that you define. Embedded documents are referenced by storing an association path, which is an array of `document_name` and `document_id` fields starting from the top most parent document and down to the embedded document that should track history.
 
 This gem also implements multi-user undo, which allows users to undo any history change in any order. Undoing a document also creates a new history track. This is great for auditing and preventing vandalism, but is probably not suitable for use cases such as a wiki (but we won't stop you either).
 
-### Version Support
+## Version Support
 
 Mongoid History supports the following dependency versions:
 
@@ -18,7 +16,7 @@ Mongoid History supports the following dependency versions:
 
 Earlier Ruby versions may work but are untested.
 
-### Tracking Boundaries
+## Tracking Boundaries
 
 History is recorded by Mongoid's create, update, and destroy callbacks. Use callback-based persistence, such as `create!`, `update_attributes!`, `save!`, and `destroy`, when changes must be tracked:
 
@@ -33,7 +31,7 @@ Atomic operations such as `post.set`, criteria operations such as `update_all`, 
 
 Mongoid History does not wrap driver writes or synthesize history by reading documents before a bulk operation. Such a read can race with concurrent writes; ordered or unordered bulk writes can partially succeed, and their result does not provide every document's before-and-after values. Applications requiring auditing for all database writers need a separate capture design with explicit consistency, failure, and recovery guarantees.
 
-### Storage and Audit Presentation
+## Storage and Audit Presentation
 
 Trackers are Mongoid documents, not a pluggable storage interface. Custom tracker classes can select a MongoDB collection or client using Mongoid's `store_in`, but cannot replace MongoDB with Cassandra or another database. A non-MongoDB adapter would also need compatible queries, association traversal, ordering, undo/redo, and failure semantics; changing only the insertion path is insufficient.
 
@@ -47,7 +45,7 @@ gem 'mongoid-history'
 
 ## Usage
 
-### Create a history tracker
+### Create a History Tracker
 
 Create a new class to track histories. All histories are stored in this tracker. The name of the class can be anything you like. The only requirement is that it includes `Mongoid::History::Tracker`
 
@@ -58,13 +56,13 @@ class HistoryTracker
 end
 ```
 
-### Group changes for reporting
+### Group Changes for Reporting
 
 Use `Mongoid::History.with_group('editing-session-id') { document.update_attributes!(title: 'New title') }` to tag history records with a `group_id`. Reuse the same application-provided string in separate requests to collect changes from an editing session. Query `document.history_tracks.where(group_id: 'editing-session-id')` or the tracker class directly. The block returns its result and restores any enclosing group even on exceptions; storage follows the existing RequestStore/thread-local tracking settings.
 
 Grouping is presentation metadata, not a transaction: each write retains its own history record, version, modifier, undo and redo. Records are not automatically merged by time or modifier, and a failed block does not roll back earlier successful writes. Group IDs do not grant authorization; scope queries to documents/users the caller may access. Existing records have no group. Add a database index on `group_id` in your tracker if your application's reporting queries require it.
 
-### Track has_and_belongs_to_many references
+### Track `has_and_belongs_to_many` References
 
 Track a HABTM association's stored ID array with `track_history on: [:tags]`, its foreign key (`on: [:tag_ids]`), or `on: :referenced_relations` for all HABTM associations. The default `on: :all` already includes these stored fields. Relation names in `except` and `format` also resolve to the foreign key, including custom foreign keys. This tracks membership IDs, not changes to fields on referenced documents.
 
@@ -72,7 +70,7 @@ Use document saves to record membership changes: `post.update_attributes!(tag_id
 
 Mongoid's association proxy operations (`post.tags << tag`, `delete`, `clear`, association replacement) and atomic field operations bypass the owner's document update callbacks and are **not tracked**. Calling `save!` afterwards cannot reliably recover those already-persisted changes. This gem deliberately does not override `has_and_belongs_to_many` or install before-add/remove history callbacks: those can record failed operations, misidentify multiple associations to the same class, and lose version updates. For audited membership changes use saved foreign-key assignments rather than proxy operations.
 
-### Set default tracker class name (optional)
+### Set Default Tracker Class Name (Optional)
 
 For backward compatibility, Mongoid::History uses the first loaded class to include `Mongoid::History::Tracker` as the default history tracker. Explicitly configure the default in a Rails initializer to avoid depending on model loading order, especially with multiple trackers or Rails lazy loading:
 
@@ -87,7 +85,7 @@ The initializer is necessary when the tracker has not yet been loaded before the
 
 Namespaced trackers and trackables are supported. Use the fully qualified class name, for example `Mongoid::History.tracker_class_name = 'CMS::HistoryTracker'` or `track_history tracker_class_name: 'CMS::HistoryTracker'`.
 
-### Create trackable classes and objects
+### Create Trackable Classes and Objects
 
 ```ruby
 class Post
@@ -105,15 +103,15 @@ class Post
 
   # telling Mongoid::History how you want to track changes
   # dynamic fields will be tracked automatically (for MongoId 4.0+ you should include Mongoid::Attributes::Dynamic to your model)
-  track_history   :on => [:title, :body],       # track title and body fields only, default is :all
-                  :modifier_field => :modifier, # adds "belongs_to :modifier" to track who made the change, default is :modifier, set to nil to not create modifier_field
-                  :modifier_field_inverse_of => :nil, # adds an ":inverse_of" option to the "belongs_to :modifier" relation, default is not set
-                  :modifier_field_optional => true, # marks the modifier relationship as optional (requires Mongoid 6 or higher)
-                  :version_field => :version,   # adds "field :version, :type => Integer" to track current version, default is :version
-                  :track_create  => true,       # track document creation, default is true
-                  :track_update  => true,       # track document updates, default is true
-                  :track_destroy => true,       # track document destruction, default is true
-                  :track_blank_changes => false # track changes from blank? to blank?, default is false
+  track_history   on: %i[title body], # track title and body fields only, default is :all
+                  modifier_field: :modifier, # adds "belongs_to :modifier" to track who made the change, default is :modifier, set to nil to not create modifier_field
+                  modifier_field_inverse_of: :nil, # adds an ":inverse_of" option to the "belongs_to :modifier" relation, default is not set
+                  modifier_field_optional: true, # marks the modifier relationship as optional (requires Mongoid 6 or higher)
+                  version_field: :version, # adds "field :version, :type => Integer" to track current version, default is :version
+                  track_create: true,       # track document creation, default is true
+                  track_update: true,       # track document updates, default is true
+                  track_destroy: true,       # track document destruction, default is true
+                  track_blank_changes: false # track changes from blank? to blank?, default is false
 end
 
 class Comment
@@ -125,16 +123,15 @@ class Comment
 
   field             :title
   field             :body
-  embedded_in       :post, :inverse_of => :comments
+  embedded_in       :post, inverse_of: :comments
 
   # track title and body for all comments, scope it to post (the parent)
   # also track creation and destruction
-  track_history     :on => [:title, :body], :scope => :post, :track_create => true, :track_destroy => true
+  track_history     on: %i[title body], scope: :post, track_create: true, track_destroy: true
 
   # For embedded polymorphic relations, specify an array of model names or its polymorphic name
   # e.g. :scope => [:post, :image, :video]
   #      :scope => :commentable
-
 end
 
 # the modifier class
@@ -142,15 +139,15 @@ class User
   include Mongoid::Document
   include Mongoid::Timestamps
 
-  field             :name
+  field :name
 end
 
-user = User.create(:name => "Aaron")
-post = Post.create(:title => "Test", :body => "Post", :modifier => user)
-comment = post.comments.create(:title => "test", :body => "comment", :modifier => user)
+user = User.create(name: 'Aaron')
+post = Post.create(title: 'Test', body: 'Post', modifier: user)
+comment = post.comments.create(title: 'test', body: 'comment', modifier: user)
 comment.history_tracks.count # should be 1
 
-comment.update_attributes(:title => "Test 2")
+comment.update_attributes(title: 'Test 2')
 comment.history_tracks.count # should be 2
 
 track = comment.history_tracks.last
@@ -166,16 +163,16 @@ comment.undo nil, from: 1, to: comment.version
 comment.undo! user
 
 # undo versions 1 - 4
-comment.undo! user, :from => 4, :to => 1
+comment.undo! user, from: 4, to: 1
 
 # undo last 3 versions
-comment.undo! user, :last => 3
+comment.undo! user, last: 3
 
 # redo versions 1 - 4
-comment.redo! user, :from => 1, :to => 4
+comment.redo! user, from: 1, to: 4
 
 # redo last 3 versions
-comment.redo! user, :last => 3
+comment.redo! user, last: 3
 
 # redo version 1
 comment.redo! user, 1
@@ -188,7 +185,7 @@ post = post.undo! user
 
 # disable tracking for comments within a block
 Comment.disable_tracking do
-  comment.update_attributes(:title => "Test 3")
+  comment.update_attributes(title: 'Test 3')
 end
 
 # disable tracking for comments by default
@@ -196,7 +193,7 @@ Comment.disable_tracking!
 
 # enable tracking for comments within a block
 Comment.enable_tracking do
-  comment.update_attributes(:title => "Test 3")
+  comment.update_attributes(title: 'Test 3')
 end
 
 # renable tracking for comments by default
@@ -204,8 +201,8 @@ Comment.enable_tracking!
 
 # globally disable all history tracking within a block
 Mongoid::History.disable do
-  comment.update_attributes(:title => "Test 3")
-  user.update_attributes(:name => "Eddie Van Halen")
+  comment.update_attributes(title: 'Test 3')
+  user.update_attributes(name: 'Eddie Van Halen')
 end
 
 # globally disable all history tracking by default
@@ -213,8 +210,8 @@ Mongoid::History.disable!
 
 # globally enable all history tracking within a block
 Mongoid::History.enable do
-  comment.update_attributes(:title => "Test 3")
-  user.update_attributes(:name => "Eddie Van Halen")
+  comment.update_attributes(title: 'Test 3')
+  user.update_attributes(name: 'Eddie Van Halen')
 end
 
 # globally renable all history tracking by default
@@ -230,11 +227,11 @@ class Post
   include Mongoid::Document
   include Mongoid::History::Trackable
 
-  field           :title
-  field           :body
-  field           :rating
+  field :title
+  field :body
+  field :rating
 
-  track_history   :on => [:fields] # all fields will be tracked
+  track_history on: [:fields] # all fields will be tracked
 end
 ```
 
@@ -248,7 +245,7 @@ class Post
   embeds_many :comments
   embeds_one  :content
 
-  track_history   :on => [:embedded_relations] # all embedded relations will be tracked
+  track_history on: [:embedded_relations] # all embedded relations will be tracked
 end
 ```
 
@@ -269,13 +266,13 @@ class Post
   field           :rating
   embeds_many     :comments
 
-  track_history   :on => [:title, :body, :comments],
-                  :modifier_field => :modifier,
-                  :modifier_field_inverse_of => :nil,
-                  :version_field => :version,
-                  :track_create   =>  true,     # track create on Post
-                  :track_update   =>  true,
-                  :track_destroy  =>  false
+  track_history   on: %i[title body comments],
+                  modifier_field: :modifier,
+                  modifier_field_inverse_of: :nil,
+                  version_field: :version,
+                  track_create: true, # track create on Post
+                  track_update: true,
+                  track_destroy: false
 end
 
 class Comment
@@ -284,12 +281,12 @@ class Comment
 
   field             :title
   field             :body
-  embedded_in       :post, :inverse_of => :comments
+  embedded_in       :post, inverse_of: :comments
 end
 
-user = User.create(:name => "Aaron")
-post = Post.create(:title => "Test", :body => "Post", :modifier => user)
-comment = post.comments.build(:title => "test", :body => "comment", :modifier => user)
+user = User.create(name: 'Aaron')
+post = Post.create(title: 'Test', body: 'Post', modifier: user)
+comment = post.comments.build(title: 'test', body: 'comment', modifier: user)
 post.save
 post.history_tracks.count # should be 1
 
@@ -300,7 +297,7 @@ track.original # {}
 track.modified # { "title" => "Test", "body" => "Post", "comments" => [{ "_id" => "575fa9e667d827e5ed00000d", "title" => "test", "body" => "comment" }], ... }
 ```
 
-### Whitelist the tracked attributes of embedded relations
+### Whitelist the Tracked Attributes of Embedded Relations
 
 When an embedded model tracks its own history, its own whitelist controls that history's `tracked_changes` and `tracked_edits`; the parent's whitelist only controls the parent's audit. To run embedded history callbacks when saving nested attributes through a parent, configure `cascade_callbacks: true` on the parent's embedded association. This also applies to polymorphic embedded associations. Version counters belong to each tracked document, not to the shared history scope: two children can both have version 1 without changing the parent's counter.
 
@@ -309,14 +306,14 @@ If you don't want to track all the attributes of embedded relations in parent au
 ```ruby
 class Book
   include Mongoid::Document
-  ...
+  # ...
   embeds_many :pages
-  track_history :on => { :pages => [:title, :content] }
+  track_history on: { pages: %i[title content] }
 end
 
 class Page
   include Mongoid::Document
-  ...
+  # ...
   field :number
   field :title
   field :subtitle
@@ -327,41 +324,41 @@ end
 
 It will now track only `_id` (Mandatory), `title` and `content` attributes for `pages` relation.
 
-### Track all blank changes
+### Track All Blank Changes
 
 Normally changes where both the original and modified values respond with `true` to `blank?` (for example `nil` to `false`) aren't tracked. However, there may be cases where it's important to track such changes, for example when a field isn't present (so appears to be `nil`) then is set to `false`. To track such changes, set the `track_blank_changes` option to `true` (it defaults to `false`) when turning on history tracking:
 
 ```ruby
 class Book
   include Mongoid::Document
-  ...
+  # ...
   field :summary
   track_history # Use default of false for track_blank_changes
 end
 
 # summary change not tracked if summary hasn't been set (or has been set to something that responds true to blank?)
-Book.find(id).update_attributes(:summary => '')
+Book.find(id).update_attributes(summary: '')
 
 class Chapter
   include Mongoid::Document
-  ...
+  # ...
   field :title
-  track_history :track_blank_changes => true
+  track_history track_blank_changes: true
 end
 
 # title change tracked even if title hasn't been set
-Chapter.find(id).update_attributes(:title => '')
+Chapter.find(id).update_attributes(title: '')
 ```
 
-### Retrieving the list of tracked static and dynamic fields
+### Retrieving the List of Tracked Static and Dynamic Fields
 
 ```ruby
 class Book
-  ...
+  # ...
   field             :title
   field             :author
   field             :price
-  track_history     :on => [:title, :price]
+  track_history     on: %i[title price]
 end
 
 Book.tracked_fields           #=> ["title", "price"]
@@ -369,12 +366,12 @@ Book.tracked_field?(:title)   #=> true
 Book.tracked_field?(:author)  #=> false
 ```
 
-### Retrieving the list of tracked relations
+### Retrieving the List of Tracked Relations
 
 ```ruby
 class Book
-  ...
-  track_history :on => [:pages]
+  # ...
+  track_history on: [:pages]
 end
 
 Book.tracked_relation?(:pages)    #=> true
@@ -382,7 +379,7 @@ Book.tracked_embeds_many          #=> ["pages"]
 Book.tracked_embeds_many?(:pages) #=> true
 ```
 
-### Skip soft-deleted embedded objects with nested tracking
+### Skip Soft-Deleted Embedded Objects with Nested Tracking
 
 Default paranoia field is `deleted_at`. You can use custom field for each class as below:
 
@@ -397,7 +394,7 @@ end
 class Page
   include Mongoid::Document
   include Mongoid::History::Trackable
-  ...
+  # ...
   embedded_in :book
   history_settings paranoia_field: :removed_at
 end
@@ -405,7 +402,7 @@ end
 
 This will skip the `page` documents with `removed_at` set to a non-blank value from nested tracking
 
-### Formatting fields
+### Formatting Fields
 
 You can opt to use a proc or string interpolation to alter attributes being stored on a history record.
 
@@ -416,7 +413,8 @@ class Post
 
   field           :title
   track_history   on: :title,
-                  format: { title: ->(t){ t[0..3] } }
+                  format: { title: ->(t) { t[0..3] } }
+end
 ```
 
 This also works for fields on an embedded relations.
@@ -440,7 +438,7 @@ class Page
 end
 ```
 
-### Displaying history trackers as an audit trail
+### Displaying History Trackers as an Audit Trail
 
 In your Controller:
 
@@ -485,11 +483,9 @@ In your View, you might do something like (example in HAML format):
 
 ### Adding Userstamp on History Trackers
 
-To track the User in the application who created the HistoryTracker, add the
-[Mongoid::Userstamp gem](https://github.com/tbpro/mongoid_userstamp) to your HistoryTracker class.
-This will add a field called `created_by` and an accessor `creator` to the model (you can rename these via gem config).
+To track the User in the application who created the HistoryTracker, add the [Mongoid::Userstamp gem](https://github.com/tbpro/mongoid_userstamp) to your HistoryTracker class. This will add a field called `created_by` and an accessor `creator` to the model (you can rename these via gem config).
 
-```
+```ruby
 class MyHistoryTracker
   include Mongoid::History::Tracker
   include Mongoid::Userstamp
@@ -521,28 +517,25 @@ Set `Mongoid::History.modifier_class_name` before loading tracker and trackable 
 
 If your application has no modifier model, use `track_history modifier_field: nil`. This omits the trackable's modifier association and records history with a nil modifier; a `User` model is not required. Setting the global `modifier_class_name` to nil is not how modifier tracking is disabled.
 
-### Repeated declarations and custom version fields
+### Repeated Declarations and Custom Version Fields
 
 Use `track_history version_field: :_version` to store a trackable's version in `_version` instead of `version`. The default remains `version` for compatibility with existing documents; changing it requires migrating stored version values. History tracker records always use their own `version` field.
 
 Subclasses inherit their parent's tracking options, including `version_field`. Calling `track_history` again on a class or subclass overrides only the supplied options, refreshes the tracked-field configuration, and does not redefine a version field already installed by history tracking. For example, a concern can call `track_history on: :fields, version_field: :_version, modifier_field: nil`, and a model can call `track_history on: :fields` after declaring additional fields. An explicit `on:` replaces the previous field selection rather than appending to it.
 
-### Conditional :if and :unless options
+### Conditional `:if` and `:unless` Options
 
-The `track_history` method supports `:if` and `:unless` options which will skip generating
-the history tracker unless they are satisfied. These options can take either a method
-`Symbol` or a `Proc`. They behave identical to how `:if` and `:unless` behave in Rails model callbacks.
+The `track_history` method supports `:if` and `:unless` options which will skip generating the history tracker unless they are satisfied. These options can take either a method `Symbol` or a `Proc`. They behave identical to how `:if` and `:unless` behave in Rails model callbacks.
 
 ```ruby
-  track_history on: [:ip],
-                if: :should_i_track_history?,
-                unless: ->(obj){ obj.method_to_skip_history }
+track_history on: [:ip],
+              if: :should_i_track_history?,
+              unless: ->(obj) { obj.method_to_skip_history }
 ```
 
-### Using an alternate changes method
+### Using an Alternate Changes Method
 
-Sometimes you may wish to provide an alternate method for determining which changes should be tracked.  For example, if you are using embedded documents
-and nested attributes, you may wish to write your own changes method that includes changes from the embedded documents.
+Sometimes you may wish to provide an alternate method for determining which changes should be tracked.  For example, if you are using embedded documents and nested attributes, you may wish to write your own changes method that includes changes from the embedded documents.
 
 Mongoid::History provides an option named `:changes_method` which allows you to do this.  It defaults to `:changes`, which is the standard changes method.
 
@@ -574,10 +567,10 @@ class Foo
   track_history on: [:ip], changes_method: :my_changes
 
   def my_changes
-    unless ip.nil?
-      changes.merge(ip: [nil, ip])
-    else
+    if ip.nil?
       changes
+    else
+      changes.merge(ip: [nil, ip])
     end
   end
 end
@@ -597,7 +590,7 @@ class Foo
 
   # use changes_with_baz to include baz's changes in this document's
   # history.
-  track_history   on: fields.keys + [:baz], changes_method: :changes_with_baz
+  track_history on: fields.keys + [:baz], changes_method: :changes_with_baz
 
   def changes_with_baz
     if baz.changed?
@@ -608,16 +601,18 @@ class Foo
   end
 
   private
+
   # This method takes the changes from an embedded doc and formats them
   # in a summarized way, similar to how the embedded doc appears in the
   # parent document's attributes
-  def summarized_changes obj
+  def summarized_changes(obj)
     obj.changes.keys.map do |field|
       next unless obj.respond_to?("#{field}_change")
-      [ { field => obj.send("#{field}_change")[0] },
-        { field => obj.send("#{field}_change")[1] } ]
+
+      [{ field => obj.send("#{field}_change")[0] },
+       { field => obj.send("#{field}_change")[1] }]
     end.compact.transpose.map do |fields|
-      fields.inject({}) {|map,f| map.merge(f)}
+      fields.inject({}) { |map, f| map.merge(f) }
     end
   end
 end
@@ -665,36 +660,23 @@ class SecondHistoryTracker
 end
 ```
 
-Note that if you are using a tracker for an embedded object that is different
-from the parent's tracker, redos and undos will not work. You have to use the
-same tracker for these to work across embedded relationships.
+Note that if you are using a tracker for an embedded object that is different from the parent's tracker, redos and undos will not work. You have to use the same tracker for these to work across embedded relationships.
 
-If you are using multiple trackers and the `tracker_class_name` parameter is
-not specified, Mongoid::History will use the default tracker configured in the
-initializer file or whatever the first tracker was loaded.
+If you are using multiple trackers and the `tracker_class_name` parameter is not specified, Mongoid::History will use the default tracker configured in the initializer file or whatever the first tracker was loaded.
 
 ### Dependent Restrict Associations
 
-When `dependent: :restrict` is used on an association, a call to `destroy` on
-the model will raise `Mongoid::Errors::DeleteRestriction` when the dependency
-is violated. Just be aware that this gem will create a history track document
-before the `destroy` call and then remove if an error is raised. This applies
-to all persistence calls: create, update and destroy.
+When `dependent: :restrict` is used on an association, a call to `destroy` on the model will raise `Mongoid::Errors::DeleteRestriction` when the dependency is violated. Just be aware that this gem will create a history track document before the `destroy` call and then remove if an error is raised. This applies to all persistence calls: create, update and destroy.
 
-See [spec/integration/validation_failure_spec.rb](spec/integration/validation_failure_spec.rb)
-for examples.
+See [spec/integration/validation_failure_spec.rb](spec/integration/validation_failure_spec.rb) for examples.
 
 ### Thread Safety
 
-Mongoid::History stores the tracking enable/disable flag in `Thread.current`.
-If the [RequestStore](https://github.com/steveklabnik/request_store) gem is installed, Mongoid::History
-will automatically store variables in the `RequestStore.store` instead. RequestStore is recommended
-for threaded web servers like Thin or Puma.
-
+Mongoid::History stores the tracking enable/disable flag in `Thread.current`. If the [RequestStore](https://github.com/steveklabnik/request_store) gem is installed, Mongoid::History will automatically store variables in the `RequestStore.store` instead. RequestStore is recommended for threaded web servers like Thin or Puma.
 
 ## Contributing
 
-You're encouraged to contribute to Mongoid History. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+You're encouraged to contribute to Mongoid History. See [CONTRIBUTING.md](CONTRIBUTING.md), [CHANGELOG.md](CHANGELOG.md), [UPGRADING.md](UPGRADING.md), and [RELEASING.md](RELEASING.md).
 
 ## Copyright
 

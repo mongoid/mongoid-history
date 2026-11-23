@@ -2,6 +2,7 @@
 
 * [#279](https://github.com/mongoid/mongoid-history/pull/279): Fix cached parent-chain slicing and cover ancestry, invalid historical associations and selectors; combine coverage across actual legacy and modern APIs - [@dblock](https://github.com/dblock).
 * [#280](https://github.com/mongoid/mongoid-history/pull/280), [#281](https://github.com/mongoid/mongoid-history/pull/281): Release with ruby-gem-release from a manually dispatched GitHub Actions workflow using RubyGems Trusted Publishing, with dry runs - [@dblock](https://github.com/dblock).
+* [#282](https://github.com/mongoid/mongoid-history/pull/282): Lint Ruby, Markdown, YAML, and spelling with rubocop-md, rubocop-prose, rubocop-yaml, rubocop-spellcheck, and rubocop-rake in a new Lint workflow; fix documentation typos, headings, and invalid README examples - [@dblock](https://github.com/dblock).
 * Your contribution here.
 * [#262](https://github.com/mongoid/mongoid-history/pull/262): Document and test callback-based auditing boundaries, and clarify MongoDB storage and audit presentation constraints - [@dblock](https://github.com/dblock).
 * [#264](https://github.com/mongoid/mongoid-history/pull/264): Add explicit `Mongoid::History.with_group` reporting metadata while preserving per-write history and undo/redo, addressing [#144](https://github.com/mongoid/mongoid-history/issues/144) proposed by [@ajsharp](https://github.com/ajsharp) - [@dblock](https://github.com/dblock).
@@ -142,7 +143,6 @@
 * [#42](https://github.com/mongoid/mongoid-history/issues/42): Fix: corrected creation of association chain when using nested embedded documents - [@matekb](https://github.com/matekb).
 * [#56](https://github.com/mongoid/mongoid-history/issues/56): Fix: now possible to undo setting (creating) attributes that was previously unset - [@matekb](https://github.com/matekb).
 * [#49](https://github.com/mongoid/mongoid-history/issues/49): Fix: now correctly undo/redo localized fields - [@edejong](https://github.com/edejong).
-
 
 ### 0.3.2 (2013/01/24)
 

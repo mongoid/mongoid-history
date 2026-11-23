@@ -20,7 +20,7 @@ describe Mongoid::History::Tracker do
     end
   end
 
-  context 'boefore field' do
+  context 'before field' do
     before :each do
       class InsideBeforeModel
         include Mongoid::Document

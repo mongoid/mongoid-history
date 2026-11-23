@@ -9,6 +9,7 @@ describe 'Historical association boundaries' do
       embeds_many :children, class_name: 'HistoryCoverageChild'
       track_history on: [:name], modifier_field: nil
     end
+
     class HistoryCoverageChild
       include Mongoid::Document
       field :name, type: String

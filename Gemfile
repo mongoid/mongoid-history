@@ -60,14 +60,21 @@ group :test do
     gem 'danger-changelog'
     gem 'danger-pr-comment'
   end
-  gem 'simplecov', Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.5') ? '>= 0.16' : '>= 0.22', require: false
   gem 'gem-release'
-  gem 'racc'
-  gem 'request_store'
   gem 'logger'
   gem 'mutex_m'
+  gem 'racc'
+  gem 'request_store'
   gem 'rspec', '~> 3.1'
-  gem 'rubocop', Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.6') ? '~> 0.49.0' : '~> 1.28'
+  gem 'simplecov', Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.5') ? '>= 0.16' : '>= 0.22', require: false
+  if RUBY_ENGINE == 'ruby' && Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('3.3')
+    gem 'rubocop', '~> 1.92'
+    gem 'rubocop-md', '~> 3.0', require: false
+    gem 'rubocop-prose', '~> 0.2', require: false
+    gem 'rubocop-rake', '~> 0.7', require: false
+    gem 'rubocop-spellcheck', '~> 0.2', require: false
+    gem 'rubocop-yaml', '~> 0.1.0', require: false
+  end
   gem 'term-ansicolor', '~> 1.3.0'
   gem 'yard'
 end
