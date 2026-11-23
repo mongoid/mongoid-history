@@ -1,15 +1,26 @@
-name: CI RSpec Test
+name: Test
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 jobs:
   test:
-    name: test (ruby=${{ matrix.ruby }}, mongoid=${{ matrix.mongoid }}, mongodb=${{ matrix.mongodb }})
+    name: test (ruby=${{ matrix.entry.ruby }}, mongoid=${{ matrix.entry.mongoid }}, mongodb=${{ matrix.entry.mongodb }})
     runs-on: ubuntu-22.04
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        include:
+        entry:
           - { ruby: '2.3', mongoid: '3', mongodb: '4.4', coverage: 'true' }
           - { ruby: '2.4', mongoid: '4', mongodb: '4.4' }
           - { ruby: '2.5', mongoid: '5', mongodb: '4.4' }
@@ -28,40 +39,41 @@ jobs:
           - { ruby: '4.0', mongoid: '9', mongodb: '8.0', coverage: 'true' }
     services:
       mongodb:
-        image: mongo:${{ matrix.mongodb }}
+        image: mongo:${{ matrix.entry.mongodb }}
         ports: ['27017:27017']
         options: >-
           --health-cmd "mongosh --quiet --eval 'db.adminCommand({ping: 1})' || mongo --quiet --eval 'db.adminCommand({ping: 1})'"
-          --health-interval 10s
+          --health-interval 2s
           --health-timeout 5s
-          --health-retries 10
+          --health-retries 30
     env:
-      MONGOID_VERSION: ${{ matrix.mongoid }}
-      COVERAGE: ${{ matrix.coverage }}
+      MONGOID_VERSION: ${{ matrix.entry.mongoid }}
+      COVERAGE: ${{ matrix.entry.coverage }}
     steps:
       - uses: actions/checkout@v7
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: ${{ matrix.ruby }}
+          ruby-version: ${{ matrix.entry.ruby }}
           bundler-cache: true
           cache-version: psych-compatible
       - name: Run tests
         timeout-minutes: 10
         run: bundle exec rspec
       - name: Report coverage
-        if: ${{ matrix.coverage == 'true' }}
+        if: ${{ matrix.entry.coverage == 'true' }}
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file: coverage/.resultset.json
           format: simplecov
           parallel: true
-          flag-name: mongoid-${{ matrix.mongoid }}
+          flag-name: mongoid-${{ matrix.entry.mongoid }}
 
   coverage:
     needs: test
     if: ${{ always() && needs.test.result == 'success' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: coverallsapp/github-action@v2
         with:
