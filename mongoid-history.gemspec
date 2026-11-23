@@ -1,5 +1,4 @@
-$LOAD_PATH.push File.expand_path('lib', __dir__)
-require 'mongoid/history/version'
+require_relative 'lib/mongoid/history/version'
 
 Gem::Specification.new do |s|
   s.name        = 'mongoid-history'
