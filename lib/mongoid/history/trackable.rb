@@ -280,7 +280,7 @@ module Mongoid
 
           tracker_attributes[:original] = original
           tracker_attributes[:modified] = modified
-          tracker_attributes
+          Mongoid::History::Obfuscation.prepare(tracker_attributes, self)
         end
 
         def track_create(&block)

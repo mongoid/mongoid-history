@@ -15,6 +15,7 @@ module Mongoid
         field :action,                  type: String
         field :scope,                   type: String
         field :group_id,                type: String
+        field :obfuscated_fields,       type: Array, default: []
         modifier_options = {
           class_name: Mongoid::History.modifier_class_name
         }
@@ -28,6 +29,7 @@ module Mongoid
       end
 
       def undo!(modifier = nil)
+        check_obfuscated_history!
         if action.to_sym == :destroy
           re_create(modifier)
         elsif action.to_sym == :create
@@ -40,6 +42,7 @@ module Mongoid
       end
 
       def redo!(modifier = nil)
+        check_obfuscated_history!
         if action.to_sym == :destroy
           re_destroy(modifier)
         elsif action.to_sym == :create
@@ -52,6 +55,7 @@ module Mongoid
       end
 
       def undo_attr(modifier)
+        check_obfuscated_history!
         undo_hash = affected.easy_unmerge(modified)
         undo_hash.easy_merge!(original)
         modifier_field = trackable.history_trackable_options[:modifier_field]
@@ -63,6 +67,7 @@ module Mongoid
       end
 
       def redo_attr(modifier)
+        check_obfuscated_history!
         redo_hash = affected.easy_unmerge(original)
         redo_hash.easy_merge!(modified)
         modifier_field = trackable.history_trackable_options[:modifier_field]
@@ -168,6 +173,10 @@ module Mongoid
       end
 
       private
+
+      def check_obfuscated_history!
+        raise ArgumentError, 'Cannot undo or redo history containing obfuscated values' if obfuscated_fields.present?
+      end
 
       def re_create(modifier)
         values = localize_keys(action.to_sym == :create ? modified.dup : original.dup)

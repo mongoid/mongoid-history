@@ -60,7 +60,7 @@ Metrics/MethodLength:
 # Offense count: 2
 # Configuration parameters: CountComments, CountAsOne.
 Metrics/ModuleLength:
-  Max: 207
+  Max: 208
 
 # Offense count: 9
 # Configuration parameters: AllowedMethods, AllowedPatterns.
