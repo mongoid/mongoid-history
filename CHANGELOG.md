@@ -1,3 +1,7 @@
+### 0.10.1 (Next)
+
+* Your contribution here.
+
 ### 0.10.0 (2026/11/24)
 
 * [#279](https://github.com/mongoid/mongoid-history/pull/279): Fix cached parent-chain slicing and cover ancestry, invalid historical associations and selectors; combine coverage across actual legacy and modern APIs - [@dblock](https://github.com/dblock).
