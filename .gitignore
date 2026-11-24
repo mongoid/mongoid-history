@@ -44,3 +44,4 @@ pkg
 #
 # For vim:
 #*.swp
+/vendor/bundle
