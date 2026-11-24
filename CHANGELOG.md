@@ -1,4 +1,4 @@
-### 0.10.0 (Next)
+### 0.10.0 (2026/11/24)
 
 * [#279](https://github.com/mongoid/mongoid-history/pull/279): Fix cached parent-chain slicing and cover ancestry, invalid historical associations and selectors; combine coverage across actual legacy and modern APIs - [@dblock](https://github.com/dblock).
 * [#280](https://github.com/mongoid/mongoid-history/pull/280), [#281](https://github.com/mongoid/mongoid-history/pull/281): Release with ruby-gem-release from a manually dispatched GitHub Actions workflow using RubyGems Trusted Publishing, with dry runs - [@dblock](https://github.com/dblock).
@@ -6,7 +6,6 @@
 * [#283](https://github.com/mongoid/mongoid-history/pull/283): Speed up CI by polling MongoDB readiness every 2 seconds, running `push` builds only on `master`, and canceling superseded pull request runs - [@dblock](https://github.com/dblock).
 * [#284](https://github.com/mongoid/mongoid-history/pull/284): Ignore `vendor/bundle` so the release workflow's clean-checkout check passes after `bundler-cache` installs gems - [@dblock](https://github.com/dblock).
 * [#285](https://github.com/mongoid/mongoid-history/pull/285): Upgrade danger-pr-comment to 0.3.0 from the `danger` organization and skip empty Danger report comments - [@dblock](https://github.com/dblock).
-* Your contribution here.
 * [#262](https://github.com/mongoid/mongoid-history/pull/262): Document and test callback-based auditing boundaries, and clarify MongoDB storage and audit presentation constraints - [@dblock](https://github.com/dblock).
 * [#264](https://github.com/mongoid/mongoid-history/pull/264): Add explicit `Mongoid::History.with_group` reporting metadata while preserving per-write history and undo/redo, addressing [#144](https://github.com/mongoid/mongoid-history/issues/144) proposed by [@ajsharp](https://github.com/ajsharp) - [@dblock](https://github.com/dblock).
 * [#268](https://github.com/mongoid/mongoid-history/pull/268): Fix repeated `track_history` declarations to retain inherited options, reuse history-owned version fields, and refresh prepared field configuration; improve missing-tracker errors and avoid memoizing history query criteria and tracker payloads - [@dblock](https://github.com/dblock).
