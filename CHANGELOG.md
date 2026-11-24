@@ -5,6 +5,7 @@
 * [#282](https://github.com/mongoid/mongoid-history/pull/282): Lint Ruby, Markdown, YAML, and spelling with rubocop-md, rubocop-prose, rubocop-yaml, rubocop-spellcheck, and rubocop-rake in a new Lint workflow; fix documentation typos, headings, and invalid README examples - [@dblock](https://github.com/dblock).
 * [#283](https://github.com/mongoid/mongoid-history/pull/283): Speed up CI by polling MongoDB readiness every 2 seconds, running `push` builds only on `master`, and canceling superseded pull request runs - [@dblock](https://github.com/dblock).
 * [#284](https://github.com/mongoid/mongoid-history/pull/284): Ignore `vendor/bundle` so the release workflow's clean-checkout check passes after `bundler-cache` installs gems - [@dblock](https://github.com/dblock).
+* [#285](https://github.com/mongoid/mongoid-history/pull/285): Upgrade danger-pr-comment to 0.3.0 from the `danger` organization and skip empty Danger report comments - [@dblock](https://github.com/dblock).
 * Your contribution here.
 * [#262](https://github.com/mongoid/mongoid-history/pull/262): Document and test callback-based auditing boundaries, and clarify MongoDB storage and audit presentation constraints - [@dblock](https://github.com/dblock).
 * [#264](https://github.com/mongoid/mongoid-history/pull/264): Add explicit `Mongoid::History.with_group` reporting metadata while preserving per-write history and undo/redo, addressing [#144](https://github.com/mongoid/mongoid-history/issues/144) proposed by [@ajsharp](https://github.com/ajsharp) - [@dblock](https://github.com/dblock).
