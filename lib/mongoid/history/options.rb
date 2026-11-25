@@ -31,6 +31,7 @@ module Mongoid
           except: %i[created_at updated_at],
           tracker_class_name: nil,
           modifier_field: :modifier,
+          track_without_modifier: Mongoid::History.track_without_modifier,
           version_field: :version,
           changes_method: :changes,
           scope: scope,

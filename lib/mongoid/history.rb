@@ -16,7 +16,8 @@ module Mongoid
     HISTORY_GROUP_KEY = 'mongoid_history_group_id'.freeze
 
     class << self
-      attr_accessor :tracker_class_name, :trackable_settings, :modifier_class_name, :current_user_method
+      attr_accessor :tracker_class_name, :trackable_settings, :modifier_class_name, :current_user_method,
+                    :track_without_modifier
 
       def disable
         original_flag = store[GLOBAL_TRACK_HISTORY_FLAG]
@@ -69,6 +70,7 @@ module Mongoid
         Mongoid::History.modifier_class_name = 'User'
         Mongoid::History.trackable_settings = {}
         Mongoid::History.current_user_method ||= :current_user
+        Mongoid::History.track_without_modifier = true
 
         Mongoid.models.each do |model|
           next unless model.included_modules.include? Mongoid::History::Trackable
