@@ -125,6 +125,13 @@ module Mongoid
         #  undo! 4
         #  undo! :last => 10
         def undo!(modifier = nil, options_or_version = nil)
+          if options_or_version.is_a?(Hash) && options_or_version[:history] == false
+            selection = options_or_version.except(:history)
+            raise ArgumentError, 'Undo without history requires an explicit :last or :from/:to selection' unless selection[:last] || (selection[:from] && selection[:to])
+
+            return Mongoid::History.disable { undo!(modifier, selection) }
+          end
+
           if destroyed?
             track = get_versions_criteria(options_or_version || { last: 1 }).where(association_chain: traverse_association_chain).first
             return track.undo!(modifier) if track && track.action == 'destroy'
